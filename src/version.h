@@ -81,7 +81,7 @@ const char *GetVersionString();
 // SAVESIG should match SAVEVER.
 
 // extension for savegames
-#define SAVEGAME_EXT "zds"
+#define SAVEGAME_EXT "wds"
 
 // MINSAVEVER is the minimum level snapshot version that can be loaded.
 #define MINSAVEVER 4556
@@ -91,16 +91,16 @@ const char *GetVersionString();
 #define SAVEVER 4558
 
 // This is so that derivates can use the same savegame versions without worrying about engine compatibility
-#define GAMESIG "GZDOOM"
-#define BASEWAD "gzdoom.pk3"
+#define GAMESIG "WIGZDOOM"
+#define BASEWAD "wigzdoom.pk3"
 #define OPTIONALWAD "game_support.pk3"
 #define GZDOOM 1
 #define VR3D_ENABLED
 
 // More stuff that needs to be different for derivatives.
-#define GAMENAME "GZDoom"
-#define WGAMENAME L"GZDoom"
-#define GAMENAMELOWERCASE "gzdoom"
+#define GAMENAME "WIGZDoom"
+#define WGAMENAME L"WUGZDoom"
+#define GAMENAMELOWERCASE "wigzdoom"
 #define FORUM_URL "http://forum.zdoom.org/"
 #define BUGS_FORUM_URL	"http://forum.zdoom.org/viewforum.php?f=2"
 
