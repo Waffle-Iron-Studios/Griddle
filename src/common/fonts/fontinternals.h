@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include "tarray.h"
 
+// This structure is used by BuildTranslations() to hold color information.
 struct TranslationParm
 {
 	short RangeStart;	// First level for this range

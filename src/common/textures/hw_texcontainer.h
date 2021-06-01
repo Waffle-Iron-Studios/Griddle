@@ -65,16 +65,8 @@ private:
 		// This is needed for allowing the client to allocate slots that aren't matched to a palette, e.g. Build's indexed variants.
 		if (translation >= 0)
 		{
-			if (!IsLuminosityTranslation(translation))
-			{
-				auto remap = GPalette.TranslationToTable(translation);
-				translation = remap == nullptr ? 0 : remap->Index;
-			}
-			else
-			{
-				// only needs to preserve the color range plus an identifier for marking this a luminosity translation.
-				translation = ((translation >> 16) & 0x3fff) | 0xff0000;
-			}
+			auto remap = GPalette.TranslationToTable(translation);
+			translation = remap == nullptr ? 0 : remap->Index;
 		}
 		else translation &= ~0x7fffffff;
 

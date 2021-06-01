@@ -102,7 +102,7 @@ class FastProjectile : Actor
 						tm.ClearLastRipped();	// [RH] Do rip damage each step, like Hexen
 					}
 					
-					if (!TryMove (Pos.XY + frac.XY, true, false, tm))
+					if (!TryMove (Pos.XY + frac.XY, true, NULL, tm))
 					{ // Blocked move
 						if (!bSkyExplode)
 						{
