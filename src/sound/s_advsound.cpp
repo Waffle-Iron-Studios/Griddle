@@ -1635,10 +1635,10 @@ int S_FindSkinnedSound (AActor *actor, FSoundID refid)
 	const char *pclass;
 	int gender = 0;
 
-	if (actor != nullptr)
+	if (actor != nullptr && actor->player != nullptr) 
 	{
-		pclass = GetSoundClass (actor);
-		if (actor->player != nullptr) gender = actor->player->userinfo.GetGender();
+		pclass = S_GetSoundClass(actor);
+		gender = actor->player->userinfo.GetGender();
 	}
 	else
 	{
@@ -1682,7 +1682,6 @@ int S_FindSkinnedSoundEx (AActor *actor, const char *name, const char *extendedn
 
 void S_MarkPlayerSounds (AActor *player)
 {
-	const char *playerclass = GetSoundClass(player);
 	int classidx = S_FindPlayerClass(playerclass);
 	if (classidx < 0)
 	{
