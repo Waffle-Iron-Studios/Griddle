@@ -173,8 +173,9 @@ void DrawChar(F2DDrawer *drawer, FFont* font, int normalcolor, double x, double 
 
 	FGameTexture* pic;
 	int dummy;
+	bool redirected;
 
-	if (NULL != (pic = font->GetChar(character, normalcolor, &dummy)))
+	if (NULL != (pic = font->GetChar(character, normalcolor, &dummy, &redirected)))
 	{
 		DrawParms parms;
 		Va_List tags;
@@ -187,7 +188,7 @@ void DrawChar(F2DDrawer *drawer, FFont* font, int normalcolor, double x, double 
 		}
 		bool palettetrans = (normalcolor == CR_UNDEFINED && parms.TranslationId != 0);
 		PalEntry color = 0xffffffff;
-		if (!palettetrans) parms.TranslationId = font->GetColorTranslation((EColorRange)normalcolor, &color);
+		if (!palettetrans) parms.TranslationId = redirected ? -1 : font->GetColorTranslation((EColorRange)normalcolor, &color);
 		parms.color = PalEntry((color.a * parms.color.a) / 255, (color.r * parms.color.r) / 255, (color.g * parms.color.g) / 255, (color.b * parms.color.b) / 255);
 		drawer->AddTexture(pic, parms);
 	}
@@ -203,8 +204,9 @@ void DrawChar(F2DDrawer *drawer,  FFont *font, int normalcolor, double x, double
 
 	FGameTexture *pic;
 	int dummy;
+	bool redirected;
 
-	if (NULL != (pic = font->GetChar(character, normalcolor, &dummy)))
+	if (NULL != (pic = font->GetChar(character, normalcolor, &dummy, &redirected)))
 	{
 		DrawParms parms;
 		uint32_t tag = ListGetInt(args);
@@ -212,7 +214,7 @@ void DrawChar(F2DDrawer *drawer,  FFont *font, int normalcolor, double x, double
 		if (!res) return;
 		bool palettetrans = (normalcolor == CR_UNDEFINED && parms.TranslationId != 0);
 		PalEntry color = 0xffffffff;
-		if (!palettetrans) parms.TranslationId = font->GetColorTranslation((EColorRange)normalcolor, &color);
+		if (!palettetrans) parms.TranslationId = redirected ? -1 : font->GetColorTranslation((EColorRange)normalcolor, &color);
 		parms.color = PalEntry((color.a * parms.color.a) / 255, (color.r * parms.color.r) / 255, (color.g * parms.color.g) / 255, (color.b * parms.color.b) / 255);
 		drawer->AddTexture(pic, parms);
 	}
@@ -314,10 +316,11 @@ void DrawTextCommon(F2DDrawer *drawer, FFont *font, int normalcolor, double x, d
 			continue;
 		}
 
-		if (NULL != (pic = font->GetChar(c, currentcolor, &w)))
+		bool redirected = false;
+		if (NULL != (pic = font->GetChar(c, currentcolor, &w, &redirected)))
 		{
 			// if palette translation is used, font colors will be ignored.
-			if (!palettetrans) parms.TranslationId = trans;
+			if (!palettetrans) parms.TranslationId = redirected? -1 : trans;
 			SetTextureParms(drawer, &parms, pic, cx, cy);
 			if (parms.cellx)
 			{

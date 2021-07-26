@@ -347,7 +347,6 @@ void player_t::CopyFrom(player_t &p, bool copyPSP)
 	ConversationFaceTalker = p.ConversationFaceTalker;
 	MUSINFOactor = p.MUSINFOactor;
 	MUSINFOtics = p.MUSINFOtics;
-	SoundClass = p.SoundClass;
 	if (copyPSP)
 	{
 		// This needs to transfer ownership completely.

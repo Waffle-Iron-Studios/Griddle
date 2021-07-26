@@ -90,22 +90,26 @@ public:
 	void RecordAllTextureColors(uint32_t* usedcolors) override;
 
 protected:
-	void CheckFON1Chars ();
-	void FixupPalette (uint8_t *identity, const PalEntry *palette, int* minlum ,int* maxlum);
+	void CheckFON1Chars (double *luminosity);
+	void BuildTranslations2 ();
+	void FixupPalette (uint8_t *identity, double *luminosity, const uint8_t *palette,
+		bool rescale, PalEntry *out_palette);
 	void LoadTranslations ();
 	void LoadFON1 (int lump, const uint8_t *data);
 	void LoadFON2 (int lump, const uint8_t *data);
 	void LoadBMF (int lump, const uint8_t *data);
-	
+	void CreateFontFromPic (FTextureID picnum);
+
+	static int BMFCompare(const void *a, const void *b);
+
 	enum
 	{
 		FONT1,
 		FONT2,
 		BMFFONT
 	} FontType;
-	PalEntry Palette[256];
+	uint8_t PaletteData[768];
 	bool RescalePalette;
-	int ActiveColors = -1;
 };
 
 
@@ -158,27 +162,57 @@ FSingleLumpFont::FSingleLumpFont (const char *name, int lump) : FFont(lump)
 
 //==========================================================================
 //
+// FSingleLumpFont :: CreateFontFromPic
+//
+//==========================================================================
+
+void FSingleLumpFont::CreateFontFromPic (FTextureID picnum)
+{
+	auto pic = TexMan.GetGameTexture(picnum);
+
+	FontHeight = (int)pic->GetDisplayHeight ();
+	SpaceWidth = (int)pic->GetDisplayWidth ();
+	GlobalKerning = 0;
+
+	FirstChar = LastChar = 'A';
+	Chars.Resize(1);
+	Chars[0].TranslatedPic = pic;
+	Chars[0].OriginalPic = pic;
+
+	// Only one color range. Don't bother with the others.
+	ActiveColors = 0;
+}
+
+//==========================================================================
+//
 // FSingleLumpFont :: LoadTranslations
 //
 //==========================================================================
 
 void FSingleLumpFont::LoadTranslations()
 {
+	double luminosity[256];
 	uint8_t identity[256];
+	PalEntry local_palette[256];
+	bool useidentity = true;
+	bool usepalette = false;
+	const void* ranges;
 	unsigned int count = LastChar - FirstChar + 1;
-	int minlum, maxlum;
 
 	switch(FontType)
 	{
 		case FONT1:
-			CheckFON1Chars();
-			minlum = 1;
-			maxlum = 255;
+			useidentity = false;
+			ranges = &TranslationParms[1][0];
+			CheckFON1Chars (luminosity);
 			break;
 
 		case BMFFONT:
 		case FONT2:
-			FixupPalette (identity, Palette, &minlum, &maxlum);
+			usepalette = true;
+			FixupPalette (identity, luminosity, PaletteData, RescalePalette, local_palette);
+
+			ranges = &TranslationParms[0][0];
 			break;
 
 		default:
@@ -189,16 +223,11 @@ void FSingleLumpFont::LoadTranslations()
 
 	for(unsigned int i = 0;i < count;++i)
 	{
-		if(Chars[i].OriginalPic)
-			static_cast<FFontChar2*>(Chars[i].OriginalPic->GetTexture()->GetImage())->SetSourceRemap(Palette);
+		if(Chars[i].TranslatedPic)
+			static_cast<FFontChar2*>(Chars[i].TranslatedPic->GetTexture()->GetImage())->SetSourceRemap(PatchRemap);
 	}
 
-	Translations.Resize(NumTextColors);
-	for (int i = 0; i < NumTextColors; i++)
-	{
-		if (i == CR_UNTRANSLATED) Translations[i] = 0;
-		else Translations[i] = LuminosityTranslation(i * 2 + (FontType == FONT1 ? 1 : 0), minlum, maxlum);
-	}
+	BuildTranslations (luminosity, useidentity ? identity : nullptr, ranges, ActiveColors, usepalette ? local_palette : nullptr);
 }
 
 //==========================================================================
@@ -233,20 +262,19 @@ void FSingleLumpFont::LoadFON1 (int lump, const uint8_t *data)
 	// Move the Windows-1252 characters to their proper place.
 	for (int i = 0x80; i < 0xa0; i++)
 	{
-		if (win1252map[i-0x80] != i && Chars[i].OriginalPic != nullptr && Chars[win1252map[i - 0x80]].OriginalPic == nullptr)
+		if (win1252map[i-0x80] != i && Chars[i].TranslatedPic != nullptr && Chars[win1252map[i - 0x80]].TranslatedPic == nullptr)
 		{ 
 			std::swap(Chars[i], Chars[win1252map[i - 0x80]]);
 		}
 	}
-	Palette[0] = 0;
-	for (int i = 1; i < 256; i++) Palette[i] = PalEntry(255, i, i, i);
 }
 
 //==========================================================================
 //
 // FSingleLumpFont :: LoadFON2
 //
-// FON2 is used for everything but the console font.
+// FON2 is used for everything but the console font. The console font should
+// probably use FON2 as well, but oh well.
 //
 //==========================================================================
 
@@ -312,11 +340,7 @@ void FSingleLumpFont::LoadFON2 (int lump, const uint8_t *data)
 		SpaceWidth = totalwidth * 2 / (3 * count);
 	}
 
-	Palette[0] = 0;
-	for (int i = 1; i < ActiveColors; i++)
-	{
-		Palette[i] = PalEntry(255, palette[i * 3], palette[i * 3 + 1], palette[i * 3 + 2]);
-	}
+	memcpy(PaletteData, palette, ActiveColors*3);
 
 	data_p = palette + ActiveColors*3;
 
@@ -326,12 +350,14 @@ void FSingleLumpFont::LoadFON2 (int lump, const uint8_t *data)
 		Chars[i].XMove = widths2[i];
 		if (destSize <= 0)
 		{
+			Chars[i].TranslatedPic = nullptr;
 			Chars[i].OriginalPic = nullptr;
 		}
 		else
 		{
-			Chars[i].OriginalPic = MakeGameTexture(new FImageTexture(new FFontChar2 (lump, int(data_p - data), widths2[i], FontHeight)), nullptr, ETextureType::FontChar);
-			TexMan.AddGameTexture(Chars[i].OriginalPic);
+			Chars[i].TranslatedPic = MakeGameTexture(new FImageTexture(new FFontChar2 (lump, int(data_p - data), widths2[i], FontHeight)), nullptr, ETextureType::FontChar);
+			Chars[i].OriginalPic = Chars[i].TranslatedPic;
+			TexMan.AddGameTexture(Chars[i].TranslatedPic);
 			do
 			{
 				int8_t code = *data_p++;
@@ -370,6 +396,8 @@ void FSingleLumpFont::LoadBMF(int lump, const uint8_t *data)
 	int numchars, count, totalwidth, nwidth;
 	int infolen;
 	int i, chari;
+	uint8_t raw_palette[256*3];
+	PalEntry sort_palette[256];
 
 	FontType = BMFFONT;
 	FontHeight = data[5];
@@ -411,14 +439,31 @@ void FSingleLumpFont::LoadBMF(int lump, const uint8_t *data)
 	count = LastChar - FirstChar + 1;
 	Chars.Resize(count);
 	// BMF palettes are only six bits per component. Fix that.
-	for (i = 0; i < ActiveColors; ++i)
+	for (i = 0; i < ActiveColors*3; ++i)
 	{
-		int r = (data[17 + i * 3] << 2) | (data[17 + i * 3] >> 4);
-		int g = (data[18 + i * 3] << 2) | (data[18 + i * 3] >> 4);
-		int b = (data[19 + i * 3] << 2) | (data[19 + i * 3] >> 4);
-		Palette[i + 1] = PalEntry(255, r, g, b); // entry 0 (transparent) is not stored in the font file.
+		raw_palette[i+3] = (data[17 + i] << 2) | (data[17 + i] >> 4);
 	}
 	ActiveColors++;
+
+	// Sort the palette by increasing brightness
+	for (i = 0; i < ActiveColors; ++i)
+	{
+		PalEntry *pal = &sort_palette[i];
+		pal->a = i;		// Use alpha part to point back to original entry
+		pal->r = raw_palette[i*3 + 0];
+		pal->g = raw_palette[i*3 + 1];
+		pal->b = raw_palette[i*3 + 2];
+	}
+	qsort(sort_palette + 1, ActiveColors - 1, sizeof(PalEntry), BMFCompare);
+
+	// Create the PatchRemap table from the sorted "alpha" values.
+	PatchRemap[0] = 0;
+	for (i = 1; i < ActiveColors; ++i)
+	{
+		PatchRemap[sort_palette[i].a] = i;
+	}
+
+	memcpy(PaletteData, raw_palette, 768);
 
 	// Now scan through the characters again, creating glyphs for each one.
 	for (i = chari = 0; i < numchars; ++i, chari += 6 + chardata[chari+1] * chardata[chari+2])
@@ -444,6 +489,7 @@ void FSingleLumpFont::LoadBMF(int lump, const uint8_t *data)
 			-(int8_t)chardata[chari+3],	// x offset
 			-(int8_t)chardata[chari+4]	// y offset
 		)), nullptr, ETextureType::FontChar);
+		Chars[chardata[chari] - FirstChar].TranslatedPic = tex;
 		Chars[chardata[chari] - FirstChar].OriginalPic = tex;
 		TexMan.AddGameTexture(tex);
 	}
@@ -466,31 +512,53 @@ void FSingleLumpFont::LoadBMF(int lump, const uint8_t *data)
 
 //==========================================================================
 //
+// FSingleLumpFont :: BMFCompare									STATIC
+//
+// Helper to sort BMF palettes.
+//
+//==========================================================================
+
+int FSingleLumpFont::BMFCompare(const void *a, const void *b)
+{
+	const PalEntry *pa = (const PalEntry *)a;
+	const PalEntry *pb = (const PalEntry *)b;
+
+	return (pa->r * 299 + pa->g * 587 + pa->b * 114) -
+		   (pb->r * 299 + pb->g * 587 + pb->b * 114);
+}
+
+//==========================================================================
+//
 // FSingleLumpFont :: CheckFON1Chars
 //
 // Scans a FON1 resource for all the color values it uses and sets up
-// some tables. Data points to the RLE data for
+// some tables like SimpleTranslation. Data points to the RLE data for
 // the characters. Also sets up the character textures.
 //
 //==========================================================================
 
-void FSingleLumpFont::CheckFON1Chars()
+void FSingleLumpFont::CheckFON1Chars (double *luminosity)
 {
 	FileData memLump = fileSystem.ReadFile(Lump);
-	const uint8_t* data = (const uint8_t*)memLump.GetMem();
-	const uint8_t* data_p;
+	const uint8_t* data = (const uint8_t*) memLump.GetMem();
 
+	uint8_t used[256], reverse[256];
+	const uint8_t *data_p;
+	int i, j;
+
+	memset (used, 0, 256);
 	data_p = data + 8;
 
-	for (int i = 0; i < 256; ++i)
+	for (i = 0; i < 256; ++i)
 	{
 		int destSize = SpaceWidth * FontHeight;
 
-		if (!Chars[i].OriginalPic)
+		if(!Chars[i].TranslatedPic)
 		{
-			Chars[i].OriginalPic = MakeGameTexture(new FImageTexture(new FFontChar2(Lump, int(data_p - data), SpaceWidth, FontHeight)), nullptr, ETextureType::FontChar);
+			Chars[i].TranslatedPic = MakeGameTexture(new FImageTexture(new FFontChar2 (Lump, int(data_p - data), SpaceWidth, FontHeight)), nullptr, ETextureType::FontChar);
+			Chars[i].OriginalPic = Chars[i].TranslatedPic;
 			Chars[i].XMove = SpaceWidth;
-			TexMan.AddGameTexture(Chars[i].OriginalPic);
+			TexMan.AddGameTexture(Chars[i].TranslatedPic);
 		}
 
 		// Advance to next char's data and count the used colors.
@@ -499,52 +567,87 @@ void FSingleLumpFont::CheckFON1Chars()
 			int8_t code = *data_p++;
 			if (code >= 0)
 			{
-				destSize -= code + 1;
+				destSize -= code+1;
 				while (code-- >= 0)
 				{
-					data_p++;
+					used[*data_p++] = 1;
 				}
 			}
 			else if (code != -128)
 			{
-				data_p++;
+				used[*data_p++] = 1;
 				destSize -= 1 - code;
 			}
 		} while (destSize > 0);
 	}
-	ActiveColors = 256;
+
+	memset (PatchRemap, 0, 256);
+	reverse[0] = 0;
+	for (i = 1, j = 1; i < 256; ++i)
+	{
+		if (used[i])
+		{
+			reverse[j++] = i;
+		}
+	}
+	for (i = 1; i < j; ++i)
+	{
+		PatchRemap[reverse[i]] = i;
+		luminosity[i] = (reverse[i] - 1) / 254.0;
+	}
+	ActiveColors = j;
 }
 
 //==========================================================================
 //
 // FSingleLumpFont :: FixupPalette
 //
-// Finds the best matches for the colors used by a FON2 font and finds thr
-// used luminosity range
+// Finds the best matches for the colors used by a FON2 font and sets up
+// some tables like SimpleTranslation.
 //
 //==========================================================================
 
-void FSingleLumpFont::FixupPalette (uint8_t *identity, const PalEntry *palette, int *pminlum, int *pmaxlum)
+void FSingleLumpFont::FixupPalette (uint8_t *identity, double *luminosity, const uint8_t *palette, bool rescale, PalEntry *out_palette)
 {
+	int i;
 	double maxlum = 0.0;
 	double minlum = 100000000.0;
+	double diver;
 
 	identity[0] = 0;
 	palette += 3;	// Skip the transparent color
 
-	for (int i = 1; i < ActiveColors; ++i, palette ++)
+	for (i = 1; i < ActiveColors; ++i, palette += 3)
 	{
-		int r = palette->r;
-		int g = palette->g;
-		int b = palette->b;
+		int r = palette[0];
+		int g = palette[1];
+		int b = palette[2];
 		double lum = r*0.299 + g*0.587 + b*0.114;
 		identity[i] = ColorMatcher.Pick(r, g, b);
-		if (lum > maxlum) maxlum = lum;
-		if (lum < minlum) minlum = lum;
+		luminosity[i] = lum;
+		out_palette[i].r = r;
+		out_palette[i].g = g;
+		out_palette[i].b = b;
+		out_palette[i].a = 255;
+		if (lum > maxlum)
+			maxlum = lum;
+		if (lum < minlum)
+			minlum = lum;
 	}
+	out_palette[0] = 0;
 
-	if (pminlum) *pminlum = int(minlum);
-	if (pmaxlum) *pmaxlum = int(maxlum);
+	if (rescale)
+	{
+		diver = 1.0 / (maxlum - minlum);
+	}
+	else
+	{
+		diver = 1.0 / 255.0;
+	}
+	for (i = 1; i < ActiveColors; ++i)
+	{
+		luminosity[i] = (luminosity[i] - minlum) * diver;
+	}
 }
 
 //==========================================================================
@@ -558,11 +661,13 @@ void FSingleLumpFont::FixupPalette (uint8_t *identity, const PalEntry *palette, 
 
 void FSingleLumpFont::RecordAllTextureColors(uint32_t* usedcolors)
 {
+	double luminosity[256];
 	uint8_t identity[256];
+	PalEntry local_palette[256];
 
 	if (FontType == BMFFONT || FontType == FONT2)
 	{
-		FixupPalette(identity, Palette, nullptr, nullptr);
+		FixupPalette(identity, luminosity, PaletteData, RescalePalette, local_palette);
 		for (int i = 0; i < 256; i++)
 		{
 			if (identity[i] != 0) usedcolors[identity[i]]++;
