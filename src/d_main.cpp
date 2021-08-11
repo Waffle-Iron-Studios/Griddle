@@ -117,6 +117,7 @@
 #include "texturemanager.h"
 #include "hw_clock.h"
 #include "hwrenderer/scene/hw_drawinfo.h"
+#include "doomfont.h"
 
 #ifdef __unix__
 #include "i_system.h"  // for SHARE_DIR
@@ -3042,6 +3043,11 @@ static void GC_MarkGameRoots()
 	GC::Mark(NextToThink);
 }
 
+static void System_ToggleFullConsole()
+{
+	gameaction = ga_fullconsole;
+}
+
 bool  CheckSkipGameOptionBlock(const char* str);
 
 //==========================================================================
@@ -3090,6 +3096,10 @@ static int D_DoomMain_Internal (void)
 		nullptr,
 		CheckSkipGameOptionBlock,
 		System_ConsoleToggled,
+		nullptr, 
+		nullptr,
+		System_ToggleFullConsole,
+		nullptr,
 	};
 
 	
@@ -3409,6 +3419,7 @@ static int D_DoomMain_Internal (void)
 
 		StartScreen->Progress();
 		V_InitFonts();
+		InitDoomFonts();
 		V_LoadTranslations();
 		UpdateGenericUI(false);
 
@@ -3734,7 +3745,6 @@ void D_Cleanup()
 	FreeSBarInfoScript();
 	
 	// clean up game state
-	ST_Clear();
 	D_ErrorCleanup ();
 	P_Shutdown();
 	

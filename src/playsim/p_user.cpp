@@ -347,6 +347,7 @@ void player_t::CopyFrom(player_t &p, bool copyPSP)
 	ConversationFaceTalker = p.ConversationFaceTalker;
 	MUSINFOactor = p.MUSINFOactor;
 	MUSINFOtics = p.MUSINFOtics;
+	SoundClass = p.SoundClass;
 	if (copyPSP)
 	{
 		// This needs to transfer ownership completely.
@@ -1696,7 +1697,8 @@ void player_t::Serialize(FSerializer &arc)
 		("settings_controller", settings_controller)
 		("onground", onground)
 		("musinfoactor", MUSINFOactor)
-		("musinfotics", MUSINFOtics);
+		("musinfotics", MUSINFOtics)
+		("soundclass", SoundClass);
 
 	if (arc.isWriting ())
 	{
