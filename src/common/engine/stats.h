@@ -61,28 +61,28 @@ public:
 	{
 		Sec = 0;
 	}
-	
+
 	void Clock()
 	{
 		timespec ts;
-		
+
 		clock_gettime(CLOCK_MONOTONIC, &ts);
 		Sec -= ts.tv_sec + ts.tv_nsec * 1e-9;
 	}
-	
+
 	void Unclock()
 	{
 		timespec ts;
-		
+
 		clock_gettime(CLOCK_MONOTONIC, &ts);
 		Sec += ts.tv_sec + ts.tv_nsec * 1e-9;
 	}
-	
+
 	double Time()
 	{
 		return Sec;
 	}
-	
+
 	double TimeMS()
 	{
 		return Sec * 1e3;
@@ -140,13 +140,15 @@ inline uint64_t rdtsc()
 #elif defined __aarch64__
 	// TODO: Implement and test on ARM64
 	return 0;
-#else // i386
+#elif defined __i386__ // i386
 	if (CPU.bRDTSC)
 	{
 		uint64_t tsc;
 		asm volatile ("\trdtsc\n" : "=A" (tsc));
 		return tsc;
 	}
+	return 0;
+#else
 	return 0;
 #endif // __amd64__
 }
@@ -159,24 +161,24 @@ public:
 	{
 		Counter = 0;
 	}
-	
+
 	void Clock()
 	{
 		int64_t time = rdtsc();
 		Counter -= time;
 	}
-	
+
 	void Unclock(bool checkvar = true)
 	{
 		int64_t time = rdtsc();
 		Counter += time;
 	}
-	
+
 	double Time()
 	{
 		return Counter * PerfToSec;
 	}
-	
+
 	double TimeMS()
 	{
 		return Counter * PerfToMillisec;
