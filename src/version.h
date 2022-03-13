@@ -110,7 +110,7 @@ const char *GetVersionString();
 #define GAME_DIR ".config/" GAMENAMELOWERCASE
 #endif
 
-#define DEFAULT_DISCORD_APP_ID "952713776631803934"
+#define DEFAULT_DISCORD_APP_ID "951303644597325885"
 
 const int SAVEPICWIDTH = 216;
 const int SAVEPICHEIGHT = 162;
