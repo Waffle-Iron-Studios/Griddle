@@ -68,7 +68,7 @@ int currentgpuswitch = -1;
 bool changerenderer;
 
 // Optimus/Hybrid switcher
-CUSTOM_CVAR(Int, vid_gpuswitch, 0, CVAR_ARCHIVE | CVAR_GLOBALCONFIG | CVAR_NOINITCALL)
+CUSTOM_CVAR(Int, vid_gpuswitch, 1, CVAR_ARCHIVE | CVAR_GLOBALCONFIG | CVAR_NOINITCALL)
 {
 	if (self != currentgpuswitch)
 	{
