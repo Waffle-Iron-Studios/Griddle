@@ -557,6 +557,7 @@ CVAR (Flag, sv_nocountendmonst,		dmflags2, DF2_NOCOUNTENDMONST);
 CVAR (Flag, sv_respawnsuper,		dmflags2, DF2_RESPAWN_SUPER);
 CVAR (Flag, sv_nothingspawn,		dmflags2, DF2_NO_COOP_THING_SPAWN);
 CVAR (Flag, sv_alwaysspawnmulti,	dmflags2, DF2_ALWAYS_SPAWN_MULTI);
+CVAR (Flag, sv_novertspread,		dmflags2, DF2_NOVERTSPREAD);
 
 //==========================================================================
 //
@@ -568,6 +569,7 @@ EXTERN_CVAR(Int, compatmode)
 
 CUSTOM_CVAR (Int, compatflags, 0, CVAR_ARCHIVE|CVAR_SERVERINFO | CVAR_NOINITCALL)
 {
+	if (FBaseCVar::m_inEnable) return;
 	for (auto Level : AllLevels())
 	{
 		Level->ApplyCompatibility();
@@ -576,6 +578,7 @@ CUSTOM_CVAR (Int, compatflags, 0, CVAR_ARCHIVE|CVAR_SERVERINFO | CVAR_NOINITCALL
 
 CUSTOM_CVAR (Int, compatflags2, 0, CVAR_ARCHIVE|CVAR_SERVERINFO | CVAR_NOINITCALL)
 {
+	if (FBaseCVar::m_inEnable) return;
 	for (auto Level : AllLevels())
 	{
 		Level->ApplyCompatibility2();
@@ -583,7 +586,7 @@ CUSTOM_CVAR (Int, compatflags2, 0, CVAR_ARCHIVE|CVAR_SERVERINFO | CVAR_NOINITCAL
 	}
 }
 
-CUSTOM_CVAR(Int, compatmode, 0, CVAR_ARCHIVE|CVAR_NOINITCALL)
+CUSTOM_CVAR(Int, compatmode, 0, CVAR_ARCHIVE)
 {
 	int v, w = 0;
 
@@ -1036,7 +1039,7 @@ void D_Display ()
 		CT_Drawer ();
 
 		// draw pause pic
-		if ((paused || pauseext) && menuactive == MENU_Off)
+		if ((paused || pauseext) && menuactive == MENU_Off && StatusBar != nullptr)
 		{
 			// [MK] optionally let the status bar handle this
 			bool skip = false;

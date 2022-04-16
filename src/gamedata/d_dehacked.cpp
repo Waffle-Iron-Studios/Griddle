@@ -237,7 +237,7 @@ static AmmoPerAttack AmmoPerAttacks[] = {
 	{ NAME_A_FireBFG, -1},	// uses deh.BFGCells
 	{ NAME_A_FireOldBFG, 1},
 	{ NAME_A_FireRailgun, 1},
-	{ NAME_A_ConsumeAmmo, 1}, // MBF21
+	{ NAME_MBF21_ConsumeAmmo, 1}, // MBF21
 	{ NAME_None, 0}
 };
 
@@ -1260,14 +1260,20 @@ static int PatchThing (int thingy)
 		}
 		else if (linelen == 12 && stricmp(Line1, "dropped item") == 0)
 		{
+			val--;	// This is 1-based and 0 means 'no drop'.
 			if ((unsigned)val < InfoNames.Size())
 			{
 				FDropItem* di = (FDropItem*)ClassDataAllocator.Alloc(sizeof(FDropItem));
 
+				di->Next = nullptr;
 				di->Name = InfoNames[val]->TypeName.GetChars();
 				di->Probability = 255;
 				di->Amount = -1;
 				info->GetInfo()->DropItems = di;
+			}
+			else if (val == -1)
+			{
+				info->GetInfo()->DropItems = nullptr;
 			}
 		}
 		else if (linelen == 11 && stricmp(Line1, "blood color") == 0)
@@ -3587,8 +3593,9 @@ void FinishDehPatch ()
 					{
 						auto p = dyn_cast<PFunction>(wcls->FindSymbol(AmmoPerAttacks[j].func, true));
 						if (p != nullptr) AmmoPerAttacks[j].ptr = p->Variants[0].Implementation;
+						assert(AmmoPerAttacks[j].ptr);
 					}
-					if (state->ActionFunc == AmmoPerAttacks[j].ptr)
+					if (state->ActionFunc == AmmoPerAttacks[j].ptr && AmmoPerAttacks[j].ptr)
 					{
 						found = true;
 						int use = AmmoPerAttacks[j].ammocount;
