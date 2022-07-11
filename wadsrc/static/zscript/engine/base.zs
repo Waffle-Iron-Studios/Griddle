@@ -600,6 +600,7 @@ struct Console native
 {
 	native static void HideConsole();
 	native static vararg void Printf(string fmt, ...);
+	native static vararg void PrintfEx(int printlevel, string fmt, ...);
 }
 
 struct CVar native
