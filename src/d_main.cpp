@@ -3565,7 +3565,7 @@ static int D_DoomMain_Internal (void)
 		Printf("\n");
 	}
 
-	if (!batchrun) Printf(PRINT_LOG, "%s version %s\n", GAMENAME, GetVersionString());
+	Printf("%s version %s\n", GAMENAME, GetVersionString());
 
 	D_DoomInit();
 
