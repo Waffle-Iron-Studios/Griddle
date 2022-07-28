@@ -101,6 +101,12 @@ CUSTOM_CVAR(Int, vid_preferbackend, 0, CVAR_ARCHIVE | CVAR_GLOBALCONFIG | CVAR_N
 
 	switch(self)
 	{
+#ifdef HAVE_GLES2
+	case 3:
+	case 2:
+		Printf("Selecting OpenGLES 2.0 backend...\n");
+		break;
+#endif
 #ifdef HAVE_VULKAN
 	case 1:
 		Printf("Selecting Vulkan backend...\n");
