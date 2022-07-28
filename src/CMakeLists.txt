@@ -632,7 +632,6 @@ file( GLOB HEADER_FILES
 	common/thirdparty/libsmackerdec/include/*.h
 	common/rendering/*.h
 	common/rendering/gl_load/*.h
-	common/rendering/gles/*.h
 	common/rendering/hwrenderer/data/*.h
 	common/rendering/vulkan/*.h
 	common/rendering/vulkan/system/*.h
@@ -803,26 +802,6 @@ set (VULKAN_SOURCES
 	common/rendering/vulkan/thirdparty/volk/volk.c
 	common/rendering/vulkan/thirdparty/vk_mem_alloc/vk_mem_alloc.cpp
 )
-
-if (HAVE_GLES2)
-	set (GLES_SOURCES
-		common/rendering/gles/gles_system.cpp
-		common/rendering/gles/gles_renderer.cpp
-		common/rendering/gles/gles_framebuffer.cpp
-		common/rendering/gles/gles_renderstate.cpp
-		common/rendering/gles/gles_renderbuffers.cpp
-		common/rendering/gles/gles_postprocess.cpp
-		common/rendering/gles/gles_postprocessstate.cpp
-		common/rendering/gles/gles_buffers.cpp
-		common/rendering/gles/gles_hwtexture.cpp
-		common/rendering/gles/gles_shader.cpp
-		common/rendering/gles/gles_shaderprogram.cpp
-		common/rendering/gles/gles_samplers.cpp
-		common/rendering/gles/glad/src/glad.c
-	)
-
-	set (FASTMATH_SOURCES ${FASTMATH_SOURCES} ${GLES_SOURCES})
-endif()
 
 if (HAVE_VULKAN)
 	set (FASTMATH_SOURCES ${FASTMATH_SOURCES} ${VULKAN_SOURCES})
@@ -1312,9 +1291,6 @@ include_directories( .
 	common/rendering/hwrenderer/data
 	common/rendering/gl_load
 	common/rendering/gl
-	common/rendering/gles
-	common/rendering/gles/glad/include
-	common/rendering/gles/Mali_OpenGL_ES_Emulator/include
 	common/rendering/vulkan/thirdparty
 	common/scripting/vm
 	common/scripting/jit
