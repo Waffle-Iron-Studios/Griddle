@@ -2,7 +2,7 @@
 
 ## WIGZDoom is the fork of GZDoom used for Waffle Iron Studios, Ltd.'s id tech 1 derived games.
 
-This mainly changes some default settings, removes the OpenGL ES 2.0 renderer, removes all non-free assets, and uses WIS Branding where possible.
+This mainly changes some default settings, removes all non-free assets, and uses WIS Branding where possible.
 
 It also uses in-development bugfixes and features our games might need.
 
