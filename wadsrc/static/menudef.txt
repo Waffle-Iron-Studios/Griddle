@@ -894,8 +894,6 @@ OptionValue PreferBackend
 {
 	0, "$OPTVAL_OPENGL"
 	1, "$OPTVAL_VULKAN"
-	2, "$OPTVAL_SOFTPOLY"
-	3, "$OPTVAL_OPENGLES"
 }
 
 OptionMenu "TrueColorOptions" protected
@@ -2205,7 +2203,6 @@ OptionValue "RenderMode"
 {
 	0, "$OPTVAL_SWDOOM"
 	1, "$OPTVAL_SWDOOMTC"
-	4,  "$OPTVAL_HWPOLY"
 }
 
 /*=======================================
