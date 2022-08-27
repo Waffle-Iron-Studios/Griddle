@@ -56,7 +56,6 @@
 #include "cmdlib.h"
 #include "md5.h"
 #include "po_man.h"
-#include "swrenderer/r_renderer.h"
 #include "p_blockmap.h"
 #include "r_utility.h"
 #include "p_spec.h"
@@ -222,11 +221,7 @@ static void PrecacheLevel(FLevelLocals *Level)
 		if (tex.Exists()) AddToList(hitlist.Data(), tex, FTextureManager::HIT_Wall);
 	}
 
-	// This is just a temporary solution, until the hardware renderer's texture manager is in a better state.
-	if (!V_IsHardwareRenderer())
-		SWRenderer->Precache(hitlist.Data(), actorhitlist);
-	else
-		hw_PrecacheTexture(hitlist.Data(), actorhitlist);
+	hw_PrecacheTexture(hitlist.Data(), actorhitlist);
 
 }
 

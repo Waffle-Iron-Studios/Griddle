@@ -103,7 +103,6 @@
 #include "g_cvars.h"
 #include "r_data/r_vanillatrans.h"
 #include "s_music.h"
-#include "swrenderer/r_swcolormaps.h"
 #include "findfile.h"
 #include "md5.h"
 #include "c_buttons.h"
@@ -400,7 +399,7 @@ void D_Render(std::function<void()> action, bool interpolate)
 	for (auto Level : AllLevels())
 	{
 		// Check for the presence of dynamic lights at the start of the frame once.
-		if ((gl_lights && vid_rendermode == 4) || (r_dynlights && vid_rendermode != 4) || Level->LightProbes.Size() > 0)
+		if ((gl_lights && vid_rendermode == 4) || Level->LightProbes.Size() > 0)
 		{
 			Level->HasDynamicLights = Level->lights || Level->LightProbes.Size() > 0;
 		}
@@ -3722,7 +3721,6 @@ void D_Cleanup()
 
 	M_ClearMenus();					// close menu if open
 	AM_ClearColorsets();
-	DeinitSWColorMaps();
 	FreeSBarInfoScript();
 	DeleteScreenJob();
 
