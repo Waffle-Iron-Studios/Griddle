@@ -899,34 +899,11 @@ OptionValue PreferBackend
 	1, "$OPTVAL_VULKAN"
 }
 
-OptionMenu "TrueColorOptions" protected
-{
-	Title "$TCMNU_TITLE"
-	StaticText " "
-	Option "$TCMNU_MINFILTER",				"r_minfilter", "OnOff"
-	Option "$TCMNU_MAGFILTER",				"r_magfilter", "OnOff"
-	Option "$TCMNU_MIPMAP",					"r_mipmap", "OnOff"
-}
-
-OptionMenu "SWROptions" protected
-{
-	Title "$DSPLYMNU_SWOPT"
-	Submenu "$DSPLYMNU_TCOPT",			"TrueColorOptions"
-	Option "$DSPLYMNU_BLENDMETHOD",				"r_blendmethod", "BlendMethods"
-	StaticText " "
-	Option "$DSPLYMNU_SKYMODE",					"r_skymode", "SkyModes"
-	Option "$DSPLYMNU_LINEARSKY",				"r_linearsky", "OnOff"
-	Option "$DSPLYMNU_GZDFULLBRIGHT",			"r_fullbrightignoresectorcolor", "OnOff"
-	Option "$DSPLYMNU_SCALEFUZZ",				"r_fuzzscale", "OnOff"
-	Option "$DSPLYMNU_MODELS",					"r_models", "OnOff"
-}
-
 OptionMenu "VideoOptions" protected
 {
 	Title "$DSPLYMNU_TITLE"
 
 	Submenu "$DSPLYMNU_GLOPT", 			"OpenGLOptions"
-	Submenu "$DSPLYMNU_SWOPT", 			"SWROptions"
 	Submenu "$DSPLYMNU_VKOPT",			"VKOptions"
 	Submenu "$GLMNU_TEXOPT", 			"GLTextureGLOptions"
 	Submenu "$GLMNU_DYNLIGHT",			"GLLightOptions"
@@ -2195,18 +2172,6 @@ OptionMenu ModReplayerOptions protected
 	Option "$ADVSNDMNU_OPNCUSTOMBANK", 	 "opn_use_custom_bank", "OnOff"
 	LabeledSubmenu "$ADVSNDMNU_OPNBANKFILE", "opn_custom_bank", "OPNMIDICustomBanksMenu"
  }
-
-/*=======================================
- *
- * Change Renderer Menu
- *
- *=======================================*/
-
-OptionValue "RenderMode"
-{
-	0, "$OPTVAL_SWDOOM"
-	1, "$OPTVAL_SWDOOMTC"
-}
 
 /*=======================================
  *

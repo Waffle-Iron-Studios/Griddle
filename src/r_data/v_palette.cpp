@@ -109,10 +109,6 @@ CCMD (testblend)
 			amt = 1.0f;
 		else if (amt < 0.0f)
 			amt = 0.0f;
-		BaseBlendR = RPART(color);
-		BaseBlendG = GPART(color);
-		BaseBlendB = BPART(color);
-		BaseBlendA = amt;
 	}
 }
 

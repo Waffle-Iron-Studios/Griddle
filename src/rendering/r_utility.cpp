@@ -51,7 +51,6 @@
 #include "p_effect.h"
 #include "st_start.h"
 #include "v_font.h"
-#include "swrenderer/r_renderer.h"
 #include "serializer.h"
 #include "r_utility.h"
 #include "d_player.h"
@@ -378,15 +377,6 @@ CUSTOM_CVAR (Int, screenblocks, 10, CVAR_ARCHIVE)
 
 //==========================================================================
 //
-//
-//
-//==========================================================================
-
-FRenderer *CreateSWRenderer();
-FRenderer* SWRenderer;
-
-//==========================================================================
-//
 // R_Init
 //
 //==========================================================================
@@ -395,13 +385,6 @@ void R_Init ()
 {
 	R_InitTranslationTables ();
 	R_SetViewSize (screenblocks);
-
-	if (SWRenderer == NULL)
-	{
-		SWRenderer = CreateSWRenderer();
-	}
-
-	SWRenderer->Init();
 }
 
 //==========================================================================
@@ -412,8 +395,7 @@ void R_Init ()
 
 void R_Shutdown ()
 {
-	if (SWRenderer != nullptr) delete SWRenderer;
-	SWRenderer = nullptr;
+
 }
 
 //==========================================================================
@@ -1051,26 +1033,6 @@ void R_SetupFrame (FRenderViewpoint &viewpoint, FViewWindow &viewwindow, AActor 
 		}
 	}
 
-	// [RH] Don't override testblend unless entering a sector with a
-	//		blend different from the previous sector's. Same goes with
-	//		NormalLight's maps pointer.
-	if (R_OldBlend != newblend)
-	{
-		R_OldBlend = newblend;
-		if (APART(newblend))
-		{
-			BaseBlendR = RPART(newblend);
-			BaseBlendG = GPART(newblend);
-			BaseBlendB = BPART(newblend);
-			BaseBlendA = APART(newblend) / 255.f;
-		}
-		else
-		{
-			BaseBlendR = BaseBlendG = BaseBlendB = 0;
-			BaseBlendA = 0.f;
-		}
-	}
-
 	validcount++;
 
 	if (r_clearbuffer != 0)
@@ -1099,7 +1061,6 @@ void R_SetupFrame (FRenderViewpoint &viewpoint, FViewWindow &viewwindow, AActor 
 			color = pr_hom();
 		}
 		screen->SetClearColor(color);
-		SWRenderer->SetClearColor(color);
 	}
     else
 	{
