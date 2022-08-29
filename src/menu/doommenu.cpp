@@ -305,7 +305,6 @@ CCMD (menu_quit)
 {	// F10
 	if (m_quickexit)
 	{
-		CleanSWDrawer();
 		ST_Endoom();
 	}
 
@@ -337,7 +336,6 @@ CCMD (menu_quit)
 				I_WaitVBL(105);
 			}
 		}
-		CleanSWDrawer();
 		ST_Endoom();
 	});
 

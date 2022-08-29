@@ -52,11 +52,6 @@
 EXTERN_CVAR(Bool, cl_capfps)
 extern bool NoInterpolateView;
 
-void CleanSWDrawer()
-{
-
-}
-
 #include "g_levellocals.h"
 #include "a_dynlight.h"
 
