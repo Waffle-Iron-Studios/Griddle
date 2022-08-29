@@ -305,6 +305,7 @@ sector_t* RenderView(player_t* player)
 	screen->mVertexData->Reset();
 
 	sector_t* retsec;
+
 	hw_ClearFakeFlat();
 
 	iter_dlightf = iter_dlight = draw_dlight = draw_dlightf = 0;
@@ -373,10 +374,7 @@ sector_t* RenderView(player_t* player)
 
 	screen->ImageTransitionScene(true); // Only relevant for Vulkan.
 
-		screen->ImageTransitionScene(true); // Only relevant for Vulkan.
-
-		retsec = RenderViewpoint(r_viewpoint, player->camera, NULL, r_viewpoint.FieldOfView.Degrees(), ratio, fovratio, true, true);
-	}
+	retsec = RenderViewpoint(r_viewpoint, player->camera, NULL, r_viewpoint.FieldOfView.Degrees(), ratio, fovratio, true, true);
 	All.Unclock();
 	return retsec;
 }
