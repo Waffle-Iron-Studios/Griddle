@@ -1005,6 +1005,7 @@ set (PCH_SOURCES
 	common/models/models_voxel.cpp
 	common/models/models_ue1.cpp
 	common/models/models_obj.cpp
+	common/models/models_iqm.cpp
 	common/models/model.cpp
 	common/models/voxels.cpp
 	common/console/c_commandline.cpp
@@ -1100,6 +1101,7 @@ set (PCH_SOURCES
 	common/rendering/hwrenderer/data/hw_cvars.cpp
 	common/rendering/hwrenderer/data/hw_vrmodes.cpp
 	common/rendering/hwrenderer/data/hw_lightbuffer.cpp
+	common/rendering/hwrenderer/data/hw_bonebuffer.cpp
 	common/rendering/hwrenderer/data/hw_aabbtree.cpp
 	common/rendering/hwrenderer/data/hw_shadowmap.cpp
 	common/rendering/hwrenderer/data/hw_shaderpatcher.cpp
@@ -1338,10 +1340,6 @@ install(DIRECTORY "${PROJECT_BINARY_DIR}/soundfonts" "${PROJECT_BINARY_DIR}/fm_b
 		DESTINATION ${INSTALL_SOUNDFONT_PATH}
 		COMPONENT "Soundfont resources")
 
-if( CMAKE_COMPILER_IS_GNUCXX )
-	# GCC misoptimizes this file
-	set_source_files_properties( oplsynth/fmopl.cpp PROPERTIES COMPILE_FLAGS "-fno-tree-dominator-opts -fno-tree-fre" )
-endif()
 if( DEM_CMAKE_COMPILER_IS_GNUCXX_COMPATIBLE )
 	# Need to enable intrinsics for these files.
 	set_property( SOURCE
