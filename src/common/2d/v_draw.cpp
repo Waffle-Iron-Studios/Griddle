@@ -393,10 +393,14 @@ DEFINE_ACTION_FUNCTION(FCanvas, DrawShapeFill)
 
 void F2DDrawer::SetClipRect(int x, int y, int w, int h)
 {
-	clipleft = clamp(x, 0, GetWidth());
-	clipwidth = clamp(w, -1, GetWidth() - x);
-	cliptop = clamp(y, 0, GetHeight());
-	clipheight = clamp(h, -1, GetHeight() - y);
+	if (x < 0) { w += x; x = 0; }
+	if (y < 0) { h += y; y = 0; }
+	if (x >= GetWidth()) { x = GetWidth(); w = 0; }
+	if (y >= GetHeight()) { x = GetHeight(); h = 0; }
+	clipleft = x;
+	clipwidth = w;
+	cliptop = y;
+	clipheight = h;
 }
 
 DEFINE_ACTION_FUNCTION(_Screen, SetClipRect)
@@ -860,7 +864,7 @@ bool ParseDrawTextureTags(F2DDrawer *drawer, FGameTexture *img, double x, double
 	parms->top = INT_MAX;
 	parms->destwidth = INT_MAX;
 	parms->destheight = INT_MAX;
-	parms->Alpha = type == DrawTexture_Fill ? fillalpha : 1.f;
+	parms->Alpha = type == DrawTexture_Fill ? (float)fillalpha : 1.f;
 	parms->fillcolor = type == DrawTexture_Fill ? fill : PalEntry(~0u);
 	parms->TranslationId = -1;
 	parms->colorOverlay = 0;
@@ -1555,19 +1559,19 @@ void VirtualToRealCoordsInt(F2DDrawer *drawer, int &x, int &y, int &w, int &h,
 //
 //==========================================================================
 
-static void DrawLine(int x0, int y0, int x1, int y1, uint32_t realcolor, int alpha)
+static void DrawLine(double x1, double y1, double x2, double y2, uint32_t realcolor, int alpha)
 {
 	if (!twod->HasBegun2D()) ThrowAbortException(X_OTHER, "Attempt to draw to screen outside a draw function");
-	twod->AddLine((float)x0, (float)y0, (float)x1, (float)y1, nullptr, realcolor | MAKEARGB(255, 0, 0, 0), alpha);
+	twod->AddLine(DVector2(x1, y1), DVector2(x2, y2), nullptr, realcolor | MAKEARGB(255, 0, 0, 0), alpha);
 }
 
 DEFINE_ACTION_FUNCTION_NATIVE(_Screen, DrawLine, DrawLine)
 {
 	PARAM_PROLOGUE;
-	PARAM_INT(x0);
-	PARAM_INT(y0);
-	PARAM_INT(x1);
-	PARAM_INT(y1);
+	PARAM_FLOAT(x0);
+	PARAM_FLOAT(y0);
+	PARAM_FLOAT(x1);
+	PARAM_FLOAT(y1);
 	PARAM_INT(color);
 	PARAM_INT(alpha);
 	DrawLine(x0, y0, x1, y1, color, alpha);
@@ -1577,30 +1581,30 @@ DEFINE_ACTION_FUNCTION_NATIVE(_Screen, DrawLine, DrawLine)
 DEFINE_ACTION_FUNCTION(FCanvas, DrawLine)
 {
 	PARAM_SELF_PROLOGUE(FCanvas);
-	PARAM_INT(x0);
-	PARAM_INT(y0);
-	PARAM_INT(x1);
-	PARAM_INT(y1);
+	PARAM_FLOAT(x0);
+	PARAM_FLOAT(y0);
+	PARAM_FLOAT(x1);
+	PARAM_FLOAT(y1);
 	PARAM_INT(color);
 	PARAM_INT(alpha);
-	self->Drawer.AddLine((float)x0, (float)y0, (float)x1, (float)y1, nullptr, color | MAKEARGB(255, 0, 0, 0), alpha);
+	self->Drawer.AddLine(DVector2(x0, y0), DVector2(x1, y1), nullptr, color | MAKEARGB(255, 0, 0, 0), alpha);
 	self->Tex->NeedUpdate();
 	return 0;
 }
 
-static void DrawThickLine(int x0, int y0, int x1, int y1, double thickness, uint32_t realcolor, int alpha)
+static void DrawThickLine(double x1, double y1, double x2, double y2, double thickness, uint32_t realcolor, int alpha)
 {
 	if (!twod->HasBegun2D()) ThrowAbortException(X_OTHER, "Attempt to draw to screen outside a draw function");
-	twod->AddThickLine(x0, y0, x1, y1, thickness, realcolor, alpha);
+	twod->AddThickLine(DVector2(x1, y1), DVector2(x2, y2), thickness, realcolor, alpha);
 }
 
 DEFINE_ACTION_FUNCTION_NATIVE(_Screen, DrawThickLine, DrawThickLine)
 {
 	PARAM_PROLOGUE;
-	PARAM_INT(x0);
-	PARAM_INT(y0);
-	PARAM_INT(x1);
-	PARAM_INT(y1);
+	PARAM_FLOAT(x0);
+	PARAM_FLOAT(y0);
+	PARAM_FLOAT(x1);
+	PARAM_FLOAT(y1);
 	PARAM_FLOAT(thickness);
 	PARAM_INT(color);
 	PARAM_INT(alpha);
@@ -1611,14 +1615,14 @@ DEFINE_ACTION_FUNCTION_NATIVE(_Screen, DrawThickLine, DrawThickLine)
 DEFINE_ACTION_FUNCTION(FCanvas, DrawThickLine)
 {
 	PARAM_SELF_PROLOGUE(FCanvas);
-	PARAM_INT(x0);
-	PARAM_INT(y0);
-	PARAM_INT(x1);
-	PARAM_INT(y1);
+	PARAM_FLOAT(x0);
+	PARAM_FLOAT(y0);
+	PARAM_FLOAT(x1);
+	PARAM_FLOAT(y1);
 	PARAM_FLOAT(thickness);
 	PARAM_INT(color);
 	PARAM_INT(alpha);
-	self->Drawer.AddThickLine(x0, y0, x1, y1, thickness, color, alpha);
+	self->Drawer.AddThickLine(DVector2(x0, y0), DVector2(x1, y1), thickness, color, alpha);
 	self->Tex->NeedUpdate();
 	return 0;
 }

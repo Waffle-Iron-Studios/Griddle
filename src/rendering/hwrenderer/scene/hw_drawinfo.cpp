@@ -41,11 +41,13 @@
 #include "hw_viewpointbuffer.h"
 #include "flatvertices.h"
 #include "hw_lightbuffer.h"
+#include "hw_bonebuffer.h"
 #include "hw_vrmodes.h"
 #include "hw_clipper.h"
 #include "v_draw.h"
 #include "a_corona.h"
 #include "texturemanager.h"
+#include "actorinlines.h"
 
 EXTERN_CVAR(Float, r_visibility)
 CVAR(Bool, gl_bandedswlight, false, CVAR_ARCHIVE)
@@ -169,7 +171,7 @@ void HWDrawInfo::StartScene(FRenderViewpoint &parentvp, HWViewpointUniforms *uni
 
 	for (int i = 0; i < GLDL_TYPES; i++) drawlists[i].Reset();
 	hudsprites.Clear();
-	Coronas.Clear();
+//	Coronas.Clear();
 	vpIndex = 0;
 
 	// Fullbright information needs to be propagated from the main view.
@@ -444,6 +446,7 @@ void HWDrawInfo::CreateScene(bool drawpsprites)
 	// clip the scene and fill the drawlists
 	screen->mVertexData->Map();
 	screen->mLights->Map();
+	screen->mBones->Map();
 
 	RenderBSP(Level->HeadNode(), drawpsprites);
 
@@ -456,6 +459,7 @@ void HWDrawInfo::CreateScene(bool drawpsprites)
 	PrepareUnhandledMissingTextures();
 	DispatchRenderHacks();
 	screen->mLights->Unmap();
+	screen->mBones->Unmap();
 	screen->mVertexData->Unmap();
 
 	ProcessAll.Unclock();
@@ -576,6 +580,7 @@ void HWDrawInfo::RenderPortal(HWPortal *p, FRenderState &state, bool usestencil)
 
 void HWDrawInfo::DrawCorona(FRenderState& state, ACorona* corona, double dist)
 {
+#if 0
 	spriteframe_t* sprframe = &SpriteFrames[sprites[corona->sprite].spriteframes + (size_t)corona->SpawnState->GetFrame()];
 	FTextureID patch = sprframe->Texture[0];
 	if (!patch.isValid()) return;
@@ -637,6 +642,7 @@ void HWDrawInfo::DrawCorona(FRenderState& state, ACorona* corona, double dist)
 	vp[3].Set(x1, y1, 1.0f, u1, v1);
 
 	state.Draw(DT_TriangleStrip, vertexindex, 4);
+#endif
 }
 
 static ETraceStatus CheckForViewpointActor(FTraceResults& res, void* userdata)
@@ -664,9 +670,11 @@ void HWDrawInfo::DrawCoronas(FRenderState& state)
 	float timeElapsed = (screen->FrameTime - LastFrameTime) / 1000.0f;
 	LastFrameTime = screen->FrameTime;
 
+#if 0
 	for (ACorona* corona : Coronas)
 	{
-		DVector3 direction = Viewpoint.Pos - corona->Pos();
+		auto cPos = corona->Vec3Offset(0., 0., corona->Height * 0.5);
+		DVector3 direction = Viewpoint.Pos - cPos;
 		double dist = direction.Length();
 
 		// skip coronas that are too far
@@ -677,7 +685,7 @@ void HWDrawInfo::DrawCoronas(FRenderState& state)
 
 		direction.MakeUnit();
 		FTraceResults results;
-		if (!Trace(corona->Pos(), corona->Sector, direction, dist, MF_SOLID, ML_BLOCKEVERYTHING, corona, results, 0, CheckForViewpointActor, &Viewpoint))
+		if (!Trace(cPos, corona->Sector, direction, dist, MF_SOLID, ML_BLOCKEVERYTHING, corona, results, 0, CheckForViewpointActor, &Viewpoint))
 		{
 			corona->CoronaFade = std::min(corona->CoronaFade + timeElapsed * fadeSpeed, 1.0f);
 		}
@@ -689,12 +697,14 @@ void HWDrawInfo::DrawCoronas(FRenderState& state)
 		if (corona->CoronaFade > 0.0f)
 			DrawCorona(state, corona, dist);
 	}
+#endif
 
 	state.SetTextureMode(TM_NORMAL);
 	screen->mViewpoints->Bind(state, vpIndex);
 	state.EnableDepthTest(true);
 	state.SetDepthMask(true);
 }
+
 
 //-----------------------------------------------------------------------------
 //
@@ -707,10 +717,10 @@ void HWDrawInfo::EndDrawScene(sector_t * viewsector, FRenderState &state)
 {
 	state.EnableFog(false);
 
-	if (gl_coronas && Coronas.Size() > 0)
+	/*if (gl_coronas && Coronas.Size() > 0)
 	{
 		DrawCoronas(state);
-	}
+	}*/
 
 	// [BB] HUD models need to be rendered here. 
 	const bool renderHUDModel = IsHUDModelForPlayerAvailable(players[consoleplayer].camera->player);

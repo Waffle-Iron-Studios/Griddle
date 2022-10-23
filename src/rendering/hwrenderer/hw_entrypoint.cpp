@@ -42,6 +42,7 @@
 #include "v_draw.h"
 
 #include "hw_lightbuffer.h"
+#include "hw_bonebuffer.h"
 #include "hw_cvars.h"
 #include "hwrenderer/data/hw_viewpointbuffer.h"
 #include "hwrenderer/scene/hw_fakeflat.h"
@@ -260,13 +261,14 @@ void WriteSavePic(player_t* player, FileWriter* file, int width, int height)
 	screen->mVertexData->Reset();
 	RenderState.SetVertexBuffer(screen->mVertexData);
 	screen->mLights->Clear();
+	screen->mBones->Clear();
 	screen->mViewpoints->Clear();
 
-		// This shouldn't overwrite the global viewpoint even for a short time.
-		FRenderViewpoint savevp;
-		sector_t* viewsector = RenderViewpoint(savevp, players[consoleplayer].camera, &bounds, r_viewpoint.FieldOfView.Degrees(), 1.6f, 1.6f, true, false);
-		RenderState.EnableStencil(false);
-		RenderState.SetNoSoftLightLevel();
+	// This shouldn't overwrite the global viewpoint even for a short time.
+	FRenderViewpoint savevp;
+	sector_t* viewsector = RenderViewpoint(savevp, players[consoleplayer].camera, &bounds, r_viewpoint.FieldOfView.Degrees(), 1.6f, 1.6f, true, false);
+	RenderState.EnableStencil(false);
+	RenderState.SetNoSoftLightLevel();
 
 	TArray<uint8_t> scr(width * height * 3, true);
 	screen->CopyScreenToBuffer(width, height, scr.Data());
@@ -315,6 +317,7 @@ sector_t* RenderView(player_t* player)
 	else r_viewpoint.TicFrac = I_GetTimeFrac();
 
 	screen->mLights->Clear();
+	screen->mBones->Clear();
 	screen->mViewpoints->Clear();
 
 	// NoInterpolateView should have no bearing on camera textures, but needs to be preserved for the main view below.
