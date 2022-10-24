@@ -5126,7 +5126,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_ChangeModel)
 		while ((int)mobj->modelData->surfaceSkinIDs.Size() < skinPosition) mobj->modelData->surfaceSkinIDs.Push(FNullTextureID());
 	else
 		while ((int)mobj->modelData->skinIDs.Size() < skinindex) mobj->modelData->skinIDs.Push(FNullTextureID());
-		
+	
 	mobj->modelData->modelIDs.Insert(modelindex, queryModel);
 	mobj->modelData->modelFrameGenerators.Insert(modelindex, generatorindex);
 	mobj->modelData->animationIDs.Insert(animationindex, queryAnimation);
