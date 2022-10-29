@@ -328,35 +328,36 @@ sector_t* RenderView(player_t* player)
 	if (player->camera)
 		CheckTimer(*RenderState, player->camera->Level->ShaderStartTime);
 
-	// Draw all canvases that changed
-	for (FCanvas* canvas : AllCanvases)
-	{
-		if (canvas->Tex->CheckNeedsUpdate())
+		// Draw all canvases that changed
+		for (FCanvas* canvas : AllCanvases)
 		{
-			screen->RenderTextureView(canvas->Tex, [=](IntRect& bounds)
-				{
-					Draw2D(&canvas->Drawer, *screen->RenderState(), 0, 0, canvas->Tex->GetWidth(), canvas->Tex->GetHeight());
-					canvas->Drawer.Clear();
-				});
-			canvas->Tex->SetUpdated(true);
-		}
-	}
-
-	// prepare all camera textures that have been used in the last frame.
-	// This must be done for all levels, not just the primary one!
-	for (auto Level : AllLevels())
-	{
-		Level->canvasTextureInfo.UpdateAll([&](AActor* camera, FCanvasTexture* camtex, double fov)
+			if (canvas->Tex->CheckNeedsUpdate())
 			{
-				screen->RenderTextureView(camtex, [=](IntRect& bounds)
+				screen->RenderTextureView(canvas->Tex, [=](IntRect& bounds)
 					{
-						FRenderViewpoint texvp;
-						float ratio = camtex->aspectRatio / Level->info->pixelstretch;
-						RenderViewpoint(texvp, camera, &bounds, fov, ratio, ratio, false, false);
+						screen->SetViewportRects(&bounds);
+						Draw2D(&canvas->Drawer, *screen->RenderState(), 0, 0, canvas->Tex->GetWidth(), canvas->Tex->GetHeight());
+						canvas->Drawer.Clear();
 					});
-			});
-	}
-	NoInterpolateView = saved_niv;
+				canvas->Tex->SetUpdated(true);
+			}
+		}
+
+		// prepare all camera textures that have been used in the last frame.
+		// This must be done for all levels, not just the primary one!
+		for (auto Level : AllLevels())
+		{
+			Level->canvasTextureInfo.UpdateAll([&](AActor* camera, FCanvasTexture* camtex, double fov)
+				{
+					screen->RenderTextureView(camtex, [=](IntRect& bounds)
+						{
+							FRenderViewpoint texvp;
+							float ratio = camtex->aspectRatio / Level->info->pixelstretch;
+							RenderViewpoint(texvp, camera, &bounds, fov, ratio, ratio, false, false);
+						});
+				});
+		}
+		NoInterpolateView = saved_niv;
 
 	// now render the main view
 	float fovratio;
