@@ -3019,7 +3019,7 @@ static FILE* D_GetHashFile()
 
 static int D_InitGame(const FIWADInfo* iwad_info, TArray<FString>& allwads, TArray<FString>& pwads)
 {
-	SavegameFolder = iwad_info->Autoname;
+	SavegameFolder = iwad_info->Name;
 	gameinfo.gametype = iwad_info->gametype;
 	gameinfo.flags = iwad_info->flags;
 	gameinfo.nokeyboardcheats = iwad_info->nokeyboardcheats;
