@@ -33,6 +33,8 @@
 #include "r_utility.h"
 #include "d_player.h"
 #include "i_time.h"
+#include "swrenderer/r_swscene.h"
+#include "swrenderer/r_renderer.h"
 #include "hw_dynlightdata.h"
 #include "hw_clock.h"
 #include "flatvertices.h"
@@ -52,6 +54,14 @@
 
 EXTERN_CVAR(Bool, cl_capfps)
 extern bool NoInterpolateView;
+
+static SWSceneDrawer *swdrawer;
+
+void CleanSWDrawer()
+{
+	if (swdrawer) delete swdrawer;
+	swdrawer = nullptr;
+}
 
 #include "g_levellocals.h"
 #include "a_dynlight.h"
@@ -243,41 +253,48 @@ void DoWriteSavePic(FileWriter* file, ESSType ssformat, uint8_t* scr, int width,
 
 void WriteSavePic(player_t* player, FileWriter* file, int width, int height)
 {
-	IntRect bounds;
-	bounds.left = 0;
-	bounds.top = 0;
-	bounds.width = width;
-	bounds.height = height;
-	auto& RenderState = *screen->RenderState();
+	if (!V_IsHardwareRenderer())
+	{
+		SWRenderer->WriteSavePic(player, file, width, height);
+	}
+	else
+	{
+		IntRect bounds;
+		bounds.left = 0;
+		bounds.top = 0;
+		bounds.width = width;
+		bounds.height = height;
+		auto& RenderState = *screen->RenderState();
 
-	// we must be sure the GPU finished reading from the buffer before we fill it with new data.
-	screen->WaitForCommands(false);
+		// we must be sure the GPU finished reading from the buffer before we fill it with new data.
+		screen->WaitForCommands(false);
 
-	// Switch to render buffers dimensioned for the savepic
-	screen->SetSaveBuffers(true);
-	screen->ImageTransitionScene(true);
+		// Switch to render buffers dimensioned for the savepic
+		screen->SetSaveBuffers(true);
+		screen->ImageTransitionScene(true);
 
-	hw_ClearFakeFlat();
-	screen->mVertexData->Reset();
-	RenderState.SetVertexBuffer(screen->mVertexData);
-	screen->mLights->Clear();
-	screen->mBones->Clear();
-	screen->mViewpoints->Clear();
+		hw_ClearFakeFlat();
+		screen->mVertexData->Reset();
+		RenderState.SetVertexBuffer(screen->mVertexData);
+		screen->mLights->Clear();
+		screen->mBones->Clear();
+		screen->mViewpoints->Clear();
 
-	// This shouldn't overwrite the global viewpoint even for a short time.
-	FRenderViewpoint savevp;
-	sector_t* viewsector = RenderViewpoint(savevp, players[consoleplayer].camera, &bounds, r_viewpoint.FieldOfView.Degrees(), 1.6f, 1.6f, true, false);
-	RenderState.EnableStencil(false);
-	RenderState.SetNoSoftLightLevel();
+		// This shouldn't overwrite the global viewpoint even for a short time.
+		FRenderViewpoint savevp;
+		sector_t* viewsector = RenderViewpoint(savevp, players[consoleplayer].camera, &bounds, r_viewpoint.FieldOfView.Degrees(), 1.6f, 1.6f, true, false);
+		RenderState.EnableStencil(false);
+		RenderState.SetNoSoftLightLevel();
 
-	TArray<uint8_t> scr(width * height * 3, true);
-	screen->CopyScreenToBuffer(width, height, scr.Data());
+		TArray<uint8_t> scr(width * height * 3, true);
+		screen->CopyScreenToBuffer(width, height, scr.Data());
 
-	DoWriteSavePic(file, SS_RGB, scr.Data(), width, height, viewsector, screen->FlipSavePic());
+		DoWriteSavePic(file, SS_RGB, scr.Data(), width, height, viewsector, screen->FlipSavePic());
 
-	// Switch back the screen render buffers
-	screen->SetViewportRects(nullptr);
-	screen->SetSaveBuffers(false);
+		// Switch back the screen render buffers
+		screen->SetViewportRects(nullptr);
+		screen->SetSaveBuffers(false);
+	}
 }
 
 //===========================================================================
@@ -302,31 +319,39 @@ sector_t* RenderView(player_t* player)
 	screen->mVertexData->Reset();
 
 	sector_t* retsec;
+	if (!V_IsHardwareRenderer())
+	{
+		screen->SetActiveRenderTarget();	// only relevant for Vulkan
 
-	hw_ClearFakeFlat();
+		if (!swdrawer) swdrawer = new SWSceneDrawer;
+		retsec = swdrawer->RenderView(player);
+	}
+	else
+	{
+		hw_ClearFakeFlat();
 
-	iter_dlightf = iter_dlight = draw_dlight = draw_dlightf = 0;
+		iter_dlightf = iter_dlight = draw_dlight = draw_dlightf = 0;
 
-	checkBenchActive();
+		checkBenchActive();
 
-	// reset statistics counters
-	ResetProfilingData();
+		// reset statistics counters
+		ResetProfilingData();
 
-	// Get this before everything else
-	if (cl_capfps || r_NoInterpolate) r_viewpoint.TicFrac = 1.;
-	else r_viewpoint.TicFrac = I_GetTimeFrac();
+		// Get this before everything else
+		if (cl_capfps || r_NoInterpolate) r_viewpoint.TicFrac = 1.;
+		else r_viewpoint.TicFrac = I_GetTimeFrac();
 
-	screen->mLights->Clear();
-	screen->mBones->Clear();
-	screen->mViewpoints->Clear();
+		screen->mLights->Clear();
+		screen->mBones->Clear();
+		screen->mViewpoints->Clear();
 
-	// NoInterpolateView should have no bearing on camera textures, but needs to be preserved for the main view below.
-	bool saved_niv = NoInterpolateView;
-	NoInterpolateView = false;
+		// NoInterpolateView should have no bearing on camera textures, but needs to be preserved for the main view below.
+		bool saved_niv = NoInterpolateView;
+		NoInterpolateView = false;
 
-	// Shader start time does not need to be handled per level. Just use the one from the camera to render from.
-	if (player->camera)
-		CheckTimer(*RenderState, player->camera->Level->ShaderStartTime);
+		// Shader start time does not need to be handled per level. Just use the one from the camera to render from.
+		if (player->camera)
+			CheckTimer(*RenderState, player->camera->Level->ShaderStartTime);
 
 		// Draw all canvases that changed
 		for (FCanvas* canvas : AllCanvases)
@@ -359,21 +384,22 @@ sector_t* RenderView(player_t* player)
 		}
 		NoInterpolateView = saved_niv;
 
-	// now render the main view
-	float fovratio;
-	float ratio = r_viewwindow.WidescreenRatio;
-	if (r_viewwindow.WidescreenRatio >= 1.3f)
-	{
-		fovratio = 1.333333f;
-	}
-	else
-	{
-		fovratio = ratio;
-	}
+		// now render the main view
+		float fovratio;
+		float ratio = r_viewwindow.WidescreenRatio;
+		if (r_viewwindow.WidescreenRatio >= 1.3f)
+		{
+			fovratio = 1.333333f;
+		}
+		else
+		{
+			fovratio = ratio;
+		}
 
-	screen->ImageTransitionScene(true); // Only relevant for Vulkan.
+		screen->ImageTransitionScene(true); // Only relevant for Vulkan.
 
-	retsec = RenderViewpoint(r_viewpoint, player->camera, NULL, r_viewpoint.FieldOfView.Degrees(), ratio, fovratio, true, true);
+		retsec = RenderViewpoint(r_viewpoint, player->camera, NULL, r_viewpoint.FieldOfView.Degrees(), ratio, fovratio, true, true);
+	}
 	All.Unclock();
 	return retsec;
 }

@@ -27,6 +27,11 @@ if( APPLE )
     option( OSX_COCOA_BACKEND "Use native Cocoa backend instead of SDL" ON )
 endif()
 
+option( ZDOOM_ENABLE_SWR "Enable software renderer" ON )
+if( NOT ZDOOM_ENABLE_SWR )
+	add_definitions( -DNO_SWRENDERER )
+endif()
+
 target_architecture(TARGET_ARCHITECTURE)
 message(STATUS "Architecture is ${TARGET_ARCHITECTURE}")
 
@@ -572,6 +577,7 @@ file( GLOB HEADER_FILES
 	common/thirdparty/libsmackerdec/include/*.h
 	common/rendering/*.h
 	common/rendering/gl_load/*.h
+	common/rendering/gles/*.h
 	common/rendering/hwrenderer/data/*.h
 	common/rendering/vulkan/*.h
 	common/rendering/vulkan/system/*.h
@@ -593,9 +599,62 @@ file( GLOB HEADER_FILES
 	sound/midisources/*.h
 	rendering/*.h
 	rendering/2d/*.h
+	rendering/swrenderer/*.h
+	rendering/swrenderer/textures/*.h
+	rendering/swrenderer/drawers/*.h
+	rendering/swrenderer/scene/*.h
+	rendering/swrenderer/segments/*.h
+	rendering/swrenderer/line/*.h
+	rendering/swrenderer/plane/*.h
+	rendering/swrenderer/things/*.h
+	rendering/swrenderer/viewport/*.h
 	rendering/hwrenderer/*.h
 	rendering/hwrenderer/scene/*.h
 	*.h
+)
+
+set ( SWRENDER_SOURCES
+	rendering/swrenderer/r_swcolormaps.cpp
+	rendering/swrenderer/r_swrenderer.cpp
+	rendering/swrenderer/r_renderthread.cpp
+	rendering/swrenderer/drawers/r_draw.cpp
+	rendering/swrenderer/drawers/r_draw_pal.cpp
+	rendering/swrenderer/drawers/r_draw_rgba.cpp
+	rendering/swrenderer/scene/r_3dfloors.cpp
+	rendering/swrenderer/scene/r_light.cpp
+	rendering/swrenderer/scene/r_opaque_pass.cpp
+	rendering/swrenderer/scene/r_portal.cpp
+	rendering/swrenderer/scene/r_scene.cpp
+	rendering/swrenderer/scene/r_translucent_pass.cpp
+	rendering/swrenderer/viewport/r_drawerargs.cpp
+	rendering/swrenderer/viewport/r_skydrawer.cpp
+	rendering/swrenderer/viewport/r_spandrawer.cpp
+	rendering/swrenderer/viewport/r_spritedrawer.cpp
+	rendering/swrenderer/viewport/r_viewport.cpp
+	rendering/swrenderer/viewport/r_walldrawer.cpp
+	rendering/swrenderer/line/r_line.cpp
+	rendering/swrenderer/line/r_farclip_line.cpp
+	rendering/swrenderer/line/r_walldraw.cpp
+	rendering/swrenderer/line/r_wallsetup.cpp
+	rendering/swrenderer/line/r_fogboundary.cpp
+	rendering/swrenderer/line/r_renderdrawsegment.cpp
+	rendering/swrenderer/segments/r_clipsegment.cpp
+	rendering/swrenderer/segments/r_drawsegment.cpp
+	rendering/swrenderer/segments/r_portalsegment.cpp
+	rendering/swrenderer/things/r_visiblesprite.cpp
+	rendering/swrenderer/things/r_visiblespritelist.cpp
+	rendering/swrenderer/things/r_voxel.cpp
+	rendering/swrenderer/things/r_particle.cpp
+	rendering/swrenderer/things/r_playersprite.cpp
+	rendering/swrenderer/things/r_sprite.cpp
+	rendering/swrenderer/things/r_wallsprite.cpp
+	rendering/swrenderer/things/r_decal.cpp
+	rendering/swrenderer/plane/r_visibleplane.cpp
+	rendering/swrenderer/plane/r_visibleplanelist.cpp
+	rendering/swrenderer/plane/r_skyplane.cpp
+	rendering/swrenderer/plane/r_planerenderer.cpp
+	rendering/swrenderer/plane/r_flatplane.cpp
+	rendering/swrenderer/plane/r_slopeplane.cpp
 )
 
 # These files will be flagged as "headers" so that they appear in project files
@@ -633,6 +692,8 @@ set( VM_JIT_SOURCES
 
 # Enable fast math for some sources
 set( FASTMATH_SOURCES
+	rendering/swrenderer/r_all.cpp
+	rendering/swrenderer/r_swscene.cpp
 	common/textures/hires/hqnx/init.cpp
 	common/textures/hires/hqnx/hq2x.cpp
 	common/textures/hires/hqnx/hq3x.cpp
@@ -687,6 +748,26 @@ set (VULKAN_SOURCES
 	common/rendering/vulkan/thirdparty/volk/volk.c
 	common/rendering/vulkan/thirdparty/vk_mem_alloc/vk_mem_alloc.cpp
 )
+
+if (HAVE_GLES2)
+	set (GLES_SOURCES
+		common/rendering/gles/gles_system.cpp
+		common/rendering/gles/gles_renderer.cpp
+		common/rendering/gles/gles_framebuffer.cpp
+		common/rendering/gles/gles_renderstate.cpp
+		common/rendering/gles/gles_renderbuffers.cpp
+		common/rendering/gles/gles_postprocess.cpp
+		common/rendering/gles/gles_postprocessstate.cpp
+		common/rendering/gles/gles_buffers.cpp
+		common/rendering/gles/gles_hwtexture.cpp
+		common/rendering/gles/gles_shader.cpp
+		common/rendering/gles/gles_shaderprogram.cpp
+		common/rendering/gles/gles_samplers.cpp
+		common/rendering/gles/glad/src/glad.c
+	)
+
+	set (FASTMATH_SOURCES ${FASTMATH_SOURCES} ${GLES_SOURCES})
+endif()
 
 if (HAVE_VULKAN)
 	set (FASTMATH_SOURCES ${FASTMATH_SOURCES} ${VULKAN_SOURCES})
@@ -874,6 +955,9 @@ set (PCH_SOURCES
 	scripting/decorate/thingdef_parse.cpp
 	scripting/decorate/thingdef_states.cpp
 	scripting/zscript/zcc_compile_doom.cpp
+	rendering/swrenderer/textures/r_swtexture.cpp
+	rendering/swrenderer/textures/warptexture.cpp
+	rendering/swrenderer/textures/swcanvastexture.cpp
 	events.cpp
 	common/audio/sound/i_sound.cpp
 	common/audio/sound/oalsound.cpp
@@ -1176,6 +1260,9 @@ include_directories( .
 	common/rendering/hwrenderer/data
 	common/rendering/gl_load
 	common/rendering/gl
+	common/rendering/gles
+	common/rendering/gles/glad/include
+	common/rendering/gles/Mali_OpenGL_ES_Emulator/include
 	common/rendering/vulkan/thirdparty
 	common/scripting/vm
 	common/scripting/jit
@@ -1285,6 +1372,7 @@ if( DEM_CMAKE_COMPILER_IS_GNUCXX_COMPATIBLE )
 	set_property( SOURCE
 		common/utility/palette.cpp
 		common/utility/x86.cpp
+		rendering/swrenderer/r_all.cpp
 		APPEND_STRING PROPERTY COMPILE_FLAGS " ${SSE2_ENABLE}" )
 endif()
 
@@ -1330,6 +1418,14 @@ source_group("Rendering" REGULAR_EXPRESSION "^${CMAKE_CURRENT_SOURCE_DIR}/render
 source_group("Rendering\\2D" REGULAR_EXPRESSION "^${CMAKE_CURRENT_SOURCE_DIR}/rendering/2d/.+")
 source_group("Rendering\\Hardware Renderer" REGULAR_EXPRESSION "^${CMAKE_CURRENT_SOURCE_DIR}/gl/.+")
 source_group("Rendering\\Hardware Renderer\\Scene" REGULAR_EXPRESSION "^${CMAKE_CURRENT_SOURCE_DIR}/rendering/hwrenderer/scene/.+")
+source_group("Rendering\\Software Renderer" REGULAR_EXPRESSION "^${CMAKE_CURRENT_SOURCE_DIR}/rendering/swrenderer/.+")
+source_group("Rendering\\Software Renderer\\Drawers" REGULAR_EXPRESSION "^${CMAKE_CURRENT_SOURCE_DIR}/rendering/swrenderer/drawers/.+")
+source_group("Rendering\\Software Renderer\\Scene" REGULAR_EXPRESSION "^${CMAKE_CURRENT_SOURCE_DIR}/rendering/swrenderer/scene/.+")
+source_group("Rendering\\Software Renderer\\Segments" REGULAR_EXPRESSION "^${CMAKE_CURRENT_SOURCE_DIR}/rendering/swrenderer/segments/.+")
+source_group("Rendering\\Software Renderer\\Line" REGULAR_EXPRESSION "^${CMAKE_CURRENT_SOURCE_DIR}/rendering/swrenderer/line/.+")
+source_group("Rendering\\Software Renderer\\Plane" REGULAR_EXPRESSION "^${CMAKE_CURRENT_SOURCE_DIR}/rendering/swrenderer/plane/.+")
+source_group("Rendering\\Software Renderer\\Things" REGULAR_EXPRESSION "^${CMAKE_CURRENT_SOURCE_DIR}/rendering/swrenderer/things/.+")
+source_group("Rendering\\Software Renderer\\Viewport" REGULAR_EXPRESSION "^${CMAKE_CURRENT_SOURCE_DIR}/rendering/swrenderer/viewport/.+")
 source_group("Render Data" REGULAR_EXPRESSION "^${CMAKE_CURRENT_SOURCE_DIR}/r_data/.+")
 source_group("Render Interface" FILES r_defs.h r_renderer.h r_sky.cpp r_sky.h r_state.h r_utility.cpp r_utility.h)
 source_group("Platforms\\POSIX Files" REGULAR_EXPRESSION "^${CMAKE_CURRENT_SOURCE_DIR}/posix/.+")
@@ -1370,6 +1466,7 @@ source_group("Common\\Rendering\\Hardware Renderer\\Data" REGULAR_EXPRESSION "^$
 source_group("Common\\Rendering\\Hardware Renderer\\Postprocessing" REGULAR_EXPRESSION "^${CMAKE_CURRENT_SOURCE_DIR}/common/rendering/hwrenderer/postprocessing/.+")
 source_group("Common\\Rendering\\OpenGL Loader" REGULAR_EXPRESSION "^${CMAKE_CURRENT_SOURCE_DIR}/common/rendering/gl_load/.+")
 source_group("Common\\Rendering\\OpenGL Backend" REGULAR_EXPRESSION "^${CMAKE_CURRENT_SOURCE_DIR}/common/rendering/gl/.+")
+source_group("Common\\Rendering\\GLES Backend" REGULAR_EXPRESSION "^${CMAKE_CURRENT_SOURCE_DIR}/common/rendering/gles/.+")
 source_group("Common\\Rendering\\Vulkan Renderer\\System" REGULAR_EXPRESSION "^${CMAKE_CURRENT_SOURCE_DIR}/common/rendering/vulkan/system/.+")
 source_group("Common\\Rendering\\Vulkan Renderer\\Renderer" REGULAR_EXPRESSION "^${CMAKE_CURRENT_SOURCE_DIR}/common/rendering/vulkan/renderer/.+")
 source_group("Common\\Rendering\\Vulkan Renderer\\Shaders" REGULAR_EXPRESSION "^${CMAKE_CURRENT_SOURCE_DIR}/common/rendering/vulkan/shaders/.+")
