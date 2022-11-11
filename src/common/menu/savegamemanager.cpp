@@ -559,7 +559,7 @@ FString G_GetSavegamesFolder()
 	}
 	else
 	{
-		name = **save_dir ? save_dir : M_GetSavegamesPath();
+		name = M_GetSavegamesPath();
 		usefilter = true;
 	}
 

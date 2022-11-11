@@ -340,16 +340,12 @@ FString M_GetScreenshotsPath()
 	{
 		path << progdir << "Screenshots/";
 	}
-	else if (IsWindows8OrGreater())
-	{
-		path = GetKnownFolder(-1, FOLDERID_Screenshots, true);
-
-		path << "/" GAMENAME "/";
-	}
 	else 
 	{
-		path = GetKnownFolder(CSIDL_MYPICTURES, FOLDERID_Pictures, true);
-		path << "/Screenshots/" GAMENAME "/";
+		// I assume since this isn't a standard folder, it doesn't have a localized name either.
+		path = GetKnownFolder(CSIDL_PERSONAL, FOLDERID_Documents, true);
+		path << "/My Games/" GAMENAME "/";
+		path << "Screenshots/";
 	}
 	CreatePath(path);
 	return path;
@@ -374,8 +370,9 @@ FString M_GetSavegamesPath()
 	// Try standard Saved Games folder
 	else
 	{
-		path = GetKnownFolder(-1, FOLDERID_SavedGames, true);
-		path << "/" GAMENAME "/";
+		path = GetKnownFolder(CSIDL_PERSONAL, FOLDERID_Documents, true);
+		path << "/My Games/" GAMENAME "/";
+		path << "Save/";
 	}
 	return path;
 }
@@ -430,6 +427,7 @@ FString M_GetDemoPath()
 		// I assume since this isn't a standard folder, it doesn't have a localized name either.
 		path = GetKnownFolder(CSIDL_PERSONAL, FOLDERID_Documents, true);
 		path << "/My Games/" GAMENAME "/";
+		path << "Demos/";
 	}
 
 	return path;
