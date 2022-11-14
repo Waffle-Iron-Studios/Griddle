@@ -815,6 +815,34 @@ ExpEmit FxVectorValue::Emit(VMFunctionBuilder *build)
 //
 //==========================================================================
 
+FxQuaternionValue::FxQuaternionValue(FxExpression* x, FxExpression* y, FxExpression* z, FxExpression* w, const FScriptPosition& sc) : FxVectorValue(x, y, z, w, sc)
+{
+}
+
+FxExpression* FxQuaternionValue::Resolve(FCompileContext& ctx)
+{
+	auto base = FxVectorValue::Resolve(ctx);
+	if (base)
+	{
+		if (base->ValueType->GetRegCount() != 4)
+		{
+			ScriptPosition.Message(MSG_ERROR, "Quat expression requires 4 arguments, got %d instead", base->ValueType->GetRegCount());
+			delete base;
+			return nullptr;
+		}
+
+		base->ValueType = TypeQuaternion;
+	}
+	return base;
+}
+
+
+//==========================================================================
+//
+//
+//
+//==========================================================================
+
 FxBoolCast::FxBoolCast(FxExpression *x, bool needvalue)
 	: FxExpression(EFX_BoolCast, x->ScriptPosition)
 {
@@ -1727,7 +1755,7 @@ FxExpression *FxTypeCast::Resolve(FCompileContext &ctx)
 		delete this;
 		return x;
 	}
-	else if ((basex->IsVector2() && IsVector2()) || (basex->IsVector3() && IsVector3()) || (basex->IsVector4() && IsVector4()))
+	else if ((basex->IsVector2() && IsVector2()) || (basex->IsVector3() && IsVector3()) || (basex->IsVector4() && IsVector4()) || (basex->IsQuaternion() && IsQuaternion()))
 	{
 		auto x = basex;
 		basex = nullptr;
@@ -1799,7 +1827,7 @@ FxExpression *FxPlusSign::Resolve(FCompileContext& ctx)
 	CHECKRESOLVED();
 	SAFE_RESOLVE(Operand, ctx);
 
-	if (Operand->IsNumeric() || Operand->IsVector())
+	if (Operand->IsNumeric() || Operand->IsVector() || Operand->IsQuaternion())
 	{
 		FxExpression *e = Operand;
 		Operand = nullptr;
@@ -1853,7 +1881,7 @@ FxExpression *FxMinusSign::Resolve(FCompileContext& ctx)
 	CHECKRESOLVED();
 	SAFE_RESOLVE(Operand, ctx);
 
-	if (Operand->IsNumeric() || Operand->IsVector())
+	if (Operand->IsNumeric() || Operand->IsVector() || Operand->IsQuaternion())
 	{
 		if (Operand->isConstant())
 		{
@@ -2441,7 +2469,7 @@ FxExpression *FxAssign::Resolve(FCompileContext &ctx)
 			delete this;
 			return nullptr;
 		}
-		if (!Base->IsVector() && Base->ValueType->isStruct())
+		if (!Base->IsVector() && !Base->IsQuaternion() && Base->ValueType->isStruct())
 		{
 			ScriptPosition.Message(MSG_ERROR, "Struct assignment not implemented yet");
 			delete this;
@@ -2839,6 +2867,10 @@ FxExpression *FxAddSub::Resolve(FCompileContext& ctx)
 	{
 		ValueType = TypeTextureID;
 	}
+	else if (left->IsQuaternion() && right->IsQuaternion())
+	{
+		ValueType = left->ValueType;
+	}
 	else if (left->IsVector() && right->IsVector())
 	{
 		// a vector2 can be added to or subtracted from a vector 3 but it needs to be the right operand.
@@ -2944,6 +2976,13 @@ ExpEmit FxAddSub::Emit(VMFunctionBuilder *build)
 			}
 			return to;
 		}
+		else if (IsQuaternion())
+		{
+			assert(op1.RegType == REGT_FLOAT && op2.RegType == REGT_FLOAT);
+			assert(op1.RegCount == 4 && op2.RegCount == 4);
+			build->Emit(OP_ADDV4_RR, to.RegNum, op1.RegNum, op2.RegNum);
+			return to;
+		}
 		else if (ValueType->GetRegType() == REGT_FLOAT)
 		{
 			assert(op1.RegType == REGT_FLOAT && op2.RegType == REGT_FLOAT);
@@ -2970,6 +3009,13 @@ ExpEmit FxAddSub::Emit(VMFunctionBuilder *build)
 		{
 			assert(op1.RegType == REGT_FLOAT && op2.RegType == REGT_FLOAT);
 			build->Emit(right->IsVector4() ? OP_SUBV4_RR : right->IsVector3() ? OP_SUBV3_RR : OP_SUBV2_RR, to.RegNum, op1.RegNum, op2.RegNum);
+			return to;
+		}
+		else if (IsQuaternion())
+		{
+			assert(op1.RegType == REGT_FLOAT && op2.RegType == REGT_FLOAT);
+			assert(op1.RegCount == 4 && op2.RegCount == 4);
+			build->Emit(OP_SUBV4_RR, to.RegNum, op1.RegNum, op2.RegNum);
 			return to;
 		}
 		else if (ValueType->GetRegType() == REGT_FLOAT)
@@ -3037,7 +3083,7 @@ FxExpression *FxMulDiv::Resolve(FCompileContext& ctx)
 		return nullptr;
 	}
 
-	if (left->IsVector() || right->IsVector())
+	if (left->IsVector() || right->IsVector() || left->IsQuaternion() || right->IsQuaternion())
 	{
 		switch (Operator)
 		{
@@ -3047,7 +3093,7 @@ FxExpression *FxMulDiv::Resolve(FCompileContext& ctx)
 			[[fallthrough]];
 
 		case '*':
-			if (left->IsVector() && right->IsNumeric())
+			if ((left->IsVector() || left->IsQuaternion()) && right->IsNumeric())
 			{
 				if (right->IsInteger())
 				{
@@ -3062,7 +3108,7 @@ FxExpression *FxMulDiv::Resolve(FCompileContext& ctx)
 				ValueType = left->ValueType;
 				break;
 			}
-			else if (right->IsVector() && left->IsNumeric())
+			else if ((right->IsVector() || right->IsQuaternion()) && left->IsNumeric())
 			{
 				if (left->IsInteger())
 				{
@@ -3162,7 +3208,7 @@ ExpEmit FxMulDiv::Emit(VMFunctionBuilder *build)
 	ExpEmit op1 = left->Emit(build);
 	ExpEmit op2 = right->Emit(build);
 
-	if (IsVector())
+	if (IsVector() || IsQuaternion())
 	{
 		assert(Operator != '%');
 		if (right->IsVector())
@@ -3641,7 +3687,7 @@ FxExpression *FxCompareEq::Resolve(FCompileContext& ctx)
 	}
 
 	// identical types are always comparable, if they can be placed in a register, so we can save most checks if this is the case.
-	if (left->ValueType != right->ValueType && !(left->IsVector2() && right->IsVector2()) && !(left->IsVector3() && right->IsVector3()) && !(left->IsVector4() && right->IsVector4()))
+	if (left->ValueType != right->ValueType && !(left->IsVector2() && right->IsVector2()) && !(left->IsVector3() && right->IsVector3()) && !(left->IsVector4() && right->IsVector4()) && !(left->IsQuaternion() && right->IsQuaternion()))
 	{
 		FxExpression *x;
 		if (left->IsNumeric() && right->ValueType == TypeString && (x = StringConstToChar(right)))
@@ -5129,6 +5175,23 @@ FxExpression *FxATan2::Resolve(FCompileContext &ctx)
 
 //==========================================================================
 //
+// The atan2 opcode only takes registers as parameters, so any constants
+// must be loaded into registers first.
+//
+//==========================================================================
+ExpEmit FxATan2::ToReg(VMFunctionBuilder* build, FxExpression* val)
+{
+	if (val->isConstant())
+	{
+		ExpEmit reg(build, REGT_FLOAT);
+		build->Emit(OP_LKF, reg.RegNum, build->GetConstantFloat(static_cast<FxConstant*>(val)->GetValue().GetFloat()));
+		return reg;
+	}
+	return val->Emit(build);
+}
+
+//==========================================================================
+//
 //
 //
 //==========================================================================
@@ -5140,6 +5203,61 @@ ExpEmit FxATan2::Emit(VMFunctionBuilder *build)
 	xreg.Free(build);
 	ExpEmit out(build, REGT_FLOAT);
 	build->Emit(OP_ATAN2, out.RegNum, yreg.RegNum, xreg.RegNum);
+	return out;
+}
+
+//==========================================================================
+//
+//
+//
+//==========================================================================
+FxATan2Vec::FxATan2Vec(FxExpression* v, const FScriptPosition& pos)
+	: FxExpression(EFX_ATan2Vec, pos)
+{
+	vval = v;
+}
+
+//==========================================================================
+//
+//
+//
+//==========================================================================
+FxATan2Vec::~FxATan2Vec()
+{
+	SAFE_DELETE(vval);
+}
+
+//==========================================================================
+//
+//
+//
+//==========================================================================
+FxExpression* FxATan2Vec::Resolve(FCompileContext& ctx)
+{
+	CHECKRESOLVED();
+	SAFE_RESOLVE(vval, ctx);
+
+	if (!vval->IsVector())
+	{
+		ScriptPosition.Message(MSG_ERROR, "vector value expected for parameter");
+		delete this;
+		return nullptr;
+	}
+	ValueType = TypeFloat64;
+	return this;
+}
+
+//==========================================================================
+//
+//
+//
+//==========================================================================
+ExpEmit FxATan2Vec::Emit(VMFunctionBuilder* build)
+{
+	ExpEmit vreg = vval->Emit(build);
+	vreg.Free(build);
+	ExpEmit out(build, REGT_FLOAT);
+	build->Emit(OP_ATAN2, out.RegNum, vreg.RegNum + 1, vreg.RegNum);
 	return out;
 }
 
@@ -5276,23 +5394,6 @@ ExpEmit FxNew::Emit(VMFunctionBuilder *build)
 	emitters.AddParameterIntConst(1);	// Todo: 1 only if version < 4.0.0
 	emitters.AddReturn(REGT_POINTER);
 	return emitters.EmitCall(build);
-}
-
-//==========================================================================
-//
-// The atan2 opcode only takes registers as parameters, so any constants
-// must be loaded into registers first.
-//
-//==========================================================================
-ExpEmit FxATan2::ToReg(VMFunctionBuilder *build, FxExpression *val)
-{
-	if (val->isConstant())
-	{
-		ExpEmit reg(build, REGT_FLOAT);
-		build->Emit(OP_LKF, reg.RegNum, build->GetConstantFloat(static_cast<FxConstant*>(val)->GetValue().GetFloat()));
-		return reg;
-	}
-	return val->Emit(build);
 }
 
 //==========================================================================
@@ -7084,7 +7185,7 @@ FxExpression *FxStructMember::Resolve(FCompileContext &ctx)
 			classx = nullptr;
 			return x;
 		}
-		else if (classx->ExprType == EFX_LocalVariable && classx->IsVector())	// vectors are a special case because they are held in registers
+		else if (classx->ExprType == EFX_LocalVariable && (classx->IsVector() || classx->IsQuaternion()))	// vectors are a special case because they are held in registers
 		{
 			// since this is a vector, all potential things that may get here are single float or an xy-vector.
 			auto locvar = static_cast<FxLocalVariable *>(classx);
@@ -7967,10 +8068,18 @@ FxExpression *FxFunctionCall::Resolve(FCompileContext& ctx)
 
 	case NAME_ATan2:
 	case NAME_VectorAngle:
-		if (CheckArgSize(MethodName, ArgList, 2, 2, ScriptPosition))
+		if (CheckArgSize(MethodName, ArgList, 1, 2, ScriptPosition))
 		{
-			func = MethodName == NAME_ATan2 ? new FxATan2(ArgList[0], ArgList[1], ScriptPosition) : new FxATan2(ArgList[1], ArgList[0], ScriptPosition);
-			ArgList[0] = ArgList[1] = nullptr;
+			if (ArgList.Size() == 2)
+			{
+				func = MethodName == NAME_ATan2 ? new FxATan2(ArgList[0], ArgList[1], ScriptPosition) : new FxATan2(ArgList[1], ArgList[0], ScriptPosition);
+				ArgList[0] = ArgList[1] = nullptr;
+			}
+			else
+			{
+				func = new FxATan2Vec(ArgList[0], ScriptPosition);
+				ArgList[0] = nullptr;
+			}
 		}
 		break;
 
@@ -7995,6 +8104,25 @@ FxExpression *FxFunctionCall::Resolve(FCompileContext& ctx)
 		}
 		break;
 
+	case NAME_FQuat:
+	case NAME_Quat:
+		if (CheckArgSize(MethodName, ArgList, 1, 4, ScriptPosition))
+		{
+			// Reuse vector expression
+			func = new FxQuaternionValue(
+				ArgList[0],
+				ArgList.Size() >= 2 ? ArgList[1] : nullptr,
+				ArgList.Size() >= 3 ? ArgList[2] : nullptr,
+				ArgList.Size() >= 4 ? ArgList[3] : nullptr,
+				ScriptPosition
+			);
+			ArgList.Clear();
+
+			delete this;
+			auto vector = func->Resolve(ctx);
+			return vector;
+		}
+		break;
 
 	default:
 		ScriptPosition.Message(MSG_ERROR, "Call to unknown function '%s'", MethodName.GetChars());
@@ -8155,6 +8283,15 @@ FxExpression *FxMemberFunctionCall::Resolve(FCompileContext& ctx)
 	// Note: These builtins would better be relegated to the actual type objects, instead of polluting this file, but that's a task for later.
 
 	// Texture builtins.
+	if (Self->ValueType->isNumeric())
+	{
+		if (MethodName == NAME_ToVector)
+		{
+			Self = new FxToVector(Self);
+			SAFE_RESOLVE(Self, ctx);
+			return Self;
+		}
+	}
 	else if (Self->ValueType == TypeTextureID)
 	{
 		if (MethodName == NAME_IsValid || MethodName == NAME_IsNull || MethodName == NAME_Exists || MethodName == NAME_SetInvalid || MethodName == NAME_SetNull)
@@ -8200,8 +8337,39 @@ FxExpression *FxMemberFunctionCall::Resolve(FCompileContext& ctx)
 
 	else if (Self->IsVector())
 	{
-		// handle builtins: Vectors got 2: Length and Unit.
-		if (MethodName == NAME_Length || MethodName == NAME_Unit)
+		// handle builtins: Vectors got 5.
+		if (MethodName == NAME_Length || MethodName == NAME_LengthSquared || MethodName == NAME_Unit || MethodName == NAME_Angle)
+		{
+			if (ArgList.Size() > 0)
+			{
+				ScriptPosition.Message(MSG_ERROR, "Too many parameters in call to %s", MethodName.GetChars());
+				delete this;
+				return nullptr;
+			}
+			auto x = new FxVectorBuiltin(Self, MethodName);
+			Self = nullptr;
+			delete this;
+			return x->Resolve(ctx);
+		}
+		else if (MethodName == NAME_PlusZ && Self->IsVector3())
+		{
+			if (ArgList.Size() != 1)
+			{
+				ScriptPosition.Message(MSG_ERROR, "Incorrect number of parameters in call to %s", MethodName.GetChars());
+				delete this;
+				return nullptr;
+			}
+			auto x = new FxVectorPlusZ(Self, MethodName, ArgList[0]);
+			Self = nullptr;
+			ArgList[0] = nullptr;
+			delete this;
+			return x->Resolve(ctx);
+		}
+	}
+	else if (Self->IsQuaternion())
+	{
+		// Reuse vector built-ins for quaternion
+		if (MethodName == NAME_Length || MethodName == NAME_LengthSquared || MethodName == NAME_Unit)
 		{
 			if (ArgList.Size() > 0)
 			{
@@ -8215,6 +8383,7 @@ FxExpression *FxMemberFunctionCall::Resolve(FCompileContext& ctx)
 			return x->Resolve(ctx);
 		}
 	}
+
 
 	else if (Self->ValueType == TypeString)
 	{
@@ -9189,8 +9358,25 @@ FxVectorBuiltin::~FxVectorBuiltin()
 FxExpression *FxVectorBuiltin::Resolve(FCompileContext &ctx)
 {
 	SAFE_RESOLVE(Self, ctx);
-	assert(Self->IsVector());	// should never be created for anything else.
-	ValueType = Function == NAME_Length ? TypeFloat64 : Self->ValueType;
+	assert(Self->IsVector() || Self->IsQuaternion());	// should never be created for anything else.
+	switch (Function.GetIndex())
+	{
+	case NAME_Angle:
+		assert(Self->IsVector());
+	case NAME_Length:
+	case NAME_LengthSquared:
+		ValueType = TypeFloat64;
+		break;
+
+	case NAME_Unit:
+		ValueType = Self->ValueType;
+		break;
+
+	default:
+		ValueType = TypeError;
+		assert(false);
+		break;
+	}
 	return this;
 }
 
@@ -9206,16 +9392,104 @@ ExpEmit FxVectorBuiltin::Emit(VMFunctionBuilder *build)
 	{
 		build->Emit(vecSize == 2 ? OP_LENV2 : vecSize == 3 ? OP_LENV3 : OP_LENV4, to.RegNum, op.RegNum);
 	}
-	else
+	else if (Function == NAME_LengthSquared)
+	{
+		build->Emit(vecSize == 2 ? OP_DOTV2_RR : vecSize == 3 ? OP_DOTV3_RR : OP_DOTV4_RR, to.RegNum, op.RegNum, op.RegNum);
+	}
+	else if (Function == NAME_Unit)
 	{
 		ExpEmit len(build, REGT_FLOAT);
 		build->Emit(vecSize == 2 ? OP_LENV2 : vecSize == 3 ? OP_LENV3 : OP_LENV4, len.RegNum, op.RegNum);
 		build->Emit(vecSize == 2 ? OP_DIVVF2_RR : vecSize == 3 ? OP_DIVVF3_RR : OP_DIVVF4_RR, to.RegNum, op.RegNum, len.RegNum);
 		len.Free(build);
 	}
+	else if (Function == NAME_Angle)
+	{
+		build->Emit(OP_ATAN2, to.RegNum, op.RegNum + 1, op.RegNum);
+	}
 	op.Free(build);
 	return to;
 }
+
+//==========================================================================
+//
+//	FxPlusZ
+//
+//==========================================================================
+
+
+FxVectorPlusZ::FxVectorPlusZ(FxExpression* self, FName name, FxExpression* z)
+	:FxExpression(EFX_VectorBuiltin, self->ScriptPosition), Function(name), Self(self), Z(new FxFloatCast(z))
+{
+}
+
+FxVectorPlusZ::~FxVectorPlusZ()
+{
+	SAFE_DELETE(Self);
+	SAFE_DELETE(Z);
+}
+
+FxExpression* FxVectorPlusZ::Resolve(FCompileContext& ctx)
+{
+	SAFE_RESOLVE(Self, ctx);
+	SAFE_RESOLVE(Z, ctx);
+	assert(Self->IsVector3());	// should never be created for anything else.
+	ValueType = Self->ValueType;
+	return this;
+}
+
+ExpEmit FxVectorPlusZ::Emit(VMFunctionBuilder* build)
+{
+	ExpEmit to(build, ValueType->GetRegType(), ValueType->GetRegCount());
+	ExpEmit op = Self->Emit(build);
+	ExpEmit z = Z->Emit(build);
+
+	build->Emit(OP_MOVEV2, to.RegNum, op.RegNum);
+	build->Emit(z.Konst ? OP_ADDF_RK : OP_ADDF_RR, to.RegNum + 2, op.RegNum + 2, z.RegNum);
+
+	op.Free(build);
+	z.Free(build);
+	return to;
+}
+
+
+//==========================================================================
+//
+//	FxPlusZ
+//
+//==========================================================================
+
+
+FxToVector::FxToVector(FxExpression* self)
+	:FxExpression(EFX_ToVector, self->ScriptPosition), Self(new FxFloatCast(self))
+{
+}
+
+FxToVector::~FxToVector()
+{
+	SAFE_DELETE(Self);
+}
+
+FxExpression* FxToVector::Resolve(FCompileContext& ctx)
+{
+	SAFE_RESOLVE(Self, ctx);
+	assert(Self->IsNumeric());	// should never be created for anything else.
+	ValueType = TypeVector2;
+	return this;
+}
+
+ExpEmit FxToVector::Emit(VMFunctionBuilder* build)
+{
+	ExpEmit to(build, ValueType->GetRegType(), ValueType->GetRegCount());
+	ExpEmit op = Self->Emit(build);
+
+	build->Emit(OP_FLOP, to.RegNum, op.RegNum, FLOP_COS_DEG);
+	build->Emit(OP_FLOP, to.RegNum + 1, op.RegNum, FLOP_SIN_DEG);
+
+	op.Free(build);
+	return to;
+}
+
 
 //==========================================================================
 //
@@ -10483,7 +10757,7 @@ FxExpression *FxReturnStatement::Resolve(FCompileContext &ctx)
 	else if (retCount == 1)
 	{
 		// If we already know the real return type we need at least try to cast the value to its proper type (unless in an anonymous function.)
-		if (hasProto && protoRetCount > 0 && ctx.Function->SymbolName != NAME_None)
+		if (hasProto && protoRetCount > 0 && ctx.Function->SymbolName != NAME_None && Args[0]->ValueType != ctx.ReturnProto->ReturnTypes[0])
 		{
 			Args[0] = new FxTypeCast(Args[0], ctx.ReturnProto->ReturnTypes[0], false, false);
 			Args[0] = Args[0]->Resolve(ctx);
@@ -10493,11 +10767,15 @@ FxExpression *FxReturnStatement::Resolve(FCompileContext &ctx)
 	}
 	else
 	{
+		assert(ctx.ReturnProto != nullptr);
 		for (unsigned i = 0; i < retCount; i++)
 		{
-			Args[i] = new FxTypeCast(Args[i], ctx.ReturnProto->ReturnTypes[i], false, false);
-			Args[i] = Args[i]->Resolve(ctx);
-			if (Args[i] == nullptr) fail = true;
+			if (Args[i]->ValueType != ctx.ReturnProto->ReturnTypes[i])
+			{
+				Args[i] = new FxTypeCast(Args[i], ctx.ReturnProto->ReturnTypes[i], false, false);
+				Args[i] = Args[i]->Resolve(ctx);
+				if (Args[i] == nullptr) fail = true;
+			}
 		}
 		if (fail)
 		{
@@ -10875,6 +11153,7 @@ FxLocalVariableDeclaration::FxLocalVariableDeclaration(PType *type, FName name, 
 	if (type == TypeFVector2) type = TypeVector2;
 	else if (type == TypeFVector3) type = TypeVector3;
 	else if (type == TypeFVector4) type = TypeVector4;
+	else if (type == TypeFQuaternion) type = TypeQuaternion;
 
 	ValueType = type;
 	VarFlags = varflags;
