@@ -295,16 +295,6 @@ FString M_GetConfigPath(bool for_reading)
 	FString oldpath = M_GetOldConfigPath(type);
 	if (!oldpath.IsEmpty())
 	{
-		if (type == 0)
-		{
-			// If we find a local per-user config, ask the user what to do with it.
-			int action = M_MigrateOldConfig();
-			if (action == IDNO)
-			{
-				path.Format("%s" GAMENAMELOWERCASE "_portable.ini", progdir.GetChars());
-				isportable = true;
-			}
-		}
 		bool res = MoveFileExW(WideString(oldpath).c_str(), WideString(path).c_str(), MOVEFILE_COPY_ALLOWED);
 		if (res) return path;
 		else return oldpath;	// if we cannot move, just use the config where it was. It won't be written back, though and never be used again if a new one gets saved.
