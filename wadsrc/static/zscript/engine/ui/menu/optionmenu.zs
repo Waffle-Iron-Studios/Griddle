@@ -89,7 +89,6 @@ class OptionMenuDescriptor : MenuDescriptor native
 	}
 }
 
-
 class OptionMenu : Menu
 {
 	OptionMenuDescriptor mDesc;

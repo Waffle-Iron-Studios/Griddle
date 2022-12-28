@@ -737,11 +737,31 @@ class OptionMenuSliderBase : OptionMenuItem
 	// Draw a slider. Set fracdigits negative to not display the current value numerically.
 	//
 	//=============================================================================
+	
+	protected Font GetSliderFont(name fontName = 'Slidefont')
+	{
+		Font sfont = Font.GetFont('Slidefont');
+		
+		if (!sfont)
+			return confont;
+		
+		bool sliderfound = sfont.GetGlyphHeight(0x10) > 0 && sfont.GetGlyphHeight(0x11) > 0 && sfont.GetGlyphHeight(0x12) > 0 && sfont.GetGlyphHeight(0x13) > 0;
+		
+		if (!sliderfound)
+			return confont;
+		
+		return sfont;
+	}
 
 	private void DrawSliderElement (int color, int x, int y, String str, bool grayed = false)
 	{
-		int overlay = grayed? Color(96, 48, 0, 0) : 0;
-		screen.DrawText (ConFont, color, x, y, str, DTA_CellX, 16 * CleanXfac_1, DTA_CellY, 16 * CleanYfac_1, DTA_ColorOverlay, overlay);
+		int overlay = grayed? Color(96, 33, 33, 33) : 0;
+		
+		Font sfont = GetSliderFont('Slidefont');
+		
+		int cellsize = 16;
+		
+		screen.DrawText (sfont, color, x, y, str, DTA_CellX, cellsize * CleanXfac_1, DTA_CellY, cellsize * CleanYfac_1, DTA_ColorOverlay, overlay);
 	}
 
 	protected void DrawSlider (int x, int y, double min, double max, double cur, int fracdigits, int indent, bool grayed = false)
@@ -750,6 +770,7 @@ class OptionMenuSliderBase : OptionMenuItem
 		String textbuf;
 		double range;
 		int maxlen = 0;
+		
 		int right = x + (12*16 + 4) * CleanXfac_1;	// length of slider. This uses the old ConFont and 
 		int cy = y + CleanYFac;
 
@@ -763,17 +784,24 @@ class OptionMenuSliderBase : OptionMenuItem
 		}
 
 		mSliderShort = right + maxlen > screen.GetWidth();
+		
+		int ofsmult = 2;
+		
+		int shifty = 0;
+		
+		if (GetSliderFont('Slidefont') != confont)
+			shifty = -8;
 
 		if (!mSliderShort)
 		{
-			DrawSliderElement(Font.FindFontColor(gameinfo.mSliderBackColor), x, cy, "\x10\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x12", grayed);
-			DrawSliderElement(Font.FindFontColor(gameinfo.mSliderColor), x + int((5 + ((ccur * 78) / range)) * 2 * CleanXfac_1), cy, "\x13", grayed);
+			DrawSliderElement(Font.FindFontColor(gameinfo.mSliderBackColor), x, cy + shifty, "\x10\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x12", grayed);
+			DrawSliderElement(Font.FindFontColor(gameinfo.mSliderColor), x + int((5 + ((ccur * 78) / range)) * ofsmult * CleanXfac_1), cy + shifty, "\x13", grayed);
 		}
 		else
 		{
 			// On 320x200 we need a shorter slider
-			DrawSliderElement(Font.FindFontColor(gameinfo.mSliderBackColor), x, cy, "\x10\x11\x11\x11\x11\x11\x12", grayed);
-			DrawSliderElement(Font.FindFontColor(gameinfo.mSliderColor), x + int((5 + ((ccur * 38) / range)) * 2 * CleanXfac_1), cy, "\x13", grayed);
+			DrawSliderElement(Font.FindFontColor(gameinfo.mSliderBackColor), x, cy + shifty, "\x10\x11\x11\x11\x11\x11\x12", grayed);
+			DrawSliderElement(Font.FindFontColor(gameinfo.mSliderColor), x + int((5 + ((ccur * 38) / range)) * ofsmult * CleanXfac_1), cy + shifty, "\x13", grayed);
 			right -= 5*8*CleanXfac;
 		}
 
