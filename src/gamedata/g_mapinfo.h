@@ -40,6 +40,8 @@
 #include "sc_man.h"
 #include "file_zip.h"
 #include "screenjob.h"
+#include "hwrenderer/postprocessing/hw_postprocess.h"
+#include "hw_viewpointuniforms.h"
 
 struct level_info_t;
 struct cluster_info_t;
@@ -409,6 +411,8 @@ struct level_info_t
 	FString		EDName;
 	FString		acsName;
 	bool		fs_nocheckposition;
+	ELightBlendMode lightblendmode;
+	ETonemapMode tonemap;
 	
 	CutsceneDef intro, outro;
 
