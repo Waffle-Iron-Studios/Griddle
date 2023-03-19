@@ -1791,6 +1791,7 @@ static FString ParseGameInfo(TArray<FString> &pwads, const char *fn, const char 
 	FScanner sc;
 	FString iwad;
 	int pos = 0;
+	bool isDir;
 
 	const char *lastSlash = strrchr (fn, '/');
 
@@ -1824,7 +1825,7 @@ static FString ParseGameInfo(TArray<FString> &pwads, const char *fn, const char 
 				{
 					checkpath = sc.String;
 				}
-				if (!FileExists(checkpath))
+				if (!DirEntryExists(checkpath, &isDir))
 				{
 					pos += D_AddFile(pwads, sc.String, true, pos, GameConfig);
 				}
