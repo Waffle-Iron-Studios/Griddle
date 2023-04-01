@@ -3671,7 +3671,7 @@ static int D_DoomMain_Internal (void)
 		if (!iwad_info) return 0;	// user exited the selection popup via cancel button.
 		if ((iwad_info->flags & GI_SHAREWARE) && pwads.Size() > 0)
 		{
-			I_FatalError ("You cannot -file with the shareware version. Register!");
+			I_FatalError ("You cannot -file with the shareware or demo version! Please buy the game for mod support, as per tradition.");
 		}
 		lastIWAD = iwad;
 
