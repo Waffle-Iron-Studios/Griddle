@@ -121,10 +121,6 @@ FHexenStartScreen::FHexenStartScreen(int max_progress)
 		{
 			S_ChangeMusic(GameStartupInfo.Song.GetChars(), true, true);
 		}
-		else
-		{
-			S_ChangeMusic("orb", true, true);
-		}
 	}
 	CreateHeader();
 }
