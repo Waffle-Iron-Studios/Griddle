@@ -534,12 +534,6 @@ add_custom_command( OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/sc_man_scanner.h
 
 include_directories( ${CMAKE_CURRENT_BINARY_DIR} )
 
-option( SEND_ANON_STATS "Enable sending of anonymous hardware statistics" ON )
-
-if( NOT SEND_ANON_STATS )
-	add_definitions( -DNO_SEND_STATS )
-endif()
-
 # Project files should be aware of the header files. We can GLOB these since
 # there's generally a new cpp for every header so this file will get changed
 file( GLOB HEADER_FILES
@@ -797,7 +791,6 @@ set (PCH_SOURCES
 	d_iwad.cpp
 	d_main.cpp
 	d_defcvars.cpp
-	d_anonstats.cpp
 	d_net.cpp
 	d_netinfo.cpp
 	d_protocol.cpp

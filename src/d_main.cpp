@@ -130,7 +130,6 @@ EXTERN_CVAR(Bool, dlg_vgafont)
 CVAR(Int, vid_renderer, 1, 0)	// for some stupid mods which threw caution out of the window...
 
 void DrawHUD();
-void D_DoAnonStats();
 void I_DetectOS();
 void UpdateGenericUI(bool cvar);
 void Local_Job_Init();
@@ -3619,9 +3618,6 @@ static int D_DoomMain_Internal (void)
 
 	Printf("%s version %s\n", GAMENAME, GetVersionString());
 
-	extern void D_ConfirmSendStats();
-	D_ConfirmSendStats();
-
 	FString basewad = wad;
 
 	FString optionalwad = BaseFileSearch(OPTIONALWAD, NULL, true, GameConfig);
@@ -3676,7 +3672,6 @@ static int D_DoomMain_Internal (void)
 		iwad_man = NULL;
 		if (ret != 0) return ret;
 
-		D_DoAnonStats();
 		I_UpdateWindowTitle();
 		D_DoomLoop ();		// this only returns if a 'restart' CCMD is given.
 		// 
