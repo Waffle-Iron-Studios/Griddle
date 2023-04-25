@@ -50,9 +50,6 @@
 
 #include "gl_renderer.h"
 #include "gl_framebuffer.h"
-#ifdef HAVE_GLES2
-#include "gles_framebuffer.h"
-#endif
 
 #ifdef HAVE_VULKAN
 #include "vulkan/system/vk_renderdevice.h"

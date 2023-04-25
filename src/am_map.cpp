@@ -132,8 +132,8 @@ struct islope_t
 
 CVAR(Bool, am_textured, false, CVAR_ARCHIVE)
 CVAR(Float, am_linealpha, 1.0f, CVAR_ARCHIVE)
-CVAR(Int, am_linethickness, 1, CVAR_ARCHIVE)
-CVAR(Int, am_lineantialiasing, 0, CVAR_ARCHIVE)
+CVAR(Int, am_linethickness, 2, CVAR_ARCHIVE)
+CVAR(Int, am_lineantialiasing, 1, CVAR_ARCHIVE)
 CVAR(Bool, am_thingrenderstyles, true, CVAR_ARCHIVE)
 CVAR(Int, am_showsubsector, -1, 0);
 
@@ -1546,6 +1546,13 @@ void DAutomap::Ticker ()
 {
 	if (!automapactive)
 		return;
+
+	// Backport this from vkDoom
+	if ((primaryLevel->flags & LEVEL9_NOAUTOMAP))
+	{
+		AM_ToggleMap();
+		return;
+	}
 
 	amclock++;
 }
@@ -3445,6 +3452,10 @@ void AM_ToggleMap()
 
 	// ... or if there is no automap.
 	if (!primaryLevel || !primaryLevel->automap)
+		return;
+
+	// Backport this from vkDoom
+	if (!automapactive && (primaryLevel->flags9 & LEVEL9_NOAUTOMAP))
 		return;
 
 	if (!automapactive)
