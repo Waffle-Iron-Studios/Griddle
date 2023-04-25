@@ -276,6 +276,8 @@ enum ELevelFlags : unsigned int
 	// Deliberately skip ahead...
 	LEVEL9_NOUSERSAVE			= 0x00000001,
 	LEVEL9_NOAUTOMAP			= 0x00000002,
+
+	LEVEL11_NOTOTALTIME				= 0x00000001,	// Sanya - no time++
 };
 
 
@@ -349,6 +351,7 @@ struct level_info_t
 	uint32_t	flags2;
 	uint32_t	flags3;
 	uint32_t	flags9;	// backport from vkdoom
+	uint32_t	flags11;
 
 	FString		Music;
 	FString		LevelName;

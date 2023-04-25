@@ -1696,6 +1696,9 @@ enum EMIType
 	MITYPE_SETFLAG9,
 	MITYPE_CLRFLAG9,
 	MITYPE_SCFLAGS9,
+	MITYPE_SETFLAG11,
+	MITYPE_CLRFLAG11,
+	MITYPE_SCFLAGS11,
 	MITYPE_COMPATFLAG,
 };
 
@@ -1795,6 +1798,7 @@ MapFlagHandlers[] =
 	{ "forceworldpanning",				MITYPE_SETFLAG3,	LEVEL3_FORCEWORLDPANNING, 0 },
 	{ "nousersave",						MITYPE_SETFLAG9,	LEVEL9_NOUSERSAVE, 0 },	// backport from vkdoom
 	{ "noautomap",						MITYPE_SETFLAG9,	LEVEL9_NOAUTOMAP, 0 },	// backport from vkdoom
+	{ "nototaltime",					MITYPE_SETFLAG11,	LEVEL11_NOTOTALTIME, 0 },
 	{ "propermonsterfallingdamage",		MITYPE_SETFLAG3,	LEVEL3_PROPERMONSTERFALLINGDAMAGE, 0 },
 	{ "disableshadowmap",				MITYPE_SETFLAG3,	LEVEL3_NOSHADOWMAP, 0 },
 	{ "enableshadowmap",				MITYPE_CLRFLAG3,	LEVEL3_NOSHADOWMAP, 0 },
@@ -1948,31 +1952,56 @@ void FMapInfoParser::ParseMapDefinition(level_info_t &info)
 				info.flags3 &= ~handler->data1;
 				info.flags3 |= handler->data2;
 				break;
-			
-			// Backport from vkDoom
-			case MITYPE_SETFLAG9:
-					if (!CheckAssign())
-					{
-						info.flags9 |= handler->data1;
-					}
-					else
-					{
-						sc.MustGetNumber();
-						if (sc.Number) info.flags9 |= handler->data1;
-						else info.flags9 &= ~handler->data1;
-					}
-					info.flags9 |= handler->data2;
-					break;
-				case MITYPE_CLRFLAG9:
-					info.flags9 &= ~handler->data1;
-					info.flags9 |= handler->data2;
-					break;
-				case MITYPE_SCFLAGS9:
-					info.flags9 = (info.flags9 & handler->data2) | handler->data1;
-					break;
 
 			case MITYPE_SCFLAGS3:
 				info.flags3 = (info.flags3 & handler->data2) | handler->data1;
+				break;
+
+			// Backport from vkDoom
+			case MITYPE_SETFLAG9:
+				if (!CheckAssign())
+				{
+					info.flags9 |= handler->data1;
+				}
+				else
+				{
+					sc.MustGetNumber();
+					if (sc.Number) info.flags9 |= handler->data1;
+					else info.flags9 &= ~handler->data1;
+				}
+				info.flags9 |= handler->data2;
+				break;
+
+			case MITYPE_CLRFLAG9:
+				info.flags9 &= ~handler->data1;
+				info.flags9 |= handler->data2;
+				break;
+			case MITYPE_SCFLAGS9:
+				info.flags9 = (info.flags9 & handler->data2) | handler->data1;
+				break;
+
+
+			case MITYPE_SETFLAG11:
+				if (!CheckAssign())
+				{
+					info.flags11 |= handler->data1;
+				}
+				else
+				{
+					sc.MustGetNumber();
+					if (sc.Number) info.flags11 |= handler->data1;
+					else info.flags11 &= ~handler->data1;
+				}
+				info.flags11 |= handler->data2;
+				break;
+
+			case MITYPE_CLRFLAG11:
+				info.flags11 &= ~handler->data1;
+				info.flags11 |= handler->data2;
+				break;
+
+			case MITYPE_SCFLAGS11:
+				info.flags11 = (info.flags11 & handler->data2) | handler->data1;
 				break;
 
 			case MITYPE_COMPATFLAG:

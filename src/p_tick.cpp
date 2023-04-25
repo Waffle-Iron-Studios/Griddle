@@ -179,9 +179,12 @@ void P_Ticker (void)
 		}
 
 		// for par times
+
 		Level->time++;
 		Level->maptime++;
-		Level->totaltime++;
+
+		if (!(Level->info->flags11 & LEVEL11_NOTOTALTIME))
+			Level->totaltime++;
 	}
 	if (players[consoleplayer].mo != NULL) {
 		if (players[consoleplayer].mo->Vel.Length() > primaryLevel->max_velocity) { primaryLevel->max_velocity = players[consoleplayer].mo->Vel.Length(); }
