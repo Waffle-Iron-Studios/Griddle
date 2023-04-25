@@ -41,15 +41,15 @@ const char *GetVersionString();
 
 /** Lots of different version numbers **/
 
-#define VERSIONSTR "1.0"
+#define VERSIONSTR "1.1"
 
 // The version as seen in the Windows resource
-#define RC_FILEVERSION 1,0,9999,0
-#define RC_PRODUCTVERSION 1,0,9999,0
+#define RC_FILEVERSION 1,1,9999,0
+#define RC_PRODUCTVERSION 1,1,9999,0
 #define RC_PRODUCTVERSION2 VERSIONSTR
 // These are for content versioning.
 #define VER_MAJOR 1
-#define VER_MINOR 0
+#define VER_MINOR 1
 #define VER_REVISION 0
 
 // These are for ZScript versioning
@@ -96,7 +96,7 @@ const char *GetVersionString();
 #define SAVEVER 4560
 
 // This is so that derivates can use the same savegame versions without worrying about engine compatibility
-#define GAMESIG "WIGZDOOM"
+#define GAMESIG "GRIDDLE"
 #define BASEWAD "griddle.pk3"
 #define OPTIONALWAD "game_support.pk3"
 #define GZDOOM 1
