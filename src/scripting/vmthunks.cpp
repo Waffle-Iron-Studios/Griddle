@@ -2808,6 +2808,8 @@ DEFINE_FIELD_BIT(FLevelLocals, flags3, removeitems, LEVEL3_REMOVEITEMS)
 DEFINE_FIELD_BIT(FLevelLocals, flags9, nousersave, LEVEL9_NOUSERSAVE)
 DEFINE_FIELD_BIT(FLevelLocals, flags9, noautomap, LEVEL9_NOAUTOMAP)
 DEFINE_FIELD_BIT(FLevelLocals, flags11, nototaltime, LEVEL11_NOTOTALTIME)
+DEFINE_FIELD_BIT(FLevelLocals, flags11, noautosaves, LEVEL11_NOAUTOSAVES)
+DEFINE_FIELD_BIT(FLevelLocals, flags11, cutscenelevel, LEVEL11_CUTSCENELEVEL)
 
 DEFINE_FIELD_X(Sector, sector_t, floorplane)
 DEFINE_FIELD_X(Sector, sector_t, ceilingplane)

@@ -1030,7 +1030,7 @@ class PlayerPawn : Actor
 	{
 		let player = self.player;
 		UserCmd cmd = player.cmd;
-		bool totallyfrozen = player.IsTotallyFrozen();
+		bool totallyfrozen = player.IsTotallyFrozen() || level.cutscenelevel;
 
 		// [RH] Being totally frozen zeros out most input parameters.
 		if (totallyfrozen)

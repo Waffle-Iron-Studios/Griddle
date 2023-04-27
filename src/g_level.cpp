@@ -1436,8 +1436,6 @@ void FLevelLocals::DoLoadLevel(const FString &nextmapname, int position, bool au
 	P_SetupLevel (this, position, newGame);
 
 
-
-
 	//Added by MC: Initialize bots.
 	if (deathmatch)
 	{
@@ -1510,7 +1508,7 @@ void FLevelLocals::DoLoadLevel(const FString &nextmapname, int position, bool au
 	
 
 	// [RH] Always save the game when entering a new 
-	if (autosave && !savegamerestore && disableautosave < 1)
+	if (autosave && !savegamerestore && disableautosave < 1 && !(flags11 & LEVEL11_CUTSCENELEVEL))
 	{
 		CreateThinker<DAutosaver>();
 	}

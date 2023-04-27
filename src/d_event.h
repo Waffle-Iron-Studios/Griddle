@@ -91,6 +91,7 @@ enum gameaction_t : int
 	ga_playdemo,
 	ga_completed,
 	ga_slideshow,
+	ga_cutscenelevelskip,
 	ga_worlddone,
 	ga_screenshot,
 	ga_togglemap,

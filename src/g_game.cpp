@@ -970,7 +970,7 @@ bool G_Responder (event_t *ev)
 	{
 		return ScreenJobResponder(ev);
 	}
-	
+
 	// any other key pops up menu if in demos
 	// [RH] But only if the key isn't bound to a "special" command
 	if (gameaction == ga_nothing && 
@@ -1000,9 +1000,10 @@ bool G_Responder (event_t *ev)
 			}
 			else
 			{
-				return C_DoKey (ev, &Bindings, &DoubleBindings);
+				return C_DoKey(ev, &Bindings, &DoubleBindings);
 			}
 		}
+
 		if (cmd && cmd[0] == '+')
 			return C_DoKey (ev, &Bindings, &DoubleBindings);
 
@@ -1014,6 +1015,12 @@ bool G_Responder (event_t *ev)
 
 	if (gamestate == GS_LEVEL)
 	{
+		if (primaryLevel->info->flags11 & LEVEL11_CUTSCENELEVEL)
+		{
+			gameaction = ga_cutscenelevelskip;
+			return true;
+		}
+
 		if (ST_Responder (ev))
 			return true;		// status window ate it
 		if (!viewactive && primaryLevel->automap && primaryLevel->automap->Responder (ev, false))
@@ -1023,6 +1030,7 @@ bool G_Responder (event_t *ev)
 	switch (ev->type)
 	{
 	case EV_KeyDown:
+
 		if (C_DoKey (ev, &Bindings, &DoubleBindings))
 			return true;
 		break;
@@ -1164,7 +1172,7 @@ void G_Ticker ()
 		case ga_loadgameplaydemo:
 			G_DoLoadGame ();
 			// fallthrough
-		case  ga_playdemo:
+		case ga_playdemo:
 			G_DoPlayDemo ();
 			break;
 		case ga_completed:
@@ -1202,6 +1210,10 @@ void G_Ticker ()
 			gameaction = ga_nothing;
 			break;
 
+		case ga_cutscenelevelskip:
+			gameaction = ga_nothing;
+			primaryLevel->ExitLevel(0, false);
+			break;
 
 
 		default:
@@ -2200,6 +2212,9 @@ void G_DoAutoSave ()
 	UCVarValue num;
 	const char *readableTime;
 	int count = autosavecount != 0 ? autosavecount : 1;
+
+	if (primaryLevel->info->flags11 & LEVEL11_NOAUTOSAVES || primaryLevel->info->flags11 & LEVEL11_CUTSCENELEVEL)
+		return;
 	
 	if (nextautosave == -1) 
 	{

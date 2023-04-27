@@ -476,6 +476,8 @@ struct LevelLocals native
 	native bool noautomap;
 
 	native bool nototaltime;
+	native bool noautosaves;
+	native bool cutscenelevel;
 
 	native String GetUDMFString(int type, int index, Name key);
 	native int GetUDMFInt(int type, int index, Name key);
