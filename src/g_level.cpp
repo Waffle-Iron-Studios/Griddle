@@ -1327,11 +1327,17 @@ void G_DoLoadLevel(const FString &nextmapname, int position, bool autosave, bool
 	// Here the new level needs to be allocated.
 	primaryLevel->DoLoadLevel(nextmapname, position, autosave, newGame);
 
+	if (primaryLevel->info->flags11 & LEVEL11_CUTSCENELEVEL)
+	{
+		gamestate = GS_CUTSCENELEVEL;
+		wipegamestate = GS_CUTSCENELEVEL;
+	}
+
 	// Reset the global state for the new level.
-	if (wipegamestate == GS_LEVEL)
+	if (wipegamestate == GS_LEVEL || wipegamestate == GS_CUTSCENELEVEL)
 		wipegamestate = GS_FORCEWIPE;
 
-	if (gamestate != GS_TITLELEVEL)
+	if (gamestate != GS_TITLELEVEL && gamestate != GS_CUTSCENELEVEL)
 	{
 		gamestate = GS_LEVEL;
 	}

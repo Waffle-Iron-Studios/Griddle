@@ -956,8 +956,6 @@ CCMD (spycancel)
 	ChangeSpy (SPY_CANCEL);
 }
 
-static bool griddle_cutsceneskip = false;
-
 //
 // G_Responder
 // Get info needed to make ticcmd_ts for the players.
@@ -1012,18 +1010,20 @@ bool G_Responder (event_t *ev)
 		return false;
 	}
 
+	if (gamestate == GS_CUTSCENELEVEL)
+	{
+		if (ev->type == EV_KeyDown)
+		{
+			gameaction = ga_cutscenelevelskip;
+			return true;
+		}
+	}
+
 	if (CT_Responder (ev))
 		return true;			// chat ate the event
 
 	if (gamestate == GS_LEVEL)
 	{
-		if (primaryLevel->info->flags11 & LEVEL11_CUTSCENELEVEL && !griddle_cutsceneskip)
-		{
-			griddle_cutsceneskip = true;
-			gameaction = ga_cutscenelevelskip;
-			return true;
-		}
-
 		if (ST_Responder (ev))
 			return true;		// status window ate it
 		if (!viewactive && primaryLevel->automap && primaryLevel->automap->Responder (ev, false))
@@ -1216,7 +1216,6 @@ void G_Ticker ()
 		case ga_cutscenelevelskip:
 			gameaction = ga_nothing;
 			primaryLevel->ExitLevel(0, false);
-			griddle_cutsceneskip = false;
 			break;
 
 
@@ -1300,6 +1299,7 @@ void G_Ticker ()
 	// do main actions
 	switch (gamestate)
 	{
+	case GS_CUTSCENELEVEL:
 	case GS_LEVEL:
 		P_Ticker ();
 		primaryLevel->automap->Ticker ();

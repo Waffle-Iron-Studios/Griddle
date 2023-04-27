@@ -982,7 +982,7 @@ void D_Display ()
 	R_UpdateSky(screen->FrameTime);
 	screen->BeginFrame();
 	twod->ClearClipRect();
-	if ((gamestate == GS_LEVEL || gamestate == GS_TITLELEVEL) && gametic != 0)
+	if ((gamestate == GS_LEVEL || gamestate == GS_TITLELEVEL || gamestate == GS_CUTSCENELEVEL) && gametic != 0)
 	{
 		// [ZZ] execute event hook that we just started the frame
 		//E_RenderFrame();
