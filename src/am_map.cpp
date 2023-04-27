@@ -130,7 +130,7 @@ struct islope_t
 //
 //=============================================================================
 
-CVAR(Bool, am_textured, false, CVAR_ARCHIVE)
+CVAR(Bool, am_textured, true, CVAR_ARCHIVE)
 CVAR(Float, am_linealpha, 1.0f, CVAR_ARCHIVE)
 CVAR(Int, am_linethickness, 2, CVAR_ARCHIVE)
 CVAR(Int, am_lineantialiasing, 1, CVAR_ARCHIVE)
@@ -156,7 +156,7 @@ CUSTOM_CVAR(Int, am_cheat, 0, 0)
 
 
 CVAR(Int, am_rotate, 0, CVAR_ARCHIVE);
-CVAR(Int, am_overlay, 0, CVAR_ARCHIVE);
+CVAR(Int, am_overlay, 1, CVAR_ARCHIVE);
 CVAR(Bool, am_showsecrets, true, CVAR_ARCHIVE);
 CVAR(Bool, am_showmonsters, true, CVAR_ARCHIVE);
 CVAR(Bool, am_showitems, false, CVAR_ARCHIVE);
