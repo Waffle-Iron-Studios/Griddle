@@ -1327,12 +1327,6 @@ void G_DoLoadLevel(const FString &nextmapname, int position, bool autosave, bool
 	// Here the new level needs to be allocated.
 	primaryLevel->DoLoadLevel(nextmapname, position, autosave, newGame);
 
-	if (primaryLevel->info->flags11 & LEVEL11_CUTSCENELEVEL)
-	{
-		gamestate = GS_CUTSCENELEVEL;
-		wipegamestate = GS_CUTSCENELEVEL;
-	}
-
 	// Reset the global state for the new level.
 	if (wipegamestate == GS_LEVEL || wipegamestate == GS_CUTSCENELEVEL)
 		wipegamestate = GS_FORCEWIPE;
@@ -1441,7 +1435,6 @@ void FLevelLocals::DoLoadLevel(const FString &nextmapname, int position, bool au
 
 	P_SetupLevel (this, position, newGame);
 
-
 	//Added by MC: Initialize bots.
 	if (deathmatch)
 	{
@@ -1514,13 +1507,19 @@ void FLevelLocals::DoLoadLevel(const FString &nextmapname, int position, bool au
 	
 
 	// [RH] Always save the game when entering a new 
-	if (autosave && !savegamerestore && disableautosave < 1 && gamestate != GS_CUTSCENELEVEL)
+	if (autosave && !savegamerestore && disableautosave < 1)
 	{
 		CreateThinker<DAutosaver>();
 	}
 	if (pnumerr > 0)
 	{
 		I_Error("no start for player %d found.", pnumerr);
+	}
+
+	if (flags11 & LEVEL11_CUTSCENELEVEL)
+	{
+		gamestate = GS_CUTSCENELEVEL;
+		wipegamestate = GS_CUTSCENELEVEL;
 	}
 }
 
@@ -1785,18 +1784,20 @@ void FLevelLocals::Init()
 {
 	P_InitParticles(this);
 	P_ClearParticles(this);
-	
-	gravity = sv_gravity * 35/TICRATE;
+
+	gravity = sv_gravity * 35 / TICRATE;
 	aircontrol = sv_aircontrol;
 	AirControlChanged();
 	teamdamage = ::teamdamage;
 	flags = 0;
 	flags2 = 0;
 	flags3 = 0;
+	flags9 = 0;
+	flags11 = 0;
 	ImpactDecalCount = 0;
 	frozenstate = 0;
 
-	info = FindLevelInfo (MapName);
+	info = FindLevelInfo(MapName);
 
 	skyspeed1 = info->skyspeed1;
 	skyspeed2 = info->skyspeed2;
@@ -1808,18 +1809,18 @@ void FLevelLocals::Init()
 	FromSnapshot = false;
 	if (fadeto == 0)
 	{
-		if (strnicmp (info->FadeTable, "COLORMAP", 8) != 0)
+		if (strnicmp(info->FadeTable, "COLORMAP", 8) != 0)
 		{
 			flags |= LEVEL_HASFADETABLE;
 		}
 	}
-	airsupply = info->airsupply*TICRATE;
+	airsupply = info->airsupply * TICRATE;
 	outsidefog = info->outsidefog;
-	WallVertLight = info->WallVertLight*2;
-	WallHorizLight = info->WallHorizLight*2;
+	WallVertLight = info->WallVertLight * 2;
+	WallHorizLight = info->WallHorizLight * 2;
 	if (info->gravity != 0.f)
 	{
-		gravity = info->gravity * 35/TICRATE;
+		gravity = info->gravity * 35 / TICRATE;
 	}
 	if (info->aircontrol != 0.f)
 	{
@@ -1830,9 +1831,9 @@ void FLevelLocals::Init()
 		teamdamage = info->teamdamage;
 	}
 
-	AirControlChanged ();
+	AirControlChanged();
 
-	cluster_info_t *clus = FindClusterInfo (info->cluster);
+	cluster_info_t* clus = FindClusterInfo(info->cluster);
 
 	partime = info->partime;
 	sucktime = info->sucktime;
@@ -1841,6 +1842,8 @@ void FLevelLocals::Init()
 	flags |= info->flags;
 	flags2 |= info->flags2;
 	flags3 |= info->flags3;
+	flags9 |= info->flags9;
+	flags11 |= info->flags11;
 	levelnum = info->levelnum;
 	Music = info->Music;
 	musicorder = info->musicorder;

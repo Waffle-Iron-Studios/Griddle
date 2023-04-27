@@ -1017,6 +1017,10 @@ bool G_Responder (event_t *ev)
 			gameaction = ga_cutscenelevelskip;
 			return true;
 		}
+		else
+		{
+			return false;
+		}
 	}
 
 	if (CT_Responder (ev))
@@ -1169,7 +1173,10 @@ void G_Ticker ()
 			savedescription = "";
 			break;
 		case ga_autosave:
-			G_DoAutoSave ();
+			if (!(gamestate == GS_CUTSCENELEVEL || primaryLevel->flags11 & LEVEL11_NOAUTOSAVES))
+			{
+				G_DoAutoSave();
+			}
 			gameaction = ga_nothing;
 			break;
 		case ga_loadgameplaydemo:
@@ -2217,9 +2224,6 @@ void G_DoAutoSave ()
 	const char *readableTime;
 	int count = autosavecount != 0 ? autosavecount : 1;
 
-	if (primaryLevel->info->flags11 & LEVEL11_NOAUTOSAVES || primaryLevel->info->flags11 & LEVEL11_CUTSCENELEVEL)
-		return;
-	
 	if (nextautosave == -1) 
 	{
 		nextautosave = (autosavenum + 1) % count;

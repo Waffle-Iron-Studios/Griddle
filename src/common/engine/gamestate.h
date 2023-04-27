@@ -6,7 +6,6 @@
 enum gamestate_t : int
 {
 	GS_LEVEL,
-	GS_CUTSCENELEVEL,	// [Sanya] Cutscene Level
 	GS_INTERMISSION,
 	GS_FINALE,
 	GS_DEMOSCREEN,
@@ -16,6 +15,7 @@ enum gamestate_t : int
 	GS_TITLELEVEL,		// [RH] A combination of GS_LEVEL and GS_DEMOSCREEN
 	GS_INTRO,
 	GS_CUTSCENE,
+	GS_CUTSCENELEVEL,	// [Sanya] Cutscene Level
 
 	GS_MENUSCREEN = GS_DEMOSCREEN,
 
