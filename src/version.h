@@ -41,16 +41,16 @@ const char *GetVersionString();
 
 /** Lots of different version numbers **/
 
-#define VERSIONSTR "1.2.1"
+#define VERSIONSTR "1.2.2"
 
 // The version as seen in the Windows resource
-#define RC_FILEVERSION 1,2,0,0
-#define RC_PRODUCTVERSION 1,2,0,0
+#define RC_FILEVERSION 1,2,2,0
+#define RC_PRODUCTVERSION 1,2,2,0
 #define RC_PRODUCTVERSION2 VERSIONSTR
 // These are for content versioning.
 #define VER_MAJOR 1
 #define VER_MINOR 2
-#define VER_REVISION 1
+#define VER_REVISION 2
 
 // These are for ZScript versioning
 #define ZSCRIPT_VER_MAJOR 4
