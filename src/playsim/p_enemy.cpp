@@ -2307,6 +2307,8 @@ nosee:
 	return 0;
 }
 
+EXTERN_CVAR(Int, cl_activesoundfrequency);
+
 //=============================================================================
 //
 // A_Chase
@@ -2669,7 +2671,8 @@ void A_DoChase (AActor *actor, bool fastchase, FState *meleestate, FState *missi
 	// make active sound
 	if (playactive && pr_chase() < 3)
 	{
-		actor->PlayActiveSound ();
+		if (!pr_chase(cl_activesoundfrequency))
+			actor->PlayActiveSound ();
 	}
 
 	actor->flags7 &= ~MF7_INCHASE;
