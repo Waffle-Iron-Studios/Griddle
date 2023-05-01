@@ -183,7 +183,7 @@ void P_Ticker (void)
 		Level->time++;
 		Level->maptime++;
 
-		if (!(Level->flags11 & LEVEL11_NOTOTALTIME) || !(Level->flags11 & LEVEL11_CUTSCENELEVEL))
+		if (!(Level->flags11 & LEVEL11_NOTOTALTIME) && !(Level->flags11 & LEVEL11_CUTSCENELEVEL))
 			Level->totaltime++;
 	}
 	if (players[consoleplayer].mo != NULL) {

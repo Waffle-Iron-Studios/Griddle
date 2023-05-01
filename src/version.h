@@ -41,11 +41,11 @@ const char *GetVersionString();
 
 /** Lots of different version numbers **/
 
-#define VERSIONSTR "1.2.3"
+#define VERSIONSTR "1.2.3a"
 
 // The version as seen in the Windows resource
-#define RC_FILEVERSION 1,2,3,0
-#define RC_PRODUCTVERSION 1,2,3,0
+#define RC_FILEVERSION 1,2,3,1
+#define RC_PRODUCTVERSION 1,2,3,1
 #define RC_PRODUCTVERSION2 VERSIONSTR
 // These are for content versioning.
 #define VER_MAJOR 1
