@@ -505,12 +505,6 @@ public:
 	FDialogueMap ClassRoots;
 	FCajunMaster BotInfo;
 
-	int ii_compatflags = 0;
-	int ii_compatflags2 = 0;
-	int ib_compatflags = 0;
-	int i_compatflags = 0;
-	int i_compatflags2 = 0;
-
 	DSectorMarker *SectorMarker;
 
 	uint8_t		md5[16];			// for savegame validation. If the MD5 does not match the savegame won't be loaded.
@@ -599,12 +593,6 @@ public:
 		auto p = GetConsolePlayer();
 		if (!p) return false;
 		return p->camera == mo;
-	}
-
-	bool MBF21Enabled() const
-	{
-		// The affected features only are a problem with Doom format maps - the flag should have no effect in Hexen and UDMF format.
-		return !(i_compatflags2 & COMPATF2_NOMBF21) || maptype != MAPTYPE_DOOM;
 	}
 
 	int NumMapSections;

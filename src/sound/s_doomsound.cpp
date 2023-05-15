@@ -474,18 +474,6 @@ static bool VerifyActorSound(AActor* ent, FSoundID& sound_id, int& channel, ECha
 		ent->Level != primaryLevel)
 		return false;
 
-	if ((flags & CHANF_MAYBE_LOCAL) && (compatflags & COMPATF_SILENTPICKUP))
-	{
-		if (!soundEngine->isListener(ent))
-		{
-			return false;
-		}
-	}
-
-	if (compatflags & COMPATF_MAGICSILENCE)
-	{ // For people who just can't play without a silent BFG.
-		channel = CHAN_WEAPON;
-	}
 	return true;
 }
 
@@ -641,7 +629,7 @@ void A_PlaySound(AActor* self, int soundid, int channel, double volume, int loop
 
 void S_StopSound (AActor *actor, int channel)
 {
-	soundEngine->StopSound(SOURCE_Actor, actor, (compatflags & COMPATF_MAGICSILENCE) ? -1 : channel);
+	soundEngine->StopSound(SOURCE_Actor, actor, channel);
 }
 
 //==========================================================================
@@ -667,7 +655,7 @@ void S_StopActorSounds(AActor *actor, int chanmin, int chanmax)
 
 void S_StopSound (const sector_t *sec, int channel)
 {
-	soundEngine->StopSound(SOURCE_Sector, sec, (compatflags & COMPATF_MAGICSILENCE) ? -1 : channel);
+	soundEngine->StopSound(SOURCE_Sector, sec, channel);
 }
 
 //==========================================================================
@@ -680,7 +668,7 @@ void S_StopSound (const sector_t *sec, int channel)
 
 void S_StopSound (const FPolyObj *poly, int channel)
 {
-	soundEngine->StopSound(SOURCE_Polyobj, poly, (compatflags & COMPATF_MAGICSILENCE) ? -1 : channel);
+	soundEngine->StopSound(SOURCE_Polyobj, poly, channel);
 }
 
 //==========================================================================
@@ -695,7 +683,7 @@ void S_RelinkSound (AActor *from, AActor *to)
 {
 
 	FVector3 p = from->SoundPos();
-	soundEngine->RelinkSound(SOURCE_Actor, from, to, !(compatflags2 & COMPATF2_SOUNDCUTOFF)? &p : nullptr);
+	soundEngine->RelinkSound(SOURCE_Actor, from, to,  &p);
 }
 
 //==========================================================================
@@ -706,7 +694,7 @@ void S_RelinkSound (AActor *from, AActor *to)
 
 void S_ChangeActorSoundVolume(AActor *actor, int channel, double dvolume)
 {
-	soundEngine->ChangeSoundVolume(SOURCE_Actor, actor, (compatflags & COMPATF_MAGICSILENCE)? -1 : channel, dvolume);
+	soundEngine->ChangeSoundVolume(SOURCE_Actor, actor, channel, dvolume);
 }
 
 //==========================================================================
@@ -750,10 +738,6 @@ bool S_GetSoundPlayingInfo (const FPolyObj *poly, FSoundID sound_id)
 
 bool S_IsActorPlayingSomething (AActor *actor, int channel, FSoundID sound_id)
 {
-	if (compatflags & COMPATF_MAGICSILENCE)
-	{
-		channel = CHAN_AUTO; // checks all channels
-	}
 	return soundEngine->IsSourcePlayingSomething(SOURCE_Actor, actor, channel, sound_id);
 }
 
@@ -931,28 +915,20 @@ void S_SerializeSounds(FSerializer &arc)
 
 static void CalcSectorSoundOrg(const DVector3& listenpos, const sector_t* sec, int channum, FVector3& pos)
 {
-	if (!(sec->Level->i_compatflags & COMPATF_SECTORSOUNDS))
+	// Are we inside the sector? If yes, the closest point is the one we're on.
+	if (primaryLevel->PointInSector(listenpos.X, listenpos.Y) == sec)
 	{
-		// Are we inside the sector? If yes, the closest point is the one we're on.
-		if (primaryLevel->PointInSector(listenpos.X, listenpos.Y) == sec)
-		{
-			pos.X = (float)listenpos.X;
-			pos.Z = (float)listenpos.Y;
-		}
-		else
-		{
-			// Find the closest point on the sector's boundary lines and use
-			// that as the perceived origin of the sound.
-			DVector2 xy;
-			sec->ClosestPoint(listenpos, xy);
-			pos.X = (float)xy.X;
-			pos.Z = (float)xy.Y;
-		}
+		pos.X = (float)listenpos.X;
+		pos.Z = (float)listenpos.Y;
 	}
 	else
 	{
-		pos.X = float(sec->centerspot.X);
-		pos.Z = float(sec->centerspot.Y);
+		// Find the closest point on the sector's boundary lines and use
+		// that as the perceived origin of the sound.
+		DVector2 xy;
+		sec->ClosestPoint(listenpos, xy);
+		pos.X = (float)xy.X;
+		pos.Z = (float)xy.Y;
 	}
 
 	// Set sound vertical position based on channel.

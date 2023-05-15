@@ -532,23 +532,6 @@ static int P_Move (AActor *actor)
 		dropoff = 2;
 	}
 
-	// [RH] I'm not so sure this is such a good idea
-	// [GZ] That's why it's compat-optioned.
-	if (actor->Level->i_compatflags & COMPATF_MBFMONSTERMOVE && !(actor->flags8 & MF8_NOFRICTION))
-	{
-		// killough 10/98: make monsters get affected by ice and sludge too:
-		movefactor = P_GetMoveFactor (actor, &friction);
-
-		if (friction < ORIG_FRICTION)
-		{ // sludge
-			speed = speed * ((ORIG_FRICTION_FACTOR - (ORIG_FRICTION_FACTOR-movefactor)/2)) / ORIG_FRICTION_FACTOR;
-			if (speed == 0)
-			{ // always give the monster a little bit of speed
-				speed = actor->Speed;
-			}
-		}
-	}
-
 	tryx = (origx = actor->X()) + (deltax = (speed * xspeed[actor->movedir]));
 	tryy = (origy = actor->Y()) + (deltay = (speed * yspeed[actor->movedir]));
 
@@ -731,10 +714,10 @@ int P_SmartMove(AActor* actor)
 {
 	AActor* target = actor->target;
 	int on_lift = false, dropoff = false, under_damage;
-	bool monster_avoid_hazards = (actor->Level->i_compatflags2 & COMPATF2_AVOID_HAZARDS) || (actor->flags8 & MF8_AVOIDHAZARDS);
+	bool monster_avoid_hazards = (actor->flags8 & MF8_AVOIDHAZARDS);
 
 	  /* killough 9/12/98: Stay on a lift if target is on one */
-	on_lift = ((actor->flags8 & MF8_STAYONLIFT) || (actor->Level->i_compatflags2 & COMPATF2_STAYONLIFT))
+	on_lift = ((actor->flags8 & MF8_STAYONLIFT))
 		&& target && target->health > 0 && P_IsOnLift(actor)
 		&& P_CheckTags(target->Sector, actor->Sector);
 
@@ -970,7 +953,7 @@ void P_NewChaseDir(AActor * actor)
 	if (actor->floorz - actor->dropoffz > actor->MaxDropOffHeight && 
 		actor->Z() <= actor->floorz && !(actor->flags & MF_DROPOFF) && 
 		!(actor->flags2 & MF2_ONMOBJ) &&
-		!(actor->flags & MF_FLOAT) && !(actor->Level->i_compatflags & COMPATF_DROPOFF))
+		!(actor->flags & MF_FLOAT))
 	{
 		FBoundingBox box(actor->X(), actor->Y(), actor->radius);
 		FBlockLinesIterator it(actor->Level, box);
@@ -987,7 +970,7 @@ void P_NewChaseDir(AActor * actor)
 				double front = line->frontsector->floorplane.ZatPoint(actor->PosRelative(line));
 				double back  = line->backsector->floorplane.ZatPoint(actor->PosRelative(line));
 				DAngle angle;
-		
+				
 				// The monster must contact one of the two floors,
 				// and the other must be a tall dropoff.
 				
@@ -1837,7 +1820,7 @@ int P_LookForPlayers (AActor *actor, INTBOOL allaround, FLookExParams *params)
 		// the player then, eh?
 		if(!(actor->flags6 & MF6_SEEINVISIBLE)) 
 		{
-			if ((player->mo->flags & MF_SHADOW && !(actor->Level->i_compatflags & COMPATF_INVISIBILITY)) ||
+			if (player->mo->flags & MF_SHADOW ||
 				player->mo->flags3 & MF3_GHOST)
 			{
 				if (player->mo->Distance2D (actor) > 128 && player->mo->Vel.XY().LengthSquared() < 5*5)
@@ -1898,7 +1881,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_Look)
 	}
 	else
 	{
-		targ = (self->Level->i_compatflags & COMPATF_SOUNDTARGET || self->flags & MF_NOSECTOR)? 
+		targ = self->flags & MF_NOSECTOR ? 
 			self->Sector->SoundTarget : self->LastHeard;
 
 		// [RH] If the soundtarget is dead, don't chase it
@@ -2031,7 +2014,7 @@ DEFINE_ACTION_FUNCTION(AActor, A_LookEx)
 	{
 		if (!(flags & LOF_NOSOUNDCHECK))
 		{
-			targ = (self->Level->i_compatflags & COMPATF_SOUNDTARGET || self->flags & MF_NOSECTOR)?
+			targ = self->flags & MF_NOSECTOR ?
 				self->Sector->SoundTarget : self->LastHeard;
 			if (targ != NULL)
 			{
@@ -2847,30 +2830,9 @@ bool P_CheckForResurrection(AActor* self, bool usevilestates, FState* state = nu
 				{
 					corpsehit->Translation = info->Translation; // Clean up bloodcolor translation from crushed corpses
 				}
-				if (self->Level->i_compatflags & COMPATF_VILEGHOSTS)
-				{
-					corpsehit->Height *= 4;
-					// [GZ] This was a commented-out feature, so let's make use of it,
-					// but only for ghost monsters so that they are visibly different.
-					if (corpsehit->Height == 0)
-					{
-						// Make raised corpses look ghostly
-						if (corpsehit->Alpha > 0.5)
-						{
-							corpsehit->Alpha /= 2;
-						}
-						// This will only work if the render style is changed as well.
-						if (corpsehit->RenderStyle == LegacyRenderStyles[STYLE_Normal])
-						{
-							corpsehit->RenderStyle = STYLE_Translucent;
-						}
-					}
-				}
-				else
-				{
-					corpsehit->Height = info->Height;	// [RH] Use real mobj height
-					corpsehit->radius = info->radius;	// [RH] Use real radius
-				}
+
+				corpsehit->Height = info->Height;	// [RH] Use real mobj height
+				corpsehit->radius = info->radius;	// [RH] Use real radius
 
 				corpsehit->Revive();
 
@@ -3257,8 +3219,7 @@ void A_BossDeath(AActor *self)
 		((Level->flags3 & (LEVEL3_E1M8SPECIAL | LEVEL3_E2M8SPECIAL | LEVEL3_E3M8SPECIAL | LEVEL3_E4M8SPECIAL | LEVEL3_E4M6SPECIAL)) == 0))
 		return;
 
-	if ((Level->i_compatflags & COMPATF_ANYBOSSDEATH) || ( // [GZ] Added for UAC_DEAD
-		((Level->flags & LEVEL_MAP07SPECIAL) && (flags8 & (MF8_MAP07BOSS1|MF8_MAP07BOSS2))) ||
+	if (((Level->flags & LEVEL_MAP07SPECIAL) && (flags8 & (MF8_MAP07BOSS1|MF8_MAP07BOSS2))) ||
 		((Level->flags & LEVEL_BRUISERSPECIAL) && (type == NAME_BaronOfHell)) ||
 		((Level->flags & LEVEL_CYBORGSPECIAL) && (type == NAME_Cyberdemon)) ||
 		((Level->flags & LEVEL_SPIDERSPECIAL) && (type == NAME_SpiderMastermind)) ||
@@ -3270,8 +3231,7 @@ void A_BossDeath(AActor *self)
 		((Level->flags3 & LEVEL3_E3M8SPECIAL) && (flags8 & MF8_E3M8BOSS)) ||
 		((Level->flags3 & LEVEL3_E4M8SPECIAL) && (flags8 & MF8_E4M8BOSS)) ||
 		((Level->flags3 & LEVEL3_E4M6SPECIAL) && (flags8 & MF8_E4M6BOSS))
-		))
-		;
+		);
 	else
 		return;
 

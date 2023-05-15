@@ -634,31 +634,27 @@ extend class Actor
 			Actor mo;
 			double spawnz = 0;
 
-			if (!(Level.compatflags & COMPATF_NOTOSSDROPS))
+			int style = sv_dropstyle;
+			if (style == 0)
 			{
-				int style = sv_dropstyle;
-				if (style == 0)
-				{
-					style = gameinfo.defaultdropstyle;
-				}
-				if (style == 2)
-				{
-					spawnz = 24;
-				}
-				else
-				{
-					spawnz = Height / 2;
-				}
+				style = gameinfo.defaultdropstyle;
+			}
+			if (style == 2)
+			{
+				spawnz = 24;
+			}
+			else
+			{
+				spawnz = Height / 2;
 			}
 			mo = Spawn(item, pos + (0, 0, spawnz), ALLOW_REPLACE);
 			if (mo != NULL)
 			{
 				mo.bDropped = true;
 				mo.bNoGravity = false;	// [RH] Make sure it is affected by gravity
-				if (!(Level.compatflags & COMPATF_NOTOSSDROPS))
-				{
-					mo.TossItem ();
-				}
+
+				mo.TossItem ();
+
 				let inv = Inventory(mo);
 				if (inv)
 				{

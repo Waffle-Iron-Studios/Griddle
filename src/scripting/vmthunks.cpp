@@ -2727,8 +2727,6 @@ DEFINE_FIELD_X(LevelInfo, level_info_t, cdtrack)
 DEFINE_FIELD_X(LevelInfo, level_info_t, gravity)
 DEFINE_FIELD_X(LevelInfo, level_info_t, aircontrol)
 DEFINE_FIELD_X(LevelInfo, level_info_t, airsupply)
-DEFINE_FIELD_X(LevelInfo, level_info_t, compatflags)
-DEFINE_FIELD_X(LevelInfo, level_info_t, compatflags2)
 DEFINE_FIELD_X(LevelInfo, level_info_t, deathsequence)
 DEFINE_FIELD_X(LevelInfo, level_info_t, fogdensity)
 DEFINE_FIELD_X(LevelInfo, level_info_t, outsidefogdensity)
@@ -2785,8 +2783,6 @@ DEFINE_FIELD(FLevelLocals, pixelstretch)
 DEFINE_FIELD(FLevelLocals, MusicVolume)
 DEFINE_FIELD(FLevelLocals, deathsequence)
 DEFINE_FIELD_BIT(FLevelLocals, frozenstate, frozen, 1)	// still needed for backwards compatibility.
-DEFINE_FIELD_NAMED(FLevelLocals, i_compatflags, compatflags)
-DEFINE_FIELD_NAMED(FLevelLocals, i_compatflags2, compatflags2)
 DEFINE_FIELD(FLevelLocals, info);
 
 DEFINE_FIELD_BIT(FLevelLocals, flags, noinventorybar, LEVEL_NOINVENTORYBAR)

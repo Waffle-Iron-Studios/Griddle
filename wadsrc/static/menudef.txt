@@ -397,7 +397,6 @@ OptionMenu "GameplayMenu" protected
 	Title "$OPTMNU_GAMEPLAY"
 
 	Submenu "$OPTMNU_GAMEPLAY",			"GameplayOptions"
-	Submenu "$OPTMNU_COMPATIBILITY",	"CompatibilityOptions"
 	Submenu "$OPTMNU_AUTOMAP",			"AutomapOptions"
 	Submenu "$OPTMNU_HUD",				"HUDOptions"
 	Submenu "$OPTMNU_MISCELLANEOUS",	"MiscOptions"
@@ -1801,126 +1800,6 @@ OptionMenu CoopOptions protected
 	Option "$GMPLYMNU_SPAWNWHEREDIED",			"sv_samespawnspot", "YesNo"
 	Option "$GMPLYMNU_NOPLAYERCLIP",			"sv_noplayerclip", "YesNo"
 	Class "GameplayMenu"
-}
-
-/*=======================================
- *
- * Compatibility Options Menu
- *
- *=======================================*/
-
-
-OptionValue CompatModes
-{
-	0, "$OPTVAL_DEFAULT"
-	1, "$OPTVAL_DOOM"
-	2, "$OPTVAL_DOOMSTRICT"
-	3, "$OPTVAL_BOOM"
-	6, "$OPTVAL_BOOMSTRICT"
-	5, "$OPTVAL_MBF"
-	7, "$OPTVAL_MBFSTRICT"
-	4, "$OPTVAL_ZDOOM2063"
-}
-
-OptionMenu "CompatibilityOptions" protected
-{
-	Position -35
-	Title "$CMPTMNU_TITLE"
-	Option "$CMPTMNU_MODE",							"compatmode", "CompatModes", "", 1
-	StaticText " "
-	Submenu "$CMPTMNU_ACTORBEHAVIOR",				"CompatActorMenu"
-	Submenu "$CMPTMNU_DEHACKEDBEHAVIOR",			"CompatDehackedMenu"
-	Submenu "$CMPTMNU_MAPACTIONBEHAVIOR",			"CompatMapMenu"
-	Submenu "$CMPTMNU_PHYSICSBEHAVIOR",				"CompatPhysicsMenu"
-	Submenu "$CMPTMNU_RENDERINGBEHAVIOR",			"CompatRenderMenu"
-	Submenu "$CMPTMNU_SOUNDBEHAVIOR",				"CompatSoundMenu"
-	Class "CompatibilityMenu"
-}
-
-OptionMenu "CompatActorMenu" protected
-{
-	Position -35
-	Title "$CMPTMNU_ACTORBEHAVIOR"
-	Option "$CMPTMNU_VILEGHOSTS",					"compat_VILEGHOSTS", "YesNo"
-	Option "$CMPTMNU_NOBLOCKFRIENDS",				"compat_NOBLOCKFRIENDS", "YesNo"
-	Option "$CMPTMNU_LIMITPAIN",					"compat_LIMITPAIN", "YesNo"
-	Option "$CMPTMNU_MBFMONSTERMOVE",				"compat_MBFMONSTERMOVE", "YesNo"
-	Option "$CMPTMNU_CROSSDROPOFF",					"compat_CROSSDROPOFF", "YesNo"
-	Option "$CMPTMNU_DROPOFF",						"compat_DROPOFF", "YesNo"
-	Option "$CMPTMNU_INVISIBILITY",					"compat_INVISIBILITY", "YesNo"
-	Option "$CMPTMNU_MINOTAUR",						"compat_MINOTAUR", "YesNo"
-	Option "$CMPTMNU_NOTOSSDROPS",					"compat_NOTOSSDROPS", "YesNo"
-	Class "CompatibilityMenu"
-}
-
-OptionMenu "CompatDehackedMenu" protected
-{
-	Position -35
-	Title "$CMPTMNU_DEHACKEDBEHAVIOR"
-	Option "$CMPTMNU_DEHHEALTH",					"compat_DEHHEALTH", "YesNo"
-	Option "$CMPTMNU_MUSHROOM",						"compat_MUSHROOM", "YesNo"
-	Class "CompatibilityMenu"
-}
-
-OptionMenu "CompatMapMenu" protected
-{
-	Position -35
-	Title "$CMPTMNU_MAPACTIONBEHAVIOR"
-	Option "$CMPTMNU_USEBLOCKING",					"compat_USEBLOCKING", "YesNo"
-	Option "$CMPTMNU_ANYBOSSDEATH",					"compat_ANYBOSSDEATH", "YesNo"
-	Option "$CMPTMNU_NODOORLIGHT",					"compat_NODOORLIGHT", "YesNo"
-	Option "$CMPTMNU_LIGHT",						"compat_LIGHT", "YesNo"
-	Option "$CMPTMNU_SHORTTEX",						"compat_SHORTTEX", "YesNo"
-	Option "$CMPTMNU_STAIRS",						"compat_stairs", "YesNo"
-	Option "$CMPTMNU_FLOORMOVE",					"compat_floormove", "YesNo"
-	Option "$CMPTMNU_POINTONLINE",					"compat_pointonline", "YesNo"
-	Option "$CMPTMNU_MULTIEXIT",					"compat_multiexit", "YesNo"
-	Option "$CMPTMNU_TELEPORT",						"compat_teleport", "YesNo"
-	Option "$CMPTMNU_PUSHWINDOW",					"compat_pushwindow", "YesNo"
-	Option "$CMPTMNU_CHECKSWITCHRANGE",				"compat_checkswitchrange", "YesNo"
-	Option "$CMPTMNU_RAILINGHACK",					"compat_railing", "YesNo"
-	Option "$CMPTMNU_NOMBF21",						"compat_nombf21", "YesNo"
-	Class "CompatibilityMenu"
-}
-
-OptionMenu "CompatPhysicsMenu" protected
-{
-	Position -35
-	Title "$CMPTMNU_PHYSICSBEHAVIOR"
-	Option "$CMPTMNU_NOPASSOVER",					"compat_nopassover", "YesNo"
-	Option "$CMPTMNU_BOOMSCROLL",					"compat_BOOMSCROLL", "YesNo"
-	Option "$CMPTMNU_BADANGLES",					"compat_badangles", "YesNo"
-	Option "$CMPTMNU_WALLRUN",						"compat_WALLRUN", "YesNo"
-	Option "$CMPTMNU_RAVENSCROLL",					"compat_RAVENSCROLL", "YesNo"
-	Option "$CMPTMNU_TRACE",						"compat_TRACE", "YesNo"
-	Option "$CMPTMNU_HITSCAN",						"compat_HITSCAN", "YesNo"
-	Option "$CMPTMNU_MISSILECLIP",					"compat_MISSILECLIP", "YesNo"
-	Option "$CMPTMNU_EXPLODE1",						"compat_explode1", "YesNo"
-	Option "$CMPTMNU_EXPLODE2",						"compat_explode2", "YesNo"
-	Class "CompatibilityMenu"
-}
-
-
-OptionMenu "CompatRenderMenu" protected
-{
-	Position -35
-	Title "$CMPTMNU_RENDERINGBEHAVIOR"
-	Option "$CMPTMNU_POLYOBJ",						"compat_POLYOBJ", "YesNo"
-	Option "$CMPTMNU_MASKEDMIDTEX",					"compat_MASKEDMIDTEX", "YesNo"
-	Option "$CMPTMNU_SPRITESORT",					"compat_SPRITESORT", "YesNo"
-	Class "CompatibilityMenu"
-}
-
-OptionMenu "CompatSoundMenu" protected
-{
-	Position -35
-	Title "$CMPTMNU_SOUNDBEHAVIOR"
-	Option "$CMPTMNU_SOUNDSLOTS",					"compat_soundslots", "YesNo"
-	Option "$CMPTMNU_SILENTPICKUP",					"compat_SILENTPICKUP", "YesNo"
-	Option "$CMPTMNU_SILENTINSTANTFLOORS",			"compat_silentinstantfloors", "YesNo"
-	Option "$CMPTMNU_SECTORSOUNDS",					"compat_SECTORSOUNDS", "YesNo"
-	Option "$CMPTMNU_SOUNDTARGET",					"compat_SOUNDTARGET", "YesNo"
-	Class "CompatibilityMenu"
 }
 
 /*=======================================

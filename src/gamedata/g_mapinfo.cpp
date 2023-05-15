@@ -271,8 +271,6 @@ void level_info_t::Reset()
 	aircontrol = 0.f;
 	WarpTrans = 0;
 	airsupply = 20;
-	compatflags = compatflags2 = 0;
-	compatmask = compatmask2 = 0;
 	Translator = "";
 	RedirectType = NAME_None;
 	RedirectMapName = "";
@@ -1761,7 +1759,6 @@ MapFlagHandlers[] =
 	{ "deathslideshow",					MITYPE_IGNORE,		0, 0 },
 	{ "strictmonsteractivation",		MITYPE_CLRFLAG2,	LEVEL2_LAXMONSTERACTIVATION, LEVEL2_LAXACTIVATIONMAPINFO },
 	{ "laxmonsteractivation",			MITYPE_SETFLAG2,	LEVEL2_LAXMONSTERACTIVATION, LEVEL2_LAXACTIVATIONMAPINFO },
-	{ "additive_scrollers",				MITYPE_COMPATFLAG, COMPATF_BOOMSCROLL, 0 },
 	{ "keepfullinventory",				MITYPE_SETFLAG2,	LEVEL2_KEEPFULLINVENTORY, 0 },
 	{ "resetitems",						MITYPE_SETFLAG3,	LEVEL3_REMOVEITEMS, 0 },
 	{ "monsterfallingdamage",			MITYPE_SETFLAG2,	LEVEL2_MONSTERFALLINGDAMAGE, 0 },
@@ -1811,50 +1808,6 @@ MapFlagHandlers[] =
 	{ "noautosaves",					MITYPE_SETFLAG11,	LEVEL11_NOAUTOSAVES, 0 },
 	{ "cutscenelevel",					MITYPE_SETFLAG11,	LEVEL11_CUTSCENELEVEL, 0 },
 	{ "nobotnodes",						MITYPE_IGNORE,	0, 0 },		// Skulltag option: nobotnodes
-	{ "compat_shorttex",				MITYPE_COMPATFLAG, COMPATF_SHORTTEX, 0 },
-	{ "compat_stairs",					MITYPE_COMPATFLAG, COMPATF_STAIRINDEX, 0 },
-	{ "compat_limitpain",				MITYPE_COMPATFLAG, COMPATF_LIMITPAIN, 0 },
-	{ "compat_nopassover",				MITYPE_COMPATFLAG, COMPATF_NO_PASSMOBJ, 0 },
-	{ "compat_notossdrops",				MITYPE_COMPATFLAG, COMPATF_NOTOSSDROPS, 0 },
-	{ "compat_useblocking", 			MITYPE_COMPATFLAG, COMPATF_USEBLOCKING, 0 },
-	{ "compat_nodoorlight",				MITYPE_COMPATFLAG, COMPATF_NODOORLIGHT, 0 },
-	{ "compat_ravenscroll",				MITYPE_COMPATFLAG, COMPATF_RAVENSCROLL, 0 },
-	{ "compat_soundtarget",				MITYPE_COMPATFLAG, COMPATF_SOUNDTARGET, 0 },
-	{ "compat_dehhealth",				MITYPE_COMPATFLAG, COMPATF_DEHHEALTH, 0 },
-	{ "compat_trace",					MITYPE_COMPATFLAG, COMPATF_TRACE, 0 },
-	{ "compat_dropoff",					MITYPE_COMPATFLAG, COMPATF_DROPOFF, 0 },
-	{ "compat_boomscroll",				MITYPE_COMPATFLAG, COMPATF_BOOMSCROLL, 0 },
-	{ "compat_invisibility",			MITYPE_COMPATFLAG, COMPATF_INVISIBILITY, 0 },
-	{ "compat_silent_instant_floors",	MITYPE_COMPATFLAG, COMPATF_SILENT_INSTANT_FLOORS, 0 },
-	{ "compat_sectorsounds",			MITYPE_COMPATFLAG, COMPATF_SECTORSOUNDS, 0 },
-	{ "compat_missileclip",				MITYPE_COMPATFLAG, COMPATF_MISSILECLIP, 0 },
-	{ "compat_crossdropoff",			MITYPE_COMPATFLAG, COMPATF_CROSSDROPOFF, 0 },
-	{ "compat_anybossdeath",			MITYPE_COMPATFLAG, COMPATF_ANYBOSSDEATH, 0 },
-	{ "compat_minotaur",				MITYPE_COMPATFLAG, COMPATF_MINOTAUR, 0 },
-	{ "compat_mushroom",				MITYPE_COMPATFLAG, COMPATF_MUSHROOM, 0 },
-	{ "compat_mbfmonstermove",			MITYPE_COMPATFLAG, COMPATF_MBFMONSTERMOVE, 0 },
-	{ "compat_corpsegibs",				MITYPE_COMPATFLAG, 0, 0 },	// this flag no longer exists, but we need it here for old mapinfos.
-	{ "compat_vileghosts",				MITYPE_COMPATFLAG, COMPATF_VILEGHOSTS, 0 },
-	{ "compat_noblockfriends",			MITYPE_COMPATFLAG, COMPATF_NOBLOCKFRIENDS, 0 },
-	{ "compat_spritesort",				MITYPE_COMPATFLAG, COMPATF_SPRITESORT, 0 },
-	{ "compat_light",					MITYPE_COMPATFLAG, COMPATF_LIGHT, 0 },
-	{ "compat_polyobj",					MITYPE_COMPATFLAG, COMPATF_POLYOBJ, 0 },
-	{ "compat_maskedmidtex",			MITYPE_COMPATFLAG, COMPATF_MASKEDMIDTEX, 0 },
-	{ "compat_badangles",				MITYPE_COMPATFLAG, 0, COMPATF2_BADANGLES },
-	{ "compat_floormove",				MITYPE_COMPATFLAG, 0, COMPATF2_FLOORMOVE },
-	{ "compat_soundcutoff",				MITYPE_COMPATFLAG, 0, COMPATF2_SOUNDCUTOFF },
-	{ "compat_pointonline",				MITYPE_COMPATFLAG, 0, COMPATF2_POINTONLINE },
-	{ "compat_multiexit",				MITYPE_COMPATFLAG, 0, COMPATF2_MULTIEXIT },
-	{ "compat_teleport",				MITYPE_COMPATFLAG, 0, COMPATF2_TELEPORT },
-	{ "compat_pushwindow",				MITYPE_COMPATFLAG, 0, COMPATF2_PUSHWINDOW },
-	{ "compat_checkswitchrange",		MITYPE_COMPATFLAG, 0, COMPATF2_CHECKSWITCHRANGE },
-	{ "compat_explode1",				MITYPE_COMPATFLAG, 0, COMPATF2_EXPLODE1 },
-	{ "compat_explode2",				MITYPE_COMPATFLAG, 0, COMPATF2_EXPLODE2 },
-	{ "compat_railing",					MITYPE_COMPATFLAG, 0, COMPATF2_RAILING },
-	{ "compat_scriptwait",				MITYPE_COMPATFLAG, 0, COMPATF2_SCRIPTWAIT },
-	{ "compat_avoidhazards",			MITYPE_COMPATFLAG, 0, COMPATF2_AVOID_HAZARDS },
-	{ "compat_stayonlift",				MITYPE_COMPATFLAG, 0, COMPATF2_STAYONLIFT },
-	{ "compat_nombf21",					MITYPE_COMPATFLAG, 0, COMPATF2_NOMBF21 },
 	{ "cd_start_track",					MITYPE_EATNEXT,	0, 0 },
 	{ "cd_end1_track",					MITYPE_EATNEXT,	0, 0 },
 	{ "cd_end2_track",					MITYPE_EATNEXT,	0, 0 },
@@ -2007,37 +1960,6 @@ void FMapInfoParser::ParseMapDefinition(level_info_t &info)
 			case MITYPE_SCFLAGS11:
 				info.flags11 = (info.flags11 & handler->data2) | handler->data1;
 				break;
-
-			case MITYPE_COMPATFLAG:
-			{
-				int set = 1;
-				if (format_type == FMT_New)
-				{
-					if (CheckAssign())
-					{
-						sc.MustGetNumber();
-						set = sc.Number;
-					}
-				}
-				else
-				{
-					if (sc.CheckNumber()) set = sc.Number;
-				}
-
-				if (set)
-				{
-					info.compatflags |= handler->data1;
-					info.compatflags2 |= handler->data2;
-				}
-				else
-				{
-					info.compatflags &= ~handler->data1;
-					info.compatflags2 &= ~handler->data2;
-				}
-				info.compatmask |= handler->data1;
-				info.compatmask2 |= handler->data2;
-			}
-			break;
 
 			default:
 				// should never happen

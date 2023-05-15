@@ -169,20 +169,6 @@ CCMD (mapchecksum)
 	}
 }
 
-//==========================================================================
-//
-// CCMD hiddencompatflags
-//
-//==========================================================================
-
-CCMD (hiddencompatflags)
-{
-	for(auto Level : AllLevels())
-	{
-		Printf("%s: %08x %08x %08x\n", Level->MapName.GetChars(), Level->ii_compatflags, Level->ii_compatflags2, Level->ib_compatflags);
-	}
-}
-
 CCMD(dumpportals)
 {
 	for (auto Level : AllLevels())

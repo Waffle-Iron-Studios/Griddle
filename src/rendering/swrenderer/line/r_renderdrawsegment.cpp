@@ -91,7 +91,7 @@ namespace swrenderer
 		auto viewport = Thread->Viewport.get();
 		Clip3DFloors *clip3d = Thread->Clip3D.get();
 
-		auto tex = GetPalettedSWTexture(curline->sidedef->GetTexture(side_t::mid), true, !!(curline->GetLevel()->i_compatflags & COMPATF_MASKEDMIDTEX));
+		auto tex = GetPalettedSWTexture(curline->sidedef->GetTexture(side_t::mid), true, true);
 		const short *mfloorclip = ds->drawsegclip.sprbottomclip;
 		const short *mceilingclip = ds->drawsegclip.sprtopclip;
 
@@ -149,8 +149,7 @@ namespace swrenderer
 			  // or above the ceiling, so the appropriate end won't be clipped automatically when adding
 			  // this drawseg.
 				if ((curline->linedef->flags & ML_CLIP_MIDTEX) ||
-					(curline->sidedef->Flags & WALLF_CLIP_MIDTEX) ||
-					(curline->GetLevel()->ib_compatflags & BCOMPATF_CLIPMIDTEX))
+					(curline->sidedef->Flags & WALLF_CLIP_MIDTEX))
 				{
 					ClipMidtex(ds, x1, x2);
 				}
@@ -167,8 +166,7 @@ namespace swrenderer
 			  // or above the ceiling, so the appropriate end won't be clipped automatically when adding
 			  // this drawseg.
 				if ((curline->linedef->flags & ML_CLIP_MIDTEX) ||
-					(curline->sidedef->Flags & WALLF_CLIP_MIDTEX) ||
-					(curline->GetLevel()->ib_compatflags & BCOMPATF_CLIPMIDTEX))
+					(curline->sidedef->Flags & WALLF_CLIP_MIDTEX))
 				{
 					ClipMidtex(ds, x1, x2);
 				}

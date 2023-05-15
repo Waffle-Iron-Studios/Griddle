@@ -354,11 +354,6 @@ void DDoor::Construct(sector_t *sec, EVlDoor type, double speed, int delay, int 
 	m_TopCountdown = topcountdown;
 	m_LightTag = lightTag;
 
-	if (Level->i_compatflags & COMPATF_NODOORLIGHT)
-	{
-		m_LightTag = 0;
-	}
-
 	switch (type)
 	{
 	case doorClose:

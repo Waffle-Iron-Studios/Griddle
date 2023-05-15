@@ -704,7 +704,7 @@ void FLevelLocals::ChangeLevel(const char *levelname, int position, int inflags,
 		Printf (TEXTCOLOR_RED "Unloading scripts cannot exit the level again.\n");
 		return;
 	}
-	if (gameaction == ga_completed && !(i_compatflags2 & COMPATF2_MULTIEXIT))	// do not exit multiple times.
+	if (gameaction == ga_completed)	// do not exit multiple times.
 	{
 		return;
 	}
@@ -1730,10 +1730,6 @@ int FLevelLocals::FinishTravel ()
 				VMCall(func, params, 1, nullptr, 0);
 			}
 		}
-		if (ib_compatflags & BCOMPATF_RESETPLAYERSPEED)
-		{
-			pawn->Speed = pawn->GetDefault()->Speed;
-		}
 
 		IFVIRTUALPTRNAME(pawn, NAME_PlayerPawn, Travelled)
 		{
@@ -1865,9 +1861,6 @@ void FLevelLocals::Init()
 	deathsequence = info->deathsequence;
 
 	pixelstretch = info->pixelstretch;
-
-	compatflags->Callback();
-	compatflags2->Callback();
 
 	DefaultEnvironment = info->DefaultEnvironment;
 
@@ -2364,36 +2357,9 @@ int FLevelLocals::GetInfighting()
 
 void FLevelLocals::SetCompatLineOnSide(bool state)
 {
-	int on = (state && (i_compatflags2 & COMPATF2_POINTONLINE));
+	int on = state;
 	if (on) for (auto &l : lines) l.flags |= ML_COMPATSIDE;
 	else for (auto &l : lines) l.flags &= ~ML_COMPATSIDE;
-}
-
-int FLevelLocals::GetCompatibility(int mask)
-{
-	if (info == nullptr) return mask;
-	else return (mask & ~info->compatmask) | (info->compatflags & info->compatmask);
-}
-
-int FLevelLocals::GetCompatibility2(int mask)
-{
-	return (info == nullptr) ? mask
-		: (mask & ~info->compatmask2) | (info->compatflags2 & info->compatmask2);
-}
-
-void FLevelLocals::ApplyCompatibility()
-{
-	int old = i_compatflags;
-	i_compatflags = GetCompatibility(compatflags) | ii_compatflags;
-	if ((old ^ i_compatflags) & COMPATF_POLYOBJ)
-	{
-		ClearAllSubsectorLinks();
-	}
-}
-
-void FLevelLocals::ApplyCompatibility2()
-{
-	i_compatflags2 = GetCompatibility2(compatflags2) | ii_compatflags2;
 }
 
 //==========================================================================

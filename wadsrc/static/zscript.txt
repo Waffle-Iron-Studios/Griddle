@@ -41,7 +41,6 @@ version "4.10"
 #include "zscript/events.zs"
 #include "zscript/destructible.zs"
 #include "zscript/level_postprocessor.zs"
-#include "zscript/level_compatibility.zs"
 
 #include "zscript/actors/actor.zs"
 #include "zscript/actors/checks.zs"
@@ -296,6 +295,5 @@ version "4.10"
 
 #include "zscript/ui/intermission.zs"
 
-#include "zscript/compatibility.zs"
 #include "zscript/scriptutil/scriptutil.zs"
 #include "zscript/actors/mbf21.zs"

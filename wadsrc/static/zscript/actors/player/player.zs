@@ -1972,7 +1972,7 @@ class PlayerPawn : Actor
 
 	override int GetMaxHealth(bool withupgrades) const
 	{
-		int ret = MaxHealth > 0? MaxHealth : ((Level.compatflags & COMPATF_DEHHEALTH)? 100 : deh.MaxHealth);
+		int ret = MaxHealth > 0? MaxHealth : deh.MaxHealth;
 		if (withupgrades) ret += stamina + BonusHealth;
 		return ret;
 	}

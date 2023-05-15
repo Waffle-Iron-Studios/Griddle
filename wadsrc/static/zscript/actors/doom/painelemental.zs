@@ -86,8 +86,6 @@ extend class Actor
 		}
 
 		// [RH] make this optional
-		if (limit < 0 && (Level.compatflags & COMPATF_LIMITPAIN))
-			limit = 21;
 
 		if (limit > 0)
 		{

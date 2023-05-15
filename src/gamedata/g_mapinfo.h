@@ -372,8 +372,6 @@ struct level_info_t
 	double		aircontrol;
 	int			WarpTrans;
 	int			airsupply;
-	uint32_t	compatflags, compatflags2;
-	uint32_t	compatmask, compatmask2;
 	FString		Translator;	// for converting Doom-format linedef and sector types.
 	int			DefaultEnvironment;	// Default sound environment for the map.
 	FName		Intermission;

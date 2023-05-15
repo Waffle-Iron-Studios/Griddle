@@ -667,13 +667,6 @@ void FLevelLocals::EV_LightTurnOn(int tag, int bright)
 			}
 		}
 		sector->SetLightLevel(tbright);
-
-		//jff 5/17/98 unless compatibility optioned
-		//then maximum near ANY tagged sector
-		if (i_compatflags & COMPATF_LIGHT)
-		{
-			bright = tbright;
-		}
 	}
 }
 

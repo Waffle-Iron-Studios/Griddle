@@ -347,8 +347,6 @@ struct LevelInfo native
 	native readonly double gravity;
 	native readonly double aircontrol;
 	native readonly int airsupply;
-	native readonly int compatflags;
-	native readonly int compatflags2;
 	native readonly name deathsequence;
 	native readonly int fogdensity;
 	native readonly int outsidefogdensity;
@@ -468,8 +466,6 @@ struct LevelLocals native
 	native readonly float pixelstretch;
 	native readonly float MusicVolume;
 	native name deathsequence;
-	native readonly int compatflags;
-	native readonly int compatflags2;
 	native readonly LevelInfo info;
 
 	native bool nousersave;
