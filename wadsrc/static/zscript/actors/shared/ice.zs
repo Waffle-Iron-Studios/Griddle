@@ -190,7 +190,78 @@ extend class Actor
 	{
 		A_SetTranslation('Ice');
 		A_FreezeDeath();
+	}	
+	
+	Actor A_GriddleSpawnGib(Class<Actor> gibtype = null, bool dontthrust = false)
+	{
+		if (!gibtype)
+			return null;
+
+		Actor a;
+		
+		Vector3 vel3;
+		
+		Vector3 pos3;
+		pos3.x = self.pos.x + Random[GibFx](-24, 24);
+		pos3.y = self.pos.y + Random[GibFx](-24, 24);
+		pos3.z = self.pos.z + Random[GibFx](4, 10);
+		
+		if (!dontthrust)
+		{
+			vel3.x = self.vel.x + Random[GibFx](-20, 20);
+			vel3.y = self.vel.y + Random[GibFx](-20, 20);
+			vel3.z = self.vel.z + Random[GibFx](0, 12);
+		}
+		
+		a = self.Spawn(gibtype, pos3, ALLOW_REPLACE);
+		
+		a.vel = vel3;
+		a.A_FaceMovementDirection();
+		
+		return a;
+	}
+
+	void A_GriddleFreezeDeath()
+	{
+		for (int i = 0; i <= 10; i++)
+		{
+			A_GriddleSpawnGib("IceChunk");
+		}
+		
+		bSolid = bShootable = bNoBlood = bIceCorpse = bPushable = bTelestomp = bCanPass = bSlidesOnWalls = bCrashed = true;
+
+		Height = Default.Height;
+		
+		A_SetTranslation('Icy');
+		A_SetRenderStyle(1.0, STYLE_Normal);
+		A_StartSound("misc/freeze", CHAN_BODY);
+
+		if (special)
+		{
+			A_CallSpecial(special, args[0],	args[1], args[2], args[3], args[4]);
+			special = 0;
+		}
 	}
 	
-
+	void A_GriddleIceShards(Class<Actor> icepuddle = null)
+	{
+		if (vel != (0, 0, 0) && !bShattering)
+			return;
+		
+		vel = (0, 0, 0);
+		
+		A_StartSound("misc/icebreak", CHAN_BODY);
+		
+		for (int i = 0; i <= 24; i++)
+		{
+			A_GriddleSpawnGib("IceChunk");
+		}
+		
+		A_NoBlocking();
+		
+		if (icepuddle)
+			A_SpawnItemEx(icepuddle, flags:SXF_NOCHECKPOSITION);
+		
+		SetStateLabel("Null");
+	}
 }
