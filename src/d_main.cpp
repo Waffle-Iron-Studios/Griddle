@@ -308,18 +308,6 @@ CUSTOM_CVAR(Int, I_FriendlyWindowTitle, 1, CVAR_GLOBALCONFIG|CVAR_ARCHIVE|CVAR_N
 }
 CVAR(Bool, cl_nointros, false, CVAR_ARCHIVE)
 
-CUSTOM_CVAR(Int, cl_activesoundfrequency, 1, CVAR_ARCHIVE | CVAR_GLOBALCONFIG)
-{
-	if (self < 0)
-	{
-		self = 0;
-	}
-	else if (self > 2)
-	{
-		self = 2;
-	}
-}
-
 
 bool hud_toggled = false;
 bool wantToRestart;
