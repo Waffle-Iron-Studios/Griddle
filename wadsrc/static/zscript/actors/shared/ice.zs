@@ -221,7 +221,7 @@ extend class Actor
 		return a;
 	}
 
-	void A_GriddleFreezeDeath()
+	void A_GriddleFreezeDeath(name trans='Ice')
 	{
 		for (int i = 0; i <= 10; i++)
 		{
@@ -232,7 +232,7 @@ extend class Actor
 
 		Height = Default.Height;
 		
-		A_SetTranslation('Icy');
+		A_SetTranslation(name);
 		A_SetRenderStyle(1.0, STYLE_Normal);
 		A_StartSound("misc/freeze", CHAN_BODY);
 
