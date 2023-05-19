@@ -221,20 +221,53 @@ extend class Actor
 		return a;
 	}
 
-	void A_GriddleFreezeDeath(name trans='Ice')
+	void A_GriddleFreezeDeath(Name trans='Ice', Class<Actor> chunk="IceChunk", Class<Actor> chunkhead="IceChunkHead")
 	{
 		for (int i = 0; i <= 10; i++)
 		{
-			A_GriddleSpawnGib("IceChunk");
+			A_GriddleSpawnGib(chunk);
 		}
 		
 		bSolid = bShootable = bNoBlood = bIceCorpse = bPushable = bTelestomp = bCanPass = bSlidesOnWalls = bCrashed = true;
 
 		Height = Default.Height;
 		
-		A_SetTranslation(name);
+		A_SetTranslation(trans);
 		A_SetRenderStyle(1.0, STYLE_Normal);
 		A_StartSound("misc/freeze", CHAN_BODY);
+
+		if (player)
+		{
+			// attach the player's view to a chunk of ice
+			Actor head = Spawn(chunkhead, pos + (0, 0, player.mo.ViewHeight), ALLOW_REPLACE);
+			if (head != null)
+			{
+				head.Vel.X = random2[FreezeDeathChunks]() / 128.;
+				head.Vel.Y = random2[FreezeDeathChunks]() / 128.;
+				head.Vel.Z = (head.pos.Z - pos.Z) / Height * 4;
+
+				head.health = health;
+				head.Angle = Angle;
+				if (head is "PlayerPawn")
+				{
+					head.player = player;
+					head.player.mo = PlayerPawn(head);
+					player = null;
+					head.ObtainInventory (self);
+				}
+				head.Pitch = 0.;
+				if (head.player.camera == self)
+				{
+					head.player.camera = head;
+				}
+			}
+		}
+
+		// [RH] Do some stuff to make this more useful outside Hexen
+		if (bBossDeath)
+		{
+			A_BossDeath();
+		}
 
 		if (special)
 		{
@@ -243,7 +276,7 @@ extend class Actor
 		}
 	}
 	
-	void A_GriddleIceShards(Class<Actor> icepuddle = null)
+	void A_GriddleIceShards(Class<Actor> chunk="IceChunk", Class<Actor> icepuddle = null)
 	{
 		if (vel != (0, 0, 0) && !bShattering)
 			return;
