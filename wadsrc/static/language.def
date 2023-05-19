@@ -389,7 +389,3 @@ OPTMNU_MULTIPLAYER = "Multiplayer Options";
 OPTMNU_SYSTEM = "System Options";
 OPTMNU_LIGHT = "Light Options";
 OPTMNU_SPRITE = "Sprite Options";
-
-SND_ENEMYACTFREQ_CLASSIC = "Classic";
-SND_ENEMYACTFREQ_DEFAULT = "Default";
-SND_ENEMYACTFREQ_LESS = "Quieter";
