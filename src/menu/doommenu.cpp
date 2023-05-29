@@ -91,7 +91,8 @@ bool M_SetSpecialMenu(FName& menu, int param)
 	if (gamestate == GS_CUTSCENELEVEL)
 	{
 		gameaction = ga_cutscenelevelskip;
-		return true;
+		M_ClearMenus();
+		return false;
 	}
 
 	// some menus need some special treatment
