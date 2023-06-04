@@ -463,6 +463,9 @@ bool FLevelLocals::CreateFloor(sector_t *sec, DFloor::EFloor floortype, line_t *
 	{
 		floor->StopInterpolation(true);
 		floor->m_Instant = true;
+
+		if (!line || !(line->activation & (SPAC_Use | SPAC_Push)) || line->backsector != sec)
+			silent = true;
 	}
 	if (!silent) floor->StartFloorSound();
 
