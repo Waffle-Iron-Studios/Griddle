@@ -402,10 +402,8 @@ set( PLAT_WIN32_SOURCES
 	common/platform/win32/i_system.cpp
 	common/platform/win32/i_specialpaths.cpp
 	common/platform/win32/st_start.cpp
-	common/platform/win32/gl_sysfb.cpp
 	common/platform/win32/base_sysfb.cpp
 	common/platform/win32/win32basevideo.cpp
-	common/platform/win32/win32glvideo.cpp
 	)
 
 if (HAVE_VULKAN)
@@ -582,8 +580,6 @@ file( GLOB HEADER_FILES
 	common/thirdparty/math/*h
 	common/thirdparty/libsmackerdec/include/*.h
 	common/rendering/*.h
-	common/rendering/gl_load/*.h
-	common/rendering/gles/*.h
 	common/rendering/hwrenderer/data/*.h
 	common/rendering/vulkan/*.h
 	common/rendering/vulkan/system/*.h
@@ -705,7 +701,6 @@ set( FASTMATH_SOURCES
 	common/textures/hires/hqnx/hq4x.cpp
 	common/textures/hires/xbr/xbrz.cpp
 	common/textures/hires/xbr/xbrz_old.cpp
-	common/rendering/gl_load/gl_load.c
 	rendering/hwrenderer/hw_dynlightdata.cpp
 	rendering/hwrenderer/scene/hw_bsp.cpp
 	rendering/hwrenderer/scene/hw_fakeflat.cpp
@@ -1113,20 +1108,6 @@ set (PCH_SOURCES
 	common/rendering/hwrenderer/postprocessing/hw_postprocess.cpp
 	common/rendering/hwrenderer/postprocessing/hw_postprocess_cvars.cpp
 	common/rendering/hwrenderer/postprocessing/hw_postprocessshader_ccmds.cpp
-	common/rendering/gl_load/gl_interface.cpp
-	common/rendering/gl/gl_renderer.cpp
-	common/rendering/gl/gl_stereo3d.cpp
-	common/rendering/gl/gl_framebuffer.cpp
-	common/rendering/gl/gl_renderstate.cpp
-	common/rendering/gl/gl_renderbuffers.cpp
-	common/rendering/gl/gl_postprocess.cpp
-	common/rendering/gl/gl_postprocessstate.cpp
-	common/rendering/gl/gl_debug.cpp
-	common/rendering/gl/gl_buffers.cpp
-	common/rendering/gl/gl_hwtexture.cpp
-	common/rendering/gl/gl_samplers.cpp
-	common/rendering/gl/gl_shader.cpp
-	common/rendering/gl/gl_shaderprogram.cpp
 	common/scripting/core/maps.cpp
 	common/scripting/core/dictionary.cpp
 	common/scripting/core/dynarrays.cpp
@@ -1239,11 +1220,6 @@ include_directories( .
 	common/startscreen
 	common/rendering
 	common/rendering/hwrenderer/data
-	common/rendering/gl_load
-	common/rendering/gl
-	common/rendering/gles
-	common/rendering/gles/glad/include
-	common/rendering/gles/Mali_OpenGL_ES_Emulator/include
 	common/scripting/vm
 	common/scripting/jit
 	common/scripting/core
@@ -1356,7 +1332,7 @@ if( DEM_CMAKE_COMPILER_IS_GNUCXX_COMPATIBLE )
 endif()
 
 if( APPLE )
-	set( LINK_FRAMEWORKS "-framework Cocoa -framework IOKit -framework OpenGL")
+	set( LINK_FRAMEWORKS "-framework Cocoa -framework IOKit")
 
 	if( HAVE_VULKAN )
 		set( LINK_FRAMEWORKS "${LINK_FRAMEWORKS} -framework QuartzCore" )
@@ -1443,8 +1419,6 @@ source_group("Common\\Rendering" REGULAR_EXPRESSION "^${CMAKE_CURRENT_SOURCE_DIR
 source_group("Common\\Rendering\\Hardware Renderer" REGULAR_EXPRESSION "^${CMAKE_CURRENT_SOURCE_DIR}/common/rendering/hwrenderer/.+")
 source_group("Common\\Rendering\\Hardware Renderer\\Data" REGULAR_EXPRESSION "^${CMAKE_CURRENT_SOURCE_DIR}/common/rendering/hwrenderer/data/.+")
 source_group("Common\\Rendering\\Hardware Renderer\\Postprocessing" REGULAR_EXPRESSION "^${CMAKE_CURRENT_SOURCE_DIR}/common/rendering/hwrenderer/postprocessing/.+")
-source_group("Common\\Rendering\\OpenGL Loader" REGULAR_EXPRESSION "^${CMAKE_CURRENT_SOURCE_DIR}/common/rendering/gl_load/.+")
-source_group("Common\\Rendering\\OpenGL Backend" REGULAR_EXPRESSION "^${CMAKE_CURRENT_SOURCE_DIR}/common/rendering/gl/.+")
 source_group("Common\\Rendering\\Vulkan Renderer\\System" REGULAR_EXPRESSION "^${CMAKE_CURRENT_SOURCE_DIR}/common/rendering/vulkan/system/.+")
 source_group("Common\\Rendering\\Vulkan Renderer\\Renderer" REGULAR_EXPRESSION "^${CMAKE_CURRENT_SOURCE_DIR}/common/rendering/vulkan/renderer/.+")
 source_group("Common\\Rendering\\Vulkan Renderer\\Shaders" REGULAR_EXPRESSION "^${CMAKE_CURRENT_SOURCE_DIR}/common/rendering/vulkan/shaders/.+")

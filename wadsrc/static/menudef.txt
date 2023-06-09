@@ -944,13 +944,6 @@ OptionValue VanillaTrans
 	3.0, "$OPTVAL_VTAVANILLA"
 }
 
-OptionValue PreferBackend
-{
-	0, "$OPTVAL_OPENGL"
-	1, "$OPTVAL_VULKAN"
-	2, "$OPTVAL_OPENGLES"
-}
-
 OptionMenu "VideoOptions" protected
 {
 	Title "$DSPLYMNU_TITLE"
