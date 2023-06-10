@@ -88,13 +88,6 @@ int LastSkill = -1;
 
 bool M_SetSpecialMenu(FName& menu, int param)
 {
-	if (gamestate == GS_CUTSCENELEVEL)
-	{
-		gameaction = ga_cutscenelevelskip;
-		M_ClearMenus();
-		return false;
-	}
-
 	// some menus need some special treatment
 	switch (menu.GetIndex())
 	{
@@ -315,8 +308,7 @@ static void M_Quit()
 //=============================================================================
 
 CCMD (menu_quit)
-{
-	// F10
+{	// F10
 	if (m_quickexit)
 	{
 		M_Quit();
