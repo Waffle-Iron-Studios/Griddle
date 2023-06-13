@@ -221,7 +221,7 @@ extend class Actor
 		return a;
 	}
 
-	void A_GriddleFreezeDeath(Name trans='Ice', Class<Actor> chunk="IceChunk", Class<Actor> chunkhead="IceChunkHead")
+	void A_GriddleFreezeDeath(Name trans='Ice', Class<Actor> chunk="IceChunk")
 	{
 		for (int i = 0; i <= 10; i++)
 		{
@@ -235,6 +235,38 @@ extend class Actor
 		A_SetTranslation(trans);
 		A_SetRenderStyle(1.0, STYLE_Normal);
 		A_StartSound("misc/freeze", CHAN_BODY);
+
+		// [RH] Do some stuff to make this more useful outside Hexen
+		if (bBossDeath)
+		{
+			A_BossDeath();
+		}
+
+		if (special)
+		{
+			A_CallSpecial(special, args[0],	args[1], args[2], args[3], args[4]);
+			special = 0;
+		}
+	}
+	
+	void A_GriddleIceShards(Class<Actor> chunk="IceChunk", Class<Actor> icepuddle = null, Class<Actor> chunkhead = "IceChunkHead")
+	{
+		if (vel != (0, 0, 0) && !bShattering)
+			return;
+		
+		vel = (0, 0, 0);
+		
+		A_StartSound("misc/icebreak", CHAN_BODY);
+		
+		for (int i = 0; i <= 24; i++)
+		{
+			A_GriddleSpawnGib("IceChunk");
+		}
+		
+		A_NoBlocking();
+		
+		if (icepuddle)
+			A_SpawnItemEx(icepuddle, flags:SXF_NOCHECKPOSITION);
 
 		if (player)
 		{
@@ -262,38 +294,6 @@ extend class Actor
 				}
 			}
 		}
-
-		// [RH] Do some stuff to make this more useful outside Hexen
-		if (bBossDeath)
-		{
-			A_BossDeath();
-		}
-
-		if (special)
-		{
-			A_CallSpecial(special, args[0],	args[1], args[2], args[3], args[4]);
-			special = 0;
-		}
-	}
-	
-	void A_GriddleIceShards(Class<Actor> chunk="IceChunk", Class<Actor> icepuddle = null)
-	{
-		if (vel != (0, 0, 0) && !bShattering)
-			return;
-		
-		vel = (0, 0, 0);
-		
-		A_StartSound("misc/icebreak", CHAN_BODY);
-		
-		for (int i = 0; i <= 24; i++)
-		{
-			A_GriddleSpawnGib("IceChunk");
-		}
-		
-		A_NoBlocking();
-		
-		if (icepuddle)
-			A_SpawnItemEx(icepuddle, flags:SXF_NOCHECKPOSITION);
 		
 		SetStateLabel("Null");
 	}
