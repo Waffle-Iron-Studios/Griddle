@@ -35,20 +35,8 @@ f10 menu_quit
 tab togglemap
 pause pause
 sysrq screenshot
-t messagemode
-\ +showscores
-f12 spynext
 mwheeldown weapnext
 mwheelup weapprev
-
-// Originally just for Heretic, Hexen, and Strife.
-// I can't see why they shouldn't be for Doom or Chex either.
-pgup +moveup
-ins +movedown
-home land
-pgdn +lookup
-del +lookdown
-end centerview
 
 // Xbox 360 / PS2 controllers
 pad_a +use
@@ -64,7 +52,6 @@ dpadup togglemap
 pad_start pause
 pad_back menu_main
 lthumb crouch
-
 
 /* Default automap bindings */
 mapbind f am_togglefollow
