@@ -1010,19 +1010,6 @@ bool G_Responder (event_t *ev)
 		return false;
 	}
 
-	if (gamestate == GS_CUTSCENELEVEL)
-	{
-		if (ev->type == EV_KeyDown)
-		{
-			gameaction = ga_cutscenelevelskip;
-			return true;
-		}
-		else
-		{
-			return false;
-		}
-	}
-
 	if (CT_Responder (ev))
 		return true;			// chat ate the event
 
@@ -1110,6 +1097,8 @@ static uint32_t StaticSumSeeds()
 		pr_damagemobj.Seed();
 }
 
+static int cscounter = 0;
+
 //
 // G_Ticker
 // Make ticcmd_ts for the players.
@@ -1173,7 +1162,7 @@ void G_Ticker ()
 			savedescription = "";
 			break;
 		case ga_autosave:
-			if (!(gamestate == GS_CUTSCENELEVEL || primaryLevel->flags11 & LEVEL11_NOAUTOSAVES))
+			if (!(primaryLevel->flags11 & LEVEL11_CUTSCENELEVEL || primaryLevel->flags11 & LEVEL11_NOAUTOSAVES))
 			{
 				G_DoAutoSave();
 			}
@@ -1219,12 +1208,6 @@ void G_Ticker ()
 			gamestate = GS_INTRO;
 			gameaction = ga_nothing;
 			break;
-
-		case ga_cutscenelevelskip:
-			gameaction = ga_nothing;
-			primaryLevel->ExitLevel(0, false);
-			break;
-
 
 		default:
 		case ga_nothing:
@@ -1306,10 +1289,8 @@ void G_Ticker ()
 	// do main actions
 	switch (gamestate)
 	{
-	case GS_CUTSCENELEVEL:
 	case GS_LEVEL:
 		P_Ticker ();
-		primaryLevel->automap->Ticker ();
 		break;
 
 	case GS_TITLELEVEL:

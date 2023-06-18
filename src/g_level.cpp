@@ -1328,10 +1328,10 @@ void G_DoLoadLevel(const FString &nextmapname, int position, bool autosave, bool
 	primaryLevel->DoLoadLevel(nextmapname, position, autosave, newGame);
 
 	// Reset the global state for the new level.
-	if (wipegamestate == GS_LEVEL || wipegamestate == GS_CUTSCENELEVEL)
+	if (wipegamestate == GS_LEVEL)
 		wipegamestate = GS_FORCEWIPE;
 
-	if (gamestate != GS_TITLELEVEL && gamestate != GS_CUTSCENELEVEL)
+	if (gamestate != GS_TITLELEVEL)
 	{
 		gamestate = GS_LEVEL;
 	}
@@ -1514,12 +1514,6 @@ void FLevelLocals::DoLoadLevel(const FString &nextmapname, int position, bool au
 	if (pnumerr > 0)
 	{
 		I_Error("no start for player %d found.", pnumerr);
-	}
-
-	if (flags11 & LEVEL11_CUTSCENELEVEL)
-	{
-		gamestate = GS_CUTSCENELEVEL;
-		wipegamestate = GS_CUTSCENELEVEL;
 	}
 }
 

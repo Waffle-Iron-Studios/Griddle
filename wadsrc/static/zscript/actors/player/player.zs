@@ -53,6 +53,8 @@ class PlayerPawn : Actor
 	double		curBob;
 	double		prevBob;
 
+	int cutsceneskipcounter;
+
 	meta Name HealingRadiusType;
 	meta Name InvulMode;
 	meta Name Face;
@@ -1631,6 +1633,28 @@ class PlayerPawn : Actor
 		// Handle crouching
 		CheckCrouch(totallyfrozen);
 		CheckMusicChange();
+
+		if (level.cutscenelevel && level.time % TICRATE == 0)
+		{
+			if (cmd.buttons & BT_USE)
+			{
+				cutsceneskipcounter++;
+
+				if (cutsceneskipcounter > 1)
+				{
+					cutsceneskipcounter = 0;
+					Exit_Normal(0);
+					return;
+				}
+			}
+			else
+			{
+				cutsceneskipcounter--;
+
+				if (cutsceneskipcounter < 0)
+					cutsceneskipcounter = 0;
+			}
+		}
 
 		if (player.playerstate == PST_DEAD)
 		{
