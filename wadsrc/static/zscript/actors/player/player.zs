@@ -1643,7 +1643,7 @@ class PlayerPawn : Actor
 				if (cutsceneskipcounter > 1)
 				{
 					cutsceneskipcounter = 0;
-					Exit_Normal(0);
+					level.ExitLevel(0, false);
 					return;
 				}
 			}
