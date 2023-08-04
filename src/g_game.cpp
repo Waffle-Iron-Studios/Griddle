@@ -1162,7 +1162,7 @@ void G_Ticker ()
 			savedescription = "";
 			break;
 		case ga_autosave:
-			if (!(primaryLevel->flags11 & LEVEL11_CUTSCENELEVEL || primaryLevel->flags11 & LEVEL11_NOAUTOSAVES))
+			if (!(primaryLevel->flags9001 & LEVEL9001_CUTSCENELEVEL || primaryLevel->flags9001 & LEVEL9001_NOAUTOSAVES))
 			{
 				G_DoAutoSave();
 			}

@@ -251,7 +251,7 @@ void level_info_t::Reset()
 		flags2 = LEVEL2_LAXMONSTERACTIVATION;
 	flags3 = 0;
 	flags9 = 0;
-	flags11 = 0;
+	flags9001 = 0;
 	Music = "";
 	LevelName = "";
 	AuthorName = "";
@@ -1805,9 +1805,9 @@ MapFlagHandlers[] =
 	{ "attenuatelights",				MITYPE_SETFLAG3,	LEVEL3_ATTENUATE, 0 },
 	{ "nousersave",						MITYPE_SETFLAG9,	LEVEL9_NOUSERSAVE, 0 },	// backport from vkdoom
 	{ "noautomap",						MITYPE_SETFLAG9,	LEVEL9_NOAUTOMAP, 0 },	// backport from vkdoom
-	{ "nototaltime",					MITYPE_SETFLAG11,	LEVEL11_NOTOTALTIME, 0 },
-	{ "noautosaves",					MITYPE_SETFLAG11,	LEVEL11_NOAUTOSAVES, 0 },
-	{ "cutscenelevel",					MITYPE_SETFLAG11,	LEVEL11_CUTSCENELEVEL, 0 },
+	{ "nototaltime",					MITYPE_SETFLAG11,	LEVEL9001_NOTOTALTIME, 0 },
+	{ "noautosaves",					MITYPE_SETFLAG11,	LEVEL9001_NOAUTOSAVES, 0 },
+	{ "cutscenelevel",					MITYPE_SETFLAG11,	LEVEL9001_CUTSCENELEVEL, 0 },
 	{ "nobotnodes",						MITYPE_IGNORE,	0, 0 },		// Skulltag option: nobotnodes
 	{ "cd_start_track",					MITYPE_EATNEXT,	0, 0 },
 	{ "cd_end1_track",					MITYPE_EATNEXT,	0, 0 },
@@ -1942,24 +1942,24 @@ void FMapInfoParser::ParseMapDefinition(level_info_t &info)
 			case MITYPE_SETFLAG11:
 				if (!CheckAssign())
 				{
-					info.flags11 |= handler->data1;
+					info.flags9001 |= handler->data1;
 				}
 				else
 				{
 					sc.MustGetNumber();
-					if (sc.Number) info.flags11 |= handler->data1;
-					else info.flags11 &= ~handler->data1;
+					if (sc.Number) info.flags9001 |= handler->data1;
+					else info.flags9001 &= ~handler->data1;
 				}
-				info.flags11 |= handler->data2;
+				info.flags9001 |= handler->data2;
 				break;
 
 			case MITYPE_CLRFLAG11:
-				info.flags11 &= ~handler->data1;
-				info.flags11 |= handler->data2;
+				info.flags9001 &= ~handler->data1;
+				info.flags9001 |= handler->data2;
 				break;
 
 			case MITYPE_SCFLAGS11:
-				info.flags11 = (info.flags11 & handler->data2) | handler->data1;
+				info.flags9001 = (info.flags9001 & handler->data2) | handler->data1;
 				break;
 
 			default:

@@ -1796,7 +1796,7 @@ void FLevelLocals::Init()
 	flags2 = 0;
 	flags3 = 0;
 	flags9 = 0;
-	flags11 = 0;
+	flags9001 = 0;
 	ImpactDecalCount = 0;
 	frozenstate = 0;
 
@@ -1846,7 +1846,7 @@ void FLevelLocals::Init()
 	flags2 |= info->flags2;
 	flags3 |= info->flags3;
 	flags9 |= info->flags9;
-	flags11 |= info->flags11;
+	flags9001 |= info->flags9001;
 	levelnum = info->levelnum;
 	Music = info->Music;
 	musicorder = info->musicorder;

@@ -66,7 +66,7 @@ bool P_CheckTickerPaused ()
 		&& wipegamestate == gamestate)
 	{
 		// Only the current UI level's settings are relevant for sound.
-		bool dontpausemusic = !(primaryLevel->flags2 & LEVEL2_PAUSE_MUSIC_IN_MENUS) && !(primaryLevel->flags11 & LEVEL11_CUTSCENELEVEL);
+		bool dontpausemusic = !(primaryLevel->flags2 & LEVEL2_PAUSE_MUSIC_IN_MENUS) && !(primaryLevel->flags9001 & LEVEL9001_CUTSCENELEVEL);
 		S_PauseSound (dontpausemusic, false);
 		return true;
 	}
@@ -184,7 +184,7 @@ void P_Ticker (void)
 		Level->time++;
 		Level->maptime++;
 
-		if (!(Level->flags11 & LEVEL11_NOTOTALTIME) && !(Level->flags11 & LEVEL11_CUTSCENELEVEL))
+		if (!(Level->flags9001 & LEVEL9001_NOTOTALTIME) && !(Level->flags9001 & LEVEL9001_CUTSCENELEVEL))
 			Level->totaltime++;
 	}
 	if (players[consoleplayer].mo != NULL) {

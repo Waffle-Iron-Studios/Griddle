@@ -277,9 +277,9 @@ enum ELevelFlags : unsigned int
 	LEVEL9_NOUSERSAVE			= 0x00000001,
 	LEVEL9_NOAUTOMAP			= 0x00000002,
 
-	LEVEL11_NOTOTALTIME				= 0x00000001,	// Sanya - no time++
-	LEVEL11_NOAUTOSAVES				= 0x00000002,	// Sanya - no autosaves on this level at all
-	LEVEL11_CUTSCENELEVEL			= 0x00000004,	// Sanya - Cutscene Level
+	LEVEL9001_NOTOTALTIME				= 0x00000001,	// Sanya - no time++
+	LEVEL9001_NOAUTOSAVES				= 0x00000002,	// Sanya - no autosaves on this level at all
+	LEVEL9001_CUTSCENELEVEL			= 0x00000004,	// Sanya - Cutscene Level
 };
 
 
@@ -353,7 +353,7 @@ struct level_info_t
 	uint32_t	flags2;
 	uint32_t	flags3;
 	uint32_t	flags9;	// backport from vkdoom
-	uint32_t	flags11;
+	uint32_t	flags9001;
 
 	FString		Music;
 	FString		LevelName;
