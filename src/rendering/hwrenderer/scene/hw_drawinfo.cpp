@@ -139,8 +139,7 @@ void HWDrawInfo::StartScene(FRenderViewpoint &parentvp, HWViewpointUniforms *uni
 	mClipper = &staticClipper;
 
 	Viewpoint = parentvp;
-	lightmode = getRealLightmode(Level, true);
-
+	lightmode = Level->lightMode;
 	if (uniforms)
 	{
 		VPUniforms = *uniforms;
@@ -154,7 +153,7 @@ void HWDrawInfo::StartScene(FRenderViewpoint &parentvp, HWViewpointUniforms *uni
 		VPUniforms.mViewMatrix.loadIdentity();
 		VPUniforms.mNormalViewMatrix.loadIdentity();
 		VPUniforms.mViewHeight = viewheight;
-		if (lightmode == ELightMode::Build)
+		if (gl_lightmode == 5)
 		{
 			VPUniforms.mGlobVis = 1 / 64.f;
 			VPUniforms.mPalLightLevels = 32 | (static_cast<int>(gl_fogmode) << 8) | ((int)lightmode << 16);
