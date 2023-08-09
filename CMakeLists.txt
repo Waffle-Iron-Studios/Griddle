@@ -403,7 +403,6 @@ option( DYN_OPENAL "Dynamically load OpenAL" ON )
 
 add_subdirectory( libraries/lzma )
 add_subdirectory( tools )
-add_subdirectory( libraries/gdtoa )
 add_subdirectory( wadsrc )
 add_subdirectory( src )
 
