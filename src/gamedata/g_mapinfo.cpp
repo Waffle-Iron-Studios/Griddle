@@ -1696,9 +1696,9 @@ enum EMIType
 	MITYPE_SETFLAG9,
 	MITYPE_CLRFLAG9,
 	MITYPE_SCFLAGS9,
-	MITYPE_SETFLAG11,
-	MITYPE_CLRFLAG11,
-	MITYPE_SCFLAGS11,
+	MITYPE_SETFLAG9001,
+	MITYPE_CLRFLAG9001,
+	MITYPE_SCFLAGS9001,
 	MITYPE_COMPATFLAG,
 	MITYPE_CLRCOMPATFLAG,
 };
@@ -1805,9 +1805,9 @@ MapFlagHandlers[] =
 	{ "attenuatelights",				MITYPE_SETFLAG3,	LEVEL3_ATTENUATE, 0 },
 	{ "nousersave",						MITYPE_SETFLAG9,	LEVEL9_NOUSERSAVE, 0 },	// backport from vkdoom
 	{ "noautomap",						MITYPE_SETFLAG9,	LEVEL9_NOAUTOMAP, 0 },	// backport from vkdoom
-	{ "nototaltime",					MITYPE_SETFLAG11,	LEVEL9001_NOTOTALTIME, 0 },
-	{ "noautosaves",					MITYPE_SETFLAG11,	LEVEL9001_NOAUTOSAVES, 0 },
-	{ "cutscenelevel",					MITYPE_SETFLAG11,	LEVEL9001_CUTSCENELEVEL, 0 },
+	{ "nototaltime",					MITYPE_SETFLAG9001,	LEVEL9001_NOTOTALTIME, 0 },
+	{ "noautosaves",					MITYPE_SETFLAG9001,	LEVEL9001_NOAUTOSAVES, 0 },
+	{ "cutscenelevel",					MITYPE_SETFLAG9001,	LEVEL9001_CUTSCENELEVEL, 0 },
 	{ "nobotnodes",						MITYPE_IGNORE,	0, 0 },		// Skulltag option: nobotnodes
 	{ "cd_start_track",					MITYPE_EATNEXT,	0, 0 },
 	{ "cd_end1_track",					MITYPE_EATNEXT,	0, 0 },
@@ -1915,29 +1915,6 @@ void FMapInfoParser::ParseMapDefinition(level_info_t &info)
 				info.flags3 = (info.flags3 & handler->data2) | handler->data1;
 				break;
 
-			case MITYPE_CLRCOMPATFLAG:
-				info.compatflags &= ~handler->data1;
-				info.compatflags2 &= ~handler->data2;
-				info.compatmask |= handler->data1;
-				info.compatmask2 |= handler->data2;
-				break;
-
-			case MITYPE_COMPATFLAG:
-			{
-				int set = 1;
-				if (format_type == FMT_New)
-				{
-					info.flags9 |= handler->data1;
-				}
-				else
-				{
-					sc.MustGetNumber();
-					if (sc.Number) info.flags9 |= handler->data1;
-					else info.flags9 &= ~handler->data1;
-				}
-				info.flags9 |= handler->data2;
-				break;
-
 			case MITYPE_CLRFLAG9:
 				info.flags9 &= ~handler->data1;
 				info.flags9 |= handler->data2;
@@ -1947,7 +1924,7 @@ void FMapInfoParser::ParseMapDefinition(level_info_t &info)
 				break;
 
 
-			case MITYPE_SETFLAG11:
+			case MITYPE_SETFLAG9001:
 				if (!CheckAssign())
 				{
 					info.flags9001 |= handler->data1;
@@ -1961,12 +1938,12 @@ void FMapInfoParser::ParseMapDefinition(level_info_t &info)
 				info.flags9001 |= handler->data2;
 				break;
 
-			case MITYPE_CLRFLAG11:
+			case MITYPE_CLRFLAG9001:
 				info.flags9001 &= ~handler->data1;
 				info.flags9001 |= handler->data2;
 				break;
 
-			case MITYPE_SCFLAGS11:
+			case MITYPE_SCFLAGS9001:
 				info.flags9001 = (info.flags9001 & handler->data2) | handler->data1;
 				break;
 
