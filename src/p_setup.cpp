@@ -435,10 +435,7 @@ void P_SetupLevel(FLevelLocals *Level, int position, bool newGame)
 	if (p) p->viewz = NO_VALUE;
 
 	// Make sure all sounds are stopped before Z_FreeTags.
-
-	if (gamestate != GS_TITLELEVEL)
-		S_Start();
-
+	S_Start();
 	S_ResetMusic();
 
 	// Don't start the music if loading a savegame, because the music is stored there.
