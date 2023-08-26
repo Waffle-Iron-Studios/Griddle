@@ -9,14 +9,14 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - name: Install GZDoom dependencies
+      - name: Install Griddle dependencies
         run: |
           sudo apt-get update
           sudo apt-get install clang-12 libsdl2-dev libvpx-dev libwebp-dev cmake -y
       - name: Install appimage-builder dependencies
         run: |
-          sudo apt-get install binutils coreutils desktop-file-utils fakeroot fuse libgdk-pixbuf2.0-dev patchelf -y 
-          sudo apt-get install python3-pip python3-setuptools squashfs-tools strace util-linux zsync -y 
+          sudo apt-get install binutils coreutils desktop-file-utils fakeroot fuse libgdk-pixbuf2.0-dev patchelf -y
+          sudo apt-get install python3-pip python3-setuptools squashfs-tools strace util-linux zsync -y
           sudo apt-get install imagemagick-6.q16hdri -y
       - name: Install appimage-builder
         run: |
