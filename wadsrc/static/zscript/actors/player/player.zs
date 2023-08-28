@@ -2106,7 +2106,7 @@ class PlayerPawn : Actor
 				let it = toDelete[i];
 				if (!it.bDestroyed)
 				{
-					item.DepleteOrDestroy();
+					it.DepleteOrDestroy();
 				}
 			}
 		}
