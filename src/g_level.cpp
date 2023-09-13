@@ -146,17 +146,30 @@ CUSTOM_CVAR(Bool, gl_notexturefill, false, CVAR_NOINITCALL)
 	}
 }
 
-CUSTOM_CVAR(Int, gl_lightmode, 2, CVAR_ARCHIVE | CVAR_NOINITCALL)
+CUSTOM_CVAR(Int, gl_maplightmode, -1, CVAR_NOINITCALL) // this is just for testing. -1 means 'inactive'
 {
-	int newself = self;
-	if (newself > 8) newself = 16;	// use 8 and 16 for software lighting to avoid conflicts with the bit mask ( in hindsight a bad idea.)
-	else if (newself > 5) newself = 8;
-	else if (newself < 0) newself = 0;
-	if (self != newself) self = newself;
-	else for (auto Level : AllLevels())
+	if (self > 5 || self < -1) self = -1;
+}
+
+CUSTOM_CVAR(Int, gl_lightmode, 1, CVAR_ARCHIVE | CVAR_NOINITCALL)
+{
+	if (self < 0 || self > 2) self = 2;
+}
+
+ELightMode getRealLightmode(FLevelLocals* Level, bool for3d)
+{
+	auto lightmode = Level->info->lightmode;
+	if (lightmode == ELightMode::NotSet)
 	{
-		if ((Level->info == nullptr || Level->info->lightmode == ELightMode::NotSet)) Level->lightMode = (ELightMode)*self;
+		if (gl_maplightmode != -1) lightmode = (ELightMode)*gl_maplightmode;
+		else lightmode = ELightMode::Doom;
 	}
+	if (lightmode == ELightMode::Doom && for3d)
+	{
+		if (gl_lightmode == 1) lightmode = ELightMode::ZDoomSoftware;
+		else if (gl_lightmode == 2) lightmode = ELightMode::DoomSoftware;
+	}
+	return lightmode;
 }
 
 CVAR(Int, sv_alwaystally, 0, CVAR_SERVERINFO)
@@ -1435,6 +1448,9 @@ void FLevelLocals::DoLoadLevel(const FString &nextmapname, int position, bool au
 
 	P_SetupLevel (this, position, newGame);
 
+
+
+
 	//Added by MC: Initialize bots.
 	if (deathmatch)
 	{
@@ -1783,7 +1799,7 @@ void FLevelLocals::Init()
 	flags2 = 0;
 	flags3 = 0;
 	flags9 = 0;
-	flags9001 = 0;
+	wisflags = 0;
 	ImpactDecalCount = 0;
 	frozenstate = 0;
 
@@ -1833,7 +1849,7 @@ void FLevelLocals::Init()
 	flags2 |= info->flags2;
 	flags3 |= info->flags3;
 	flags9 |= info->flags9;
-	flags9001 |= info->flags9001;
+	wisflags |= info->wisflags;
 	levelnum = info->levelnum;
 	Music = info->Music;
 	musicorder = info->musicorder;
@@ -1858,7 +1874,6 @@ void FLevelLocals::Init()
 
 	DefaultEnvironment = info->DefaultEnvironment;
 
-	lightMode = info->lightmode == ELightMode::NotSet? (ELightMode)*gl_lightmode : info->lightmode;
 	brightfog = info->brightfog < 0? gl_brightfog : !!info->brightfog;
 	lightadditivesurfaces = info->lightadditivesurfaces < 0 ? gl_lightadditivesurfaces : !!info->lightadditivesurfaces;
 	notexturefill = info->notexturefill < 0 ? gl_notexturefill : !!info->notexturefill;
@@ -1986,7 +2001,7 @@ void G_ReadSnapshots(FResourceFile *resf)
 
 	for (unsigned j = 0; j < resf->LumpCount(); j++)
 	{
-		auto resl = resf->GetLump(j);
+		FResourceLump * resl = resf->GetLump(j);
 		if (resl != nullptr)
 		{
 			auto name = resl->getName();

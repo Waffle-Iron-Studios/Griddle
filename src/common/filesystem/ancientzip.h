@@ -1,8 +1,7 @@
 #pragma once
-#include "fs_files.h"
+#include "files.h"
+#include "engineerrors.h"
 
-namespace FileSys {
-	
 class FZipExploder
 {
 	unsigned int Hold, Bits;
@@ -43,5 +42,10 @@ public:
 	int Explode(unsigned char *out, unsigned int outsize, FileReader &in, unsigned int insize, int flags);
 };
 
+class CExplosionError : public CRecoverableError
+{
+public:
+	CExplosionError(const char *message) : CRecoverableError(message) {}
+};
+
 int ShrinkLoop(unsigned char *out, unsigned int outsize, FileReader &in, unsigned int insize);
-}

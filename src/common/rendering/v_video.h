@@ -45,7 +45,6 @@
 #include "hw_shadowmap.h"
 #include "hw_levelmesh.h"
 #include "buffers.h"
-#include "files.h"
 
 
 struct FPortalSceneState;
@@ -91,6 +90,7 @@ EXTERN_CVAR(Int, win_h)
 EXTERN_CVAR(Bool, win_maximized)
 
 struct FColormap;
+class FileWriter;
 enum FTextureFormat : uint32_t;
 class FModelRenderer;
 struct SamplerUniform;

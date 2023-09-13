@@ -203,9 +203,9 @@ void FTextureAnimator::InitAnimated (void)
 	int lumpnum = fileSystem.CheckNumForName ("ANIMATED");
 	if (lumpnum != -1)
 	{
-		auto animatedlump = fileSystem.ReadFile (lumpnum);
+		FileData animatedlump = fileSystem.ReadFile (lumpnum);
 		int animatedlen = fileSystem.FileLength(lumpnum);
-		auto animdefs = animatedlump.GetBytes();
+		const uint8_t *animdefs = (const uint8_t *)animatedlump.GetMem();
 		const uint8_t *anim_p;
 		FTextureID pic1, pic2;
 		int animtype;

@@ -57,8 +57,8 @@ class FVoxelTexture : public FImageSource
 public:
 	FVoxelTexture(FVoxel *voxel);
 
-	int CopyPixels(FBitmap *bmp, int conversion, int frame = 0) override;
-	PalettedPixels CreatePalettedPixels(int conversion, int frame = 0) override;
+	int CopyPixels(FBitmap *bmp, int conversion) override;
+	PalettedPixels CreatePalettedPixels(int conversion) override;
 
 protected:
 	FVoxel *SourceVox;
@@ -84,7 +84,7 @@ FVoxelTexture::FVoxelTexture(FVoxel *vox)
 //
 //===========================================================================
 
-PalettedPixels FVoxelTexture::CreatePalettedPixels(int conversion, int frame)
+PalettedPixels FVoxelTexture::CreatePalettedPixels(int conversion)
 {
 	// GetPixels gets called when a translated palette is used so we still need to implement it here.
 	PalettedPixels Pixels(256);
@@ -123,7 +123,7 @@ PalettedPixels FVoxelTexture::CreatePalettedPixels(int conversion, int frame)
 //
 //===========================================================================
 
-int FVoxelTexture::CopyPixels(FBitmap *bmp, int conversion, int frame)
+int FVoxelTexture::CopyPixels(FBitmap *bmp, int conversion)
 {
 	PalEntry pe[256];
 	uint8_t bitmap[256];

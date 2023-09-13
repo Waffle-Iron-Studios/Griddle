@@ -47,11 +47,10 @@
 //
 //==========================================================================
 
-FImageTexture::FImageTexture(FImageSource *img, int frame) noexcept
+FImageTexture::FImageTexture(FImageSource *img) noexcept
 : FTexture(img? img->LumpNum() : 0)
 {
 	mImage = img;
-	TexFrame = frame;
 	if (img != nullptr)
 	{
 		SetFromImage();
@@ -80,7 +79,7 @@ void FImageTexture::SetFromImage()
 
 FBitmap FImageTexture::GetBgraBitmap(const PalEntry *p, int *trans)
 {
-	return mImage->GetCachedBitmap(p, bNoRemap0? FImageSource::noremap0 : FImageSource::normal, trans, TexFrame);
+	return mImage->GetCachedBitmap(p, bNoRemap0? FImageSource::noremap0 : FImageSource::normal, trans);
 }	
 
 //===========================================================================
@@ -91,7 +90,7 @@ FBitmap FImageTexture::GetBgraBitmap(const PalEntry *p, int *trans)
 
 TArray<uint8_t> FImageTexture::Get8BitPixels(bool alpha)
 {
-	return mImage->GetPalettedPixels(alpha? FImageSource::luminance : bNoRemap0 ? FImageSource::noremap0 : FImageSource::normal, TexFrame);
+	return mImage->GetPalettedPixels(alpha? FImageSource::luminance : bNoRemap0 ? FImageSource::noremap0 : FImageSource::normal);
 }	
 
 //===========================================================================
@@ -114,8 +113,8 @@ bool FImageTexture::DetermineTranslucency()
 }
 
 
-FTexture* CreateImageTexture(FImageSource* img, int frame) noexcept
+FTexture* CreateImageTexture(FImageSource* img) noexcept
 {
-	return new FImageTexture(img, frame);
+	return new FImageTexture(img);
 }
 

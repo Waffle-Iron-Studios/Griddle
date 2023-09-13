@@ -601,7 +601,7 @@ public:
 	uint32_t		flags2;
 	uint32_t		flags3;
 	uint32_t		flags9;
-	uint32_t		flags9001;
+	uint32_t		wisflags;
 
 	uint32_t		fadeto;					// The color the palette fades to (usually black)
 	uint32_t		outsidefog;				// The fog for sectors with sky ceilings
@@ -673,7 +673,6 @@ public:
 	float		MusicVolume;
 
 	// Hardware render stuff that can either be set via CVAR or MAPINFO
-	ELightMode	lightMode;
 	bool		brightfog;
 	bool		lightadditivesurfaces;
 	bool		notexturefill;
@@ -873,3 +872,5 @@ inline TArrayView<FLevelLocals *> AllLevels()
 {
 	return TArrayView<FLevelLocals *>(&primaryLevel, 1);
 }
+
+ELightMode getRealLightmode(FLevelLocals* Level, bool for3d);

@@ -50,8 +50,6 @@
 #include "g_level.h"
 #include "r_data/sprites.h"
 
-using namespace FileSys;
-
 struct VoxelOptions
 {
 	int			DroppedSpin = 0;

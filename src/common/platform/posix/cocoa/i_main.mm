@@ -282,8 +282,7 @@ extern bool AppActive;
 {
 	ZD_UNUSED(aNotification);
 
-	if (GSnd)
-		S_SetSoundPaused(1);
+	S_SetSoundPaused(1);
 
 	AppActive = true;
 }
@@ -292,8 +291,7 @@ extern bool AppActive;
 {
 	ZD_UNUSED(aNotification);
 
-	if (GSnd)
-		S_SetSoundPaused(0);
+	S_SetSoundPaused(0);
 
 	AppActive = false;
 }

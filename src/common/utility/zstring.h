@@ -40,7 +40,6 @@
 #include <string>
 #include "tarray.h"
 #include "utf8.h"
-#include "filesystem.h"
 
 #ifdef __GNUC__
 #define PRINTFISH(x) __attribute__((format(printf, 2, x)))
@@ -145,6 +144,9 @@ public:
 	FString (const char *head, const FString &tail);
 	FString (const char *head, const char *tail);
 	FString (char head, const FString &tail);
+
+	// Other constructors
+	FString (ELumpNum);	// Create from a lump
 
 	~FString ();
 

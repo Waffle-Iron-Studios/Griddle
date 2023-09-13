@@ -35,3 +35,5 @@ extern TArray<TranslationMap> TranslationLookup;
 extern TArray<PalEntry> TranslationColors;
 
 class FImageSource;
+
+void RecordTextureColors (FImageSource *pic, uint32_t *usedcolors);

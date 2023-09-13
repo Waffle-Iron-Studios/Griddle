@@ -60,7 +60,7 @@ CUSTOM_CVAR(Int, snd_samplerate, 0, CVAR_ARCHIVE | CVAR_GLOBALCONFIG)
 	}
 }
 CVAR(Int, snd_buffersize, 0, CVAR_ARCHIVE | CVAR_GLOBALCONFIG)
-CVAR(Int, snd_hrtf, 0, CVAR_ARCHIVE | CVAR_GLOBALCONFIG)
+CVAR(Int, snd_hrtf, -1, CVAR_ARCHIVE | CVAR_GLOBALCONFIG)
 
 #if !defined(NO_OPENAL)	
 #define DEF_BACKEND "openal"
@@ -88,7 +88,7 @@ void I_CloseSound ();
 // Maximum volume of all audio
 //==========================================================================
 
-CUSTOM_CVAR(Float, snd_mastervolume, 0.5f, CVAR_ARCHIVE | CVAR_GLOBALCONFIG | CVAR_NOINITCALL)
+CUSTOM_CVAR(Float, snd_mastervolume, 1.f, CVAR_ARCHIVE | CVAR_GLOBALCONFIG | CVAR_NOINITCALL)
 {
 	if (self < 0.f)
 		self = 0.f;
@@ -107,7 +107,7 @@ CUSTOM_CVAR(Float, snd_mastervolume, 0.5f, CVAR_ARCHIVE | CVAR_GLOBALCONFIG | CV
 // Maximum volume of a sound effect.
 //==========================================================================
 
-CUSTOM_CVAR (Float, snd_sfxvolume, 667.f, CVAR_ARCHIVE|CVAR_GLOBALCONFIG|CVAR_NOINITCALL)
+CUSTOM_CVAR (Float, snd_sfxvolume, 1.f, CVAR_ARCHIVE|CVAR_GLOBALCONFIG|CVAR_NOINITCALL)
 {
 	if (self < 0.f)
 		self = 0.f;

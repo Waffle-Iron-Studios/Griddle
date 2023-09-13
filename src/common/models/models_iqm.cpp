@@ -63,6 +63,12 @@ bool IQMModel::Load(const char* path, int lumpnum, const char* buffer, int lengt
 		uint32_t num_extensions = reader.ReadUInt32();
 		uint32_t ofs_extensions = reader.ReadUInt32();
 
+		/*if (num_joints <= 0)
+		{
+			Printf("Invalid model: \"%s%s\", no joint data is present\n", path, fileSystem.GetLongName(mLumpNum).GetChars());
+			return false;
+		}*/
+
 		if (num_text == 0)
 			return false;
 
@@ -270,7 +276,7 @@ void IQMModel::LoadGeometry()
 {
 	try
 	{
-		auto lumpdata = fileSystem.ReadFile(mLumpNum);
+		FileData lumpdata = fileSystem.ReadFile(mLumpNum);
 		IQMFileReader reader(lumpdata.GetMem(), (int)lumpdata.GetSize());
 
 		Vertices.Resize(NumVertices);

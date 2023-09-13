@@ -39,8 +39,6 @@
 #include "files.h"
 #include "filesystem.h"
 #include "printf.h"
-#include "m_swap.h"
-#include "cmdlib.h"
 
 #include "m_png.h"
 
@@ -664,8 +662,9 @@ int V_GetColorFromString(const char* cstr, FScriptPosition* sc)
 
 FString V_GetColorStringByName(const char* name, FScriptPosition* sc)
 {
-	const char* rgbEnd;
-	const char* rgb, * endp;
+	FileData rgbNames;
+	char* rgbEnd;
+	char* rgb, * endp;
 	int rgblump;
 	int c[3], step;
 	size_t namelen;
@@ -680,9 +679,9 @@ FString V_GetColorStringByName(const char* name, FScriptPosition* sc)
 		return FString();
 	}
 
-	auto rgbNames = fileSystem.ReadFile(rgblump);
-	rgb = rgbNames.GetString();
-	rgbEnd = rgb + rgbNames.GetSize();
+	rgbNames = fileSystem.ReadFile(rgblump);
+	rgb = (char*)rgbNames.GetMem();
+	rgbEnd = rgb + fileSystem.FileLength(rgblump);
 	step = 0;
 	namelen = strlen(name);
 
@@ -705,7 +704,7 @@ FString V_GetColorStringByName(const char* name, FScriptPosition* sc)
 		}
 		else if (step < 3)
 		{ // collect RGB values
-			c[step++] = strtoul(rgb, (char**)&endp, 10);
+			c[step++] = strtoul(rgb, &endp, 10);
 			if (endp == rgb)
 			{
 				break;
@@ -929,8 +928,8 @@ int ReadPalette(int lumpnum, uint8_t* buffer)
 	{
 		return 0;
 	}
-	auto lump =  fileSystem.ReadFile(lumpnum);
-	auto lumpmem = lump.GetBytes();
+	FileData lump = fileSystem.ReadFile(lumpnum);
+	uint8_t* lumpmem = (uint8_t*)lump.GetMem();
 	memset(buffer, 0, 768);
 
 	FileReader fr;

@@ -251,7 +251,7 @@ void level_info_t::Reset()
 		flags2 = LEVEL2_LAXMONSTERACTIVATION;
 	flags3 = 0;
 	flags9 = 0;
-	flags9001 = 0;
+	wisflags = 0;
 	Music = "";
 	LevelName = "";
 	AuthorName = "";
@@ -1521,7 +1521,8 @@ DEFINE_MAP_OPTION(lightmode, false)
 	parse.ParseAssign();
 	parse.sc.MustGetNumber();
 
-	if ((parse.sc.Number >= 0 && parse.sc.Number <= 4) || parse.sc.Number == 8 || parse.sc.Number == 16)
+	if (parse.sc.Number == 8 || parse.sc.Number == 16) info->lightmode = ELightMode::NotSet;
+	else if (parse.sc.Number >= 0 && parse.sc.Number <= 5)
 	{
 		info->lightmode = ELightMode(parse.sc.Number);
 	}
@@ -1696,8 +1697,8 @@ enum EMIType
 	MITYPE_SETFLAG9,
 	MITYPE_CLRFLAG9,
 	MITYPE_SCFLAGS9,
-	MITYPE_SETFLAG9001,
-	MITYPE_CLRFLAG9001,
+	MITYPE_SETFLAGWIS,
+	MITYPE_CLRFLAGWIS,
 	MITYPE_SCFLAGS9001,
 	MITYPE_COMPATFLAG,
 	MITYPE_CLRCOMPATFLAG,
@@ -1805,9 +1806,9 @@ MapFlagHandlers[] =
 	{ "attenuatelights",				MITYPE_SETFLAG3,	LEVEL3_ATTENUATE, 0 },
 	{ "nousersave",						MITYPE_SETFLAG9,	LEVEL9_NOUSERSAVE, 0 },	// backport from vkdoom
 	{ "noautomap",						MITYPE_SETFLAG9,	LEVEL9_NOAUTOMAP, 0 },	// backport from vkdoom
-	{ "nototaltime",					MITYPE_SETFLAG9001,	LEVEL9001_NOTOTALTIME, 0 },
-	{ "noautosaves",					MITYPE_SETFLAG9001,	LEVEL9001_NOAUTOSAVES, 0 },
-	{ "cutscenelevel",					MITYPE_SETFLAG9001,	LEVEL9001_CUTSCENELEVEL, 0 },
+	{ "nototaltime",					MITYPE_SETFLAGWIS,	LEVELWIS_NOTOTALTIME, 0 },
+	{ "noautosaves",					MITYPE_SETFLAGWIS,	LEVELWIS_NOAUTOSAVES, 0 },
+	{ "cutscenelevel",					MITYPE_SETFLAGWIS,	LEVELWIS_CUTSCENELEVEL, 0 },
 	{ "nobotnodes",						MITYPE_IGNORE,	0, 0 },		// Skulltag option: nobotnodes
 	{ "cd_start_track",					MITYPE_EATNEXT,	0, 0 },
 	{ "cd_end1_track",					MITYPE_EATNEXT,	0, 0 },
@@ -1924,27 +1925,27 @@ void FMapInfoParser::ParseMapDefinition(level_info_t &info)
 				break;
 
 
-			case MITYPE_SETFLAG9001:
+			case MITYPE_SETFLAGWIS:
 				if (!CheckAssign())
 				{
-					info.flags9001 |= handler->data1;
+					info.wisflags |= handler->data1;
 				}
 				else
 				{
 					sc.MustGetNumber();
-					if (sc.Number) info.flags9001 |= handler->data1;
-					else info.flags9001 &= ~handler->data1;
+					if (sc.Number) info.wisflags |= handler->data1;
+					else info.wisflags &= ~handler->data1;
 				}
-				info.flags9001 |= handler->data2;
+				info.wisflags |= handler->data2;
 				break;
 
-			case MITYPE_CLRFLAG9001:
-				info.flags9001 &= ~handler->data1;
-				info.flags9001 |= handler->data2;
+			case MITYPE_CLRFLAGWIS:
+				info.wisflags &= ~handler->data1;
+				info.wisflags |= handler->data2;
 				break;
 
 			case MITYPE_SCFLAGS9001:
-				info.flags9001 = (info.flags9001 & handler->data2) | handler->data1;
+				info.wisflags = (info.wisflags & handler->data2) | handler->data1;
 				break;
 
 			default:
@@ -2562,7 +2563,7 @@ void G_ParseMapInfo (FString basemapinfo)
 			// If that exists we need to skip this one.
 
 			int wad = fileSystem.GetFileContainer(lump);
-			int altlump = fileSystem.CheckNumForName("ZMAPINFO", FileSys::ns_global, wad, true);
+			int altlump = fileSystem.CheckNumForName("ZMAPINFO", ns_global, wad, true);
 
 			if (altlump >= 0) continue;
 		}
@@ -2570,9 +2571,9 @@ void G_ParseMapInfo (FString basemapinfo)
 		{
 			// MAPINFO and ZMAPINFO will override UMAPINFO if in the same WAD.
 			int wad = fileSystem.GetFileContainer(lump);
-			int altlump = fileSystem.CheckNumForName("ZMAPINFO", FileSys::ns_global, wad, true);
+			int altlump = fileSystem.CheckNumForName("ZMAPINFO", ns_global, wad, true);
 			if (altlump >= 0) continue;
-			altlump = fileSystem.CheckNumForName("MAPINFO", FileSys::ns_global, wad, true);
+			altlump = fileSystem.CheckNumForName("MAPINFO", ns_global, wad, true);
 			if (altlump >= 0) continue;
 		}
 		if (nindex != 2)

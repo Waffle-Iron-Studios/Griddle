@@ -91,7 +91,7 @@ FFont::FFont (const char *name, const char *nametemplate, const char *filetempla
 	// Read the font's configuration.
 	// This will not be done for the default fonts, because they are not atomic and the default content does not need it.
 
-	std::vector<FileSys::FolderEntry> folderdata;
+	TArray<FolderEntry> folderdata;
 	if (filetemplate != nullptr)
 	{
 		FStringf path("fonts/%s/", filetemplate);
@@ -103,13 +103,12 @@ FFont::FFont (const char *name, const char *nametemplate, const char *filetempla
 		{
 			FStringf infpath("fonts/%s/font.inf", filetemplate);
 
-			size_t index;
-			for(index = 0; index < folderdata.size(); index++)
+			unsigned index = folderdata.FindEx([=](const FolderEntry &entry)
 			{
-				if (infpath.CompareNoCase(folderdata[index].name) == 0) break;
-			}
+				return infpath.CompareNoCase(entry.name) == 0;
+			});
 
-			if (index < folderdata.size())
+			if (index < folderdata.Size())
 			{
 				FScanner sc;
 				sc.OpenLumpNum(folderdata[index].lumpnum);
@@ -289,7 +288,7 @@ FFont::FFont (const char *name, const char *nametemplate, const char *filetempla
 				}
 			}
 		}
-		if (folderdata.size() > 0)
+		if (folderdata.Size() > 0)
 		{
 			// all valid lumps must be named with a hex number that represents its Unicode character index.
 			for (auto &entry : folderdata)
@@ -398,7 +397,7 @@ public:
 	}
 
 };
-void FFont::ReadSheetFont(std::vector<FileSys::FolderEntry> &folderdata, int width, int height, const DVector2 &Scale)
+void FFont::ReadSheetFont(TArray<FolderEntry> &folderdata, int width, int height, const DVector2 &Scale)
 {
 	TMap<int, FGameTexture*> charMap;
 	int minchar = INT_MAX;
@@ -422,7 +421,7 @@ void FFont::ReadSheetFont(std::vector<FileSys::FolderEntry> &folderdata, int wid
 
 				FBitmap* sheetimg = &sheetBitmaps[sheetBitmaps.Reserve(1)];
 				sheetimg->Create(tex->GetTexelWidth(), tex->GetTexelHeight());
-				tex->GetTexture()->GetImage()->CopyPixels(sheetimg, FImageSource::normal, 0);
+				tex->GetTexture()->GetImage()->CopyPixels(sheetimg, FImageSource::normal);
 
 				for (int y = 0; y < numtex_y; y++)
 				{

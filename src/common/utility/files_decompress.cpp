@@ -41,49 +41,31 @@
 #include <algorithm>
 #include <stdexcept>
 
-#include "fs_files.h"
+#include "files.h"
 
-namespace FileSys {
-	using namespace byteswap;
-
-
-class DecompressorBase : public FileReaderInterface
-{
-	bool exceptions = false;
-public:
-	// These do not work but need to be defined to satisfy the FileReaderInterface.
-	// They will just error out when called.
-	long Tell() const override;
-	long Seek(long offset, int origin) override;
-	char* Gets(char* strbuf, int len) override;
-	void DecompressionError(const char* error, ...) const;
-	void SetOwnsReader();
-	void EnableExceptions(bool on) { exceptions = on; }
-
-protected:
-	FileReader* File = nullptr;
-	FileReader OwnedFile;
-};
-
+#include "cmdlib.h"
 
 //==========================================================================
 //
-// DecompressionError
+// I_Error
 //
-// Allows catching errors from the decompressor. The default is just to
-// return failure from the calling function.
+// Throw an error that will send us to the console if we are far enough
+// along in the startup process.
 //
 //==========================================================================
 
 void DecompressorBase::DecompressionError(const char *error, ...) const 
 {
-	if (exceptions)
-	{
-		va_list argptr;
-		va_start(argptr, error);
-		throw FileSystemException(error, argptr);
-		va_end(argptr);
-	}
+	const int MAX_ERRORTEXT = 300;
+	va_list argptr;
+	char errortext[MAX_ERRORTEXT];
+
+	va_start(argptr, error);
+	vsnprintf(errortext, MAX_ERRORTEXT, error, argptr);
+	va_end(argptr);
+
+	if (ErrorCallback != nullptr) ErrorCallback(errortext);
+	else throw std::runtime_error(errortext);
 }
 
 long DecompressorBase::Tell () const
@@ -110,19 +92,6 @@ void DecompressorBase::SetOwnsReader()
 
 //==========================================================================
 //
-//
-//
-//==========================================================================
-
-static const char* ZLibError(int zerr)
-{
-	static const char* const errs[6] = { "Errno", "Stream Error", "Data Error", "Memory Error", "Buffer Error", "Version Error" };
-	if (zerr >= 0 || zerr < -6) return "Unknown";
-	else return errs[-zerr - 1];
-}
-
-//==========================================================================
-//
 // DecompressorZ
 //
 // The zlib wrapper
@@ -134,22 +103,18 @@ class DecompressorZ : public DecompressorBase
 {
 	enum { BUFF_SIZE = 4096 };
 
-	bool SawEOF = false;
+	bool SawEOF;
 	z_stream Stream;
 	uint8_t InBuff[BUFF_SIZE];
 
 public:
-	bool Open (FileReader *file, bool zip)
+	DecompressorZ (FileReader *file, bool zip, const std::function<void(const char*)>& cb)
+	: SawEOF(false)
 	{
-		if (File != nullptr)
-		{
-			DecompressionError("File already open");
-			return false;
-		}
-
 		int err;
 
 		File = file;
+		SetErrorCallback(cb);
 		FillBuffer ();
 
 		Stream.zalloc = Z_NULL;
@@ -158,12 +123,10 @@ public:
 		if (!zip) err = inflateInit (&Stream);
 		else err = inflateInit2 (&Stream, -MAX_WBITS);
 
-		if (err < Z_OK)
+		if (err != Z_OK)
 		{
-			DecompressionError ("DecompressorZ: inflateInit failed: %s\n", ZLibError(err));
-			return false;
+			DecompressionError ("DecompressorZ: inflateInit failed: %s\n", M_ZLibError(err).GetChars());
 		}
-		return true;
 	}
 
 	~DecompressorZ ()
@@ -174,12 +137,6 @@ public:
 	long Read (void *buffer, long len) override
 	{
 		int err;
-
-		if (File == nullptr)
-		{
-			DecompressionError("File not open");
-			return 0;
-		}
 
 		Stream.next_out = (Bytef *)buffer;
 		Stream.avail_out = len;
@@ -196,13 +153,11 @@ public:
 		if (err != Z_OK && err != Z_STREAM_END)
 		{
 			DecompressionError ("Corrupt zlib stream");
-			return 0;
 		}
 
 		if (Stream.avail_out != 0)
 		{
 			DecompressionError ("Ran out of data in zlib stream");
-			return 0;
 		}
 
 		return len - Stream.avail_out;
@@ -239,22 +194,18 @@ class DecompressorBZ2 : public DecompressorBase
 {
 	enum { BUFF_SIZE = 4096 };
 
-	bool SawEOF = false;
+	bool SawEOF;
 	bz_stream Stream;
 	uint8_t InBuff[BUFF_SIZE];
 
 public:
-	bool Open(FileReader *file)
+	DecompressorBZ2 (FileReader *file, const std::function<void(const char*)>& cb)
+	: SawEOF(false)
 	{
-		if (File != nullptr)
-		{
-			DecompressionError("File already open");
-			return false;
-		}
-
 		int err;
 
 		File = file;
+		SetErrorCallback(cb);
 		stupidGlobal = this;
 		FillBuffer ();
 
@@ -267,9 +218,7 @@ public:
 		if (err != BZ_OK)
 		{
 			DecompressionError ("DecompressorBZ2: bzDecompressInit failed: %d\n", err);
-			return false;
 		}
-		return true;
 	}
 
 	~DecompressorBZ2 ()
@@ -280,12 +229,6 @@ public:
 
 	long Read (void *buffer, long len) override
 	{
-		if (File == nullptr)
-		{
-			DecompressionError("File not open");
-			return 0;
-		}
-
 		int err;
 
 		stupidGlobal = this;
@@ -304,13 +247,11 @@ public:
 		if (err != BZ_OK && err != BZ_STREAM_END)
 		{
 			DecompressionError ("Corrupt bzip2 stream");
-			return 0;
 		}
 
 		if (Stream.avail_out != 0)
 		{
 			DecompressionError ("Ran out of data in bzip2 stream");
-			return 0;
 		}
 
 		return len - Stream.avail_out;
@@ -362,7 +303,7 @@ class DecompressorLZMA : public DecompressorBase
 {
 	enum { BUFF_SIZE = 4096 };
 
-	bool SawEOF = false;
+	bool SawEOF;
 	CLzmaDec Stream;
 	size_t Size;
 	size_t InPos, InSize;
@@ -371,17 +312,13 @@ class DecompressorLZMA : public DecompressorBase
 
 public:
 
-	bool Open(FileReader *file, size_t uncompressed_size)
+	DecompressorLZMA (FileReader *file, size_t uncompressed_size, const std::function<void(const char*)>& cb)
+	: SawEOF(false)
 	{
-		if (File != nullptr)
-		{
-			DecompressionError("File already open");
-			return false;
-		}
-
 		uint8_t header[4 + LZMA_PROPS_SIZE];
 		int err;
 		File = file;
+		SetErrorCallback(cb);
 
 		Size = uncompressed_size;
 		OutProcessed = 0;
@@ -390,13 +327,11 @@ public:
 		if (File->Read(header, sizeof(header)) < (long)sizeof(header))
 		{
 			DecompressionError("DecompressorLZMA: File too short\n");
-			return false;
 		}
 		if (header[2] + header[3] * 256 != LZMA_PROPS_SIZE)
 		{
 			DecompressionError("DecompressorLZMA: LZMA props size is %d (expected %d)\n",
 				header[2] + header[3] * 256, LZMA_PROPS_SIZE);
-			return false;
 		}
 
 		FillBuffer();
@@ -407,11 +342,9 @@ public:
 		if (err != SZ_OK)
 		{
 			DecompressionError("DecompressorLZMA: LzmaDec_Allocate failed: %d\n", err);
-			return false;
 		}
 
 		LzmaDec_Init(&Stream);
-		return true;
 	}
 
 	~DecompressorLZMA ()
@@ -421,12 +354,6 @@ public:
 
 	long Read (void *buffer, long len) override
 	{
-		if (File == nullptr)
-		{
-			DecompressionError("File not open");
-			return 0;
-		}
-
 		int err;
 		Byte *next_out = (Byte *)buffer;
 
@@ -445,14 +372,12 @@ public:
 			if (err != SZ_OK)
 			{
 				DecompressionError ("Corrupt LZMA stream");
-				return 0;
 			}
 			if (in_processed == 0 && out_processed == 0)
 			{
 				if (status != LZMA_STATUS_FINISHED_WITH_MARK)
 				{
 					DecompressionError ("Corrupt LZMA stream");
-					return 0;
 				}
 			}
 			if (InSize == 0 && !SawEOF)
@@ -464,13 +389,11 @@ public:
 		if (err != Z_OK && err != Z_STREAM_END)
 		{
 			DecompressionError ("Corrupt LZMA stream");
-			return 0;
 		}
 
 		if (len != 0)
 		{
 			DecompressionError ("Ran out of data in LZMA stream");
-			return 0;
 		}
 
 		return (long)(next_out - (Byte *)buffer);
@@ -585,7 +508,7 @@ class DecompressorLZSS : public DecompressorBase
 				// Partial overlap: Copy in 2 or 3 chunks.
 				do
 				{
-					unsigned int copy = std::min<unsigned int>(len, pos+1);
+					unsigned int copy = min<unsigned int>(len, pos+1);
 					memcpy(Stream.InternalBuffer, copyStart, copy);
 					Stream.InternalBuffer += copy;
 					Stream.InternalOut += copy;
@@ -617,22 +540,16 @@ class DecompressorLZSS : public DecompressorBase
 	}
 
 public:
-	bool Open(FileReader *file)
+	DecompressorLZSS(FileReader *file, const std::function<void(const char*)>& cb) : SawEOF(false)
 	{
-		if (File != nullptr)
-		{
-			DecompressionError("File already open");
-			return false;
-		}
-
 		File = file;
+		SetErrorCallback(cb);
 		Stream.State = STREAM_EMPTY;
 		Stream.WindowData = Stream.InternalBuffer = Stream.Window+WINDOW_SIZE;
 		Stream.InternalOut = 0;
 		Stream.AvailIn = 0;
 
 		FillBuffer();
-		return true;
 	}
 
 	~DecompressorLZSS()
@@ -657,7 +574,7 @@ public:
 					break;
 			}
 
-			unsigned int copy = std::min<unsigned int>(Stream.InternalOut, AvailOut);
+			unsigned int copy = min<unsigned int>(Stream.InternalOut, AvailOut);
 			if(copy > 0)
 			{
 				memcpy(Out, Stream.WindowData, copy);
@@ -687,92 +604,50 @@ public:
 };
 
 
-bool FileReader::OpenDecompressor(FileReader &parent, Size length, int method, bool seekable, bool exceptions)
+bool FileReader::OpenDecompressor(FileReader &parent, Size length, int method, bool seekable, const std::function<void(const char*)>& cb)
 {
-	DecompressorBase* dec = nullptr;
-	try
+	DecompressorBase *dec = nullptr;
+	FileReader *p = &parent;
+	switch (method & ~METHOD_TRANSFEROWNER)
 	{
-		FileReader* p = &parent;
-		switch (method & ~METHOD_TRANSFEROWNER)
-		{
 		case METHOD_DEFLATE:
 		case METHOD_ZLIB:
-		{
-			auto idec = new DecompressorZ;
-			dec = idec;
-			idec->EnableExceptions(exceptions);
-			if (!idec->Open(p, method == METHOD_DEFLATE))
-			{
-				delete idec;
-				return false;
-			}
+			dec = new DecompressorZ(p, method == METHOD_DEFLATE, cb);
 			break;
-		}
+
 		case METHOD_BZIP2:
-		{
-			auto idec = new DecompressorBZ2;
-			dec = idec;
-			idec->EnableExceptions(exceptions);
-			if (!idec->Open(p))
-			{
-				delete idec;
-				return false;
-			}
+			dec = new DecompressorBZ2(p, cb);
 			break;
-		}
+
 		case METHOD_LZMA:
-		{
-			auto idec = new DecompressorLZMA;
-			dec = idec;
-			idec->EnableExceptions(exceptions);
-			if (!idec->Open(p, length))
-			{
-				delete idec;
-				return false;
-			}
+			dec = new DecompressorLZMA(p, length, cb);
 			break;
-		}
+
 		case METHOD_LZSS:
-		{
-			auto idec = new DecompressorLZSS;
-			dec = idec;
-			idec->EnableExceptions(exceptions);
-			if (!idec->Open(p))
-			{
-				delete idec;
-				return false;
-			}
+			dec = new DecompressorLZSS(p, cb);
 			break;
-		}
 
 		// todo: METHOD_IMPLODE, METHOD_SHRINK
 		default:
 			return false;
-		}
-		if (method & METHOD_TRANSFEROWNER)
-		{
-			dec->SetOwnsReader();
-		}
-
-		dec->Length = (long)length;
-		if (!seekable)
-		{
-			Close();
-			mReader = dec;
-			return true;
-		}
-		else
-		{
-			// todo: create a wrapper. for now this fails
-			delete dec;
-			return false;
-		}
 	}
-	catch (...)
+	if (method & METHOD_TRANSFEROWNER)
 	{
-		if (dec) delete dec;
-		throw;
+		dec->SetOwnsReader();
+	}
+
+	dec->Length = (long)length;
+	if (!seekable)
+	{
+		Close();
+		mReader = dec;
+		return true;
+	}
+	else
+	{
+		// todo: create a wrapper. for now this fails
+		delete dec;
+		return false;
 	}
 }
 
-}

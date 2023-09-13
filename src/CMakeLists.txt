@@ -139,11 +139,7 @@ else()
 endif()
 
 if( NOT NO_OPENAL )
-	if ( "vcpkg-openal-soft" IN_LIST VCPKG_MANIFEST_FEATURES )
-		# Statically link to OpenAL from vcpkg
-		find_package( OpenAL CONFIG REQUIRED )
-		list( APPEND PROJECT_LIBRARIES OpenAL::OpenAL )
-	elseif ( NOT DYN_OPENAL )	# DYN_OPENAL uses local copies of the headers.
+	if ( NOT DYN_OPENAL )	# DYN_OPENAL uses local copies of the headers.
 		find_package( OpenAL )
 		mark_as_advanced(CLEAR OPENAL_INCLUDE_DIR)
 		if( OPENAL_INCLUDE_DIR )
@@ -304,7 +300,7 @@ if( UNIX )
 			add_definitions( -DNO_CLOCK_GETTIME )
 		endif()
 	else()
-		list( APPEND PROJECT_LIBRARIES rt )
+		set( PROJECT_LIBRARIES ${PROJECT_LIBRARIES} rt )
 	endif()
 endif()
 
@@ -321,7 +317,7 @@ add_custom_target( revision_check ALL
 
 set( PROJECT_LIBRARIES ${PROJECT_LIBRARIES} "${ZLIB_LIBRARIES}" "${JPEG_LIBRARIES}" "${BZIP2_LIBRARIES}" "${CMAKE_DL_LIBS}" "${DRPC_LIBRARIES}")
 if (HAVE_VULKAN)
-	list( APPEND PROJECT_LIBRARIES "zvulkan" )
+	set( PROJECT_LIBRARIES ${PROJECT_LIBRARIES} "zvulkan")
 endif()
 
 # ZMUSIC
@@ -378,13 +374,6 @@ if( VPX_FOUND )
 	set( PROJECT_LIBRARIES ${PROJECT_LIBRARIES} ${VPX_LIBRARIES} )
 else()
 	message( SEND_ERROR "Could not find libvpx" )
-endif()
-
-if (TARGET WebP::webp)
-	list( APPEND PROJECT_LIBRARIES WebP::webp WebP::webpdemux WebP::libwebpmux )
-	if (TARGET WebP::webpdecoder)
-		list( APPEND PROJECT_LIBRARIES WebP::webpdecoder)
-	endif()
 endif()
 
 include_directories( SYSTEM "${ZLIB_INCLUDE_DIR}" "${BZIP2_INCLUDE_DIR}" "${LZMA_INCLUDE_DIR}" "${JPEG_INCLUDE_DIR}" "${ZMUSIC_INCLUDE_DIR}" "${DRPC_INCLUDE_DIR}")
@@ -575,8 +564,7 @@ file( GLOB HEADER_FILES
 	common/statusbar/*.h
 	common/fonts/*.h
 	common/objects/*.h
-	common/filesystem/include/*.h
-	common/filesystem/source/*.h
+	common/filesystem/*.h
 	common/platform/posix/cocoa/*.h
 	common/platform/posix/sdl/*.h
 	common/platform/win32/*.h
@@ -1009,7 +997,6 @@ set (PCH_SOURCES
 	common/textures/formats/anmtexture.cpp
 	common/textures/formats/startscreentexture.cpp
 	common/textures/formats/qoitexture.cpp
-	common/textures/formats/webptexture.cpp
 	common/textures/hires/hqresize.cpp
 	common/models/models_md3.cpp
 	common/models/models_md2.cpp
@@ -1040,6 +1027,8 @@ set (PCH_SOURCES
 	common/utility/m_alloc.cpp
 	common/utility/utf8.cpp
 	common/utility/palette.cpp
+	common/utility/files.cpp
+	common/utility/files_decompress.cpp
 	common/utility/memarena.cpp
 	common/utility/cmdlib.cpp
 	common/utility/configfile.cpp
@@ -1056,6 +1045,19 @@ set (PCH_SOURCES
 	common/thirdparty/libsmackerdec/src/HuffmanVLC.cpp
 	common/thirdparty/libsmackerdec/src/LogError.cpp
 	common/thirdparty/libsmackerdec/src/SmackerDecoder.cpp
+	common/filesystem/filesystem.cpp
+	common/filesystem/ancientzip.cpp
+	common/filesystem/file_7z.cpp
+	common/filesystem/file_grp.cpp
+	common/filesystem/file_lump.cpp
+	common/filesystem/file_rff.cpp
+	common/filesystem/file_wad.cpp
+	common/filesystem/file_zip.cpp
+	common/filesystem/file_pak.cpp
+	common/filesystem/file_whres.cpp
+	common/filesystem/file_ssi.cpp
+	common/filesystem/file_directory.cpp
+	common/filesystem/resourcefile.cpp
 	common/engine/cycler.cpp
 	common/engine/d_event.cpp
 	common/engine/date.cpp
@@ -1179,25 +1181,6 @@ set( GAME_SOURCES
 	common/thirdparty/math/tan.c
 	common/thirdparty/math/tanh.c
 	common/thirdparty/math/fastsin.cpp
-
-	common/filesystem/source/filesystem.cpp
-	common/filesystem/source/ancientzip.cpp
-	common/filesystem/source/file_7z.cpp
-	common/filesystem/source/file_grp.cpp
-	common/filesystem/source/file_lump.cpp
-	common/filesystem/source/file_rff.cpp
-	common/filesystem/source/file_wad.cpp
-	common/filesystem/source/file_zip.cpp
-	common/filesystem/source/file_pak.cpp
-	common/filesystem/source/file_whres.cpp
-	common/filesystem/source/file_ssi.cpp
-	common/filesystem/source/file_directory.cpp
-	common/filesystem/source/resourcefile.cpp
-	common/filesystem/source/files.cpp
-	common/filesystem/source/files_decompress.cpp
-	common/filesystem/source/fs_findfile.cpp
-	common/filesystem/source/fs_stringpool.cpp
-
 )
 
 set( GAME_NONPCH_SOURCES ${GAME_SOURCES} )
@@ -1243,7 +1226,7 @@ include_directories(
 	common/textures/hires
 	common/textures
 	common/models
-	common/filesystem/include
+	common/filesystem
 	common/utility
 	common/console
 	common/engine
@@ -1350,10 +1333,6 @@ add_custom_command(TARGET zdoom POST_BUILD
 	${CMAKE_SOURCE_DIR}/fm_banks/gs-by-papiezak-and-sneakernets.wopn $<TARGET_FILE_DIR:zdoom>/fm_banks/gs-by-papiezak-and-sneakernets.wopn
 )
 
-if (VCPKG_TOOLCHAIN)
-	x_vcpkg_install_local_dependencies(TARGETS zdoom DESTINATION ".")
-endif()
-
 if( WIN32 )
 	set( INSTALL_SOUNDFONT_PATH . CACHE STRING "Directory where soundfonts and WOPL/WOPN banks will be placed during install." )
 else()
@@ -1444,8 +1423,6 @@ source_group("Common\\Objects" REGULAR_EXPRESSION "^${CMAKE_CURRENT_SOURCE_DIR}/
 source_group("Common\\Menu" REGULAR_EXPRESSION "^${CMAKE_CURRENT_SOURCE_DIR}/common/menu/.+")
 source_group("Common\\Fonts" REGULAR_EXPRESSION "^${CMAKE_CURRENT_SOURCE_DIR}/common/fonts/.+")
 source_group("Common\\File System" REGULAR_EXPRESSION "^${CMAKE_CURRENT_SOURCE_DIR}/common/filesystem/.+")
-source_group("Common\\File System\\Include" REGULAR_EXPRESSION "^${CMAKE_CURRENT_SOURCE_DIR}/common/filesystem/include/.+")
-source_group("Common\\File System\\Source" REGULAR_EXPRESSION "^${CMAKE_CURRENT_SOURCE_DIR}/common/filesystem/source/.+")
 source_group("Common\\Scripting" REGULAR_EXPRESSION "^${CMAKE_CURRENT_SOURCE_DIR}/common/scripting/.+")
 source_group("Common\\Scripting\\Interface" REGULAR_EXPRESSION "^${CMAKE_CURRENT_SOURCE_DIR}/common/scripting/interface/.+")
 source_group("Common\\Scripting\\Frontend" REGULAR_EXPRESSION "^${CMAKE_CURRENT_SOURCE_DIR}/common/scripting/frontend/.+" FILES ${CMAKE_CURRENT_BINARY_DIR}/zcc-parse.c ${CMAKE_CURRENT_BINARY_DIR}/zcc-parse.h)

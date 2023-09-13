@@ -407,6 +407,8 @@ PNamespace *ParseOneScript(const int baselump, ZCCParseState &state)
 	int lumpnum = baselump;
 	auto fileno = fileSystem.GetFileContainer(lumpnum);
 
+	FString file  = fileSystem.GetFileFullPath(lumpnum);
+
 	state.FileNo = fileno;
 
 	if (TokenMap.CountUsed() == 0)
@@ -456,7 +458,7 @@ PNamespace *ParseOneScript(const int baselump, ZCCParseState &state)
 			{
 				sc.ScriptError("Bad version directive");
 			}
-			if (state.ParseVersion > MakeVersion(ZSCRIPT_VER_MAJOR, ZSCRIPT_VER_MINOR, ZSCRIPT_VER_REVISION))
+			if (state.ParseVersion > MakeVersion(VER_MAJOR, VER_MINOR, VER_REVISION))
 			{
 				sc.ScriptError("The file you are attempting to run requires a newer version of " GAMENAME ".\n\nA version with ZScript version %d.%d.%d is required, but your copy of " GAMENAME " only supports %d.%d.%d. Please upgrade!", state.ParseVersion.major, state.ParseVersion.minor, state.ParseVersion.revision, VER_MAJOR, VER_MINOR, VER_REVISION);
 			}
@@ -501,7 +503,7 @@ PNamespace *ParseOneScript(const int baselump, ZCCParseState &state)
 	// If the parser fails, there is no point starting the compiler, because it'd only flood the output with endless errors.
 	if (FScriptPosition::ErrorCounter > 0)
 	{
-		I_Error("%d errors while parsing %s", FScriptPosition::ErrorCounter, fileSystem.GetFileFullPath(baselump).c_str());
+		I_Error("%d errors while parsing %s", FScriptPosition::ErrorCounter, fileSystem.GetFileFullPath(baselump).GetChars());
 	}
 
 #ifndef NDEBUG
@@ -515,7 +517,7 @@ PNamespace *ParseOneScript(const int baselump, ZCCParseState &state)
 	if (Args->CheckParm("-dumpast"))
 	{
 		FString ast = ZCC_PrintAST(state.TopNode);
-		FString filename = fileSystem.GetFileFullPath(baselump).c_str();
+		FString filename = fileSystem.GetFileFullPath(baselump);
 		filename.ReplaceChars(":\\/?|", '.');
 		filename << ".ast";
 		FileWriter *ff = FileWriter::Open(filename);

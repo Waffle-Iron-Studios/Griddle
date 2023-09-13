@@ -38,18 +38,6 @@
 #include "bitmap.h"
 #include "image.h"
 #include "imagehelpers.h"
-#include "m_swap.h"
-
-
-// Doom patch format header
-struct patch_t
-{
-	int16_t			width;			// bounding box size 
-	int16_t			height;
-	int16_t			leftoffset; 	// pixels to the left of origin 
-	int16_t			topoffset;		// pixels below the origin 
-	uint32_t 		columnofs[1];	// only [width] used
-};
 
 
 // posts are runs of non masked source pixels
@@ -73,8 +61,8 @@ class FPatchTexture : public FImageSource
 	bool isalpha = false;
 public:
 	FPatchTexture (int lumpnum, int w, int h, int lo, int to, bool isalphatex);
-	PalettedPixels CreatePalettedPixels(int conversion, int frame = 0) override;
-	int CopyPixels(FBitmap *bmp, int conversion, int frame = 0) override;
+	PalettedPixels CreatePalettedPixels(int conversion) override;
+	int CopyPixels(FBitmap *bmp, int conversion) override;
 	bool SupportRemap0() override { return !badflag; }
 	void DetectBadPatches();
 };
@@ -92,7 +80,7 @@ static bool CheckIfPatch(FileReader & file, bool &isalpha)
 	file.Seek(0, FileReader::SeekSet);
 	auto data = file.Read(file.GetLength());
 
-	const patch_t *foo = (const patch_t *)data.data();
+	const patch_t *foo = (const patch_t *)data.Data();
 
 	int height = LittleShort(foo->height);
 	int width = LittleShort(foo->width);
@@ -122,7 +110,7 @@ static bool CheckIfPatch(FileReader & file, bool &isalpha)
 		{
 			// only check this if the texture passed validation.
 			// Here is a good point because we already have a valid buffer of the lump's data.
-			isalpha = checkPatchForAlpha(data.data(), (uint32_t)file.GetLength());
+			isalpha = checkPatchForAlpha(data.Data(), (uint32_t)file.GetLength());
 		}
 		return !gapAtStart;
 	}
@@ -178,14 +166,14 @@ FPatchTexture::FPatchTexture (int lumpnum, int w, int h, int lo, int to, bool is
 //
 //==========================================================================
 
-PalettedPixels FPatchTexture::CreatePalettedPixels(int conversion, int frame)
+PalettedPixels FPatchTexture::CreatePalettedPixels(int conversion)
 {
 	uint8_t *remap, remaptable[256];
 	int numspans;
 	const column_t *maxcol;
 	int x;
 
-	auto lump =  fileSystem.ReadFile (SourceLump);
+	FileData lump = fileSystem.ReadFile (SourceLump);
 	const patch_t *patch = (const patch_t *)lump.GetMem();
 
 	maxcol = (const column_t *)((const uint8_t *)patch + fileSystem.FileLength (SourceLump) - 3);
@@ -275,10 +263,10 @@ PalettedPixels FPatchTexture::CreatePalettedPixels(int conversion, int frame)
 //
 //==========================================================================
 
-int FPatchTexture::CopyPixels(FBitmap *bmp, int conversion, int frame)
+int FPatchTexture::CopyPixels(FBitmap *bmp, int conversion)
 {
-	if (!isalpha) return FImageSource::CopyPixels(bmp, conversion, frame);
-	else return CopyTranslatedPixels(bmp, GPalette.GrayscaleMap.Palette, frame);
+	if (!isalpha) return FImageSource::CopyPixels(bmp, conversion);
+	else return CopyTranslatedPixels(bmp, GPalette.GrayscaleMap.Palette);
 }
 
 //==========================================================================
@@ -295,7 +283,7 @@ void FPatchTexture::DetectBadPatches ()
 	// Check if this patch is likely to be a problem.
 	// It must be 256 pixels tall, and all its columns must have exactly
 	// one post, where each post has a supposed length of 0.
-	auto lump =  fileSystem.ReadFile (SourceLump);
+	FileData lump = fileSystem.ReadFile (SourceLump);
 	const patch_t *realpatch = (patch_t *)lump.GetMem();
 	const uint32_t *cofs = realpatch->columnofs;
 	int x, x2 = LittleShort(realpatch->width);

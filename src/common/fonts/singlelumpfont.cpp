@@ -41,7 +41,6 @@
 #include "utf8.h"
 #include "fontchars.h"
 #include "texturemanager.h"
-#include "m_swap.h"
 
 #include "fontinternals.h"
 
@@ -124,8 +123,8 @@ FSingleLumpFont::FSingleLumpFont (const char *name, int lump) : FFont(lump)
 
 	FontName = name;
 
-	auto data1 = fileSystem.ReadFile (lump);
-	auto data = data1.GetBytes();
+	FileData data1 = fileSystem.ReadFile (lump);
+	const uint8_t *data = (const uint8_t *)data1.GetMem();
 
 	if (data[0] == 0xE1 && data[1] == 0xE6 && data[2] == 0xD5 && data[3] == 0x1A)
 	{
@@ -474,8 +473,8 @@ void FSingleLumpFont::LoadBMF(int lump, const uint8_t *data)
 
 void FSingleLumpFont::CheckFON1Chars()
 {
-	auto memLump = fileSystem.ReadFile(Lump);
-	auto data = memLump.GetBytes();
+	FileData memLump = fileSystem.ReadFile(Lump);
+	const uint8_t* data = (const uint8_t*)memLump.GetMem();
 	const uint8_t* data_p;
 
 	data_p = data + 8;

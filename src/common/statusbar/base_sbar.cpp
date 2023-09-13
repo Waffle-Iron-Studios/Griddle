@@ -57,8 +57,8 @@ IMPLEMENT_CLASS(DStatusBarCore, false, false)
 IMPLEMENT_CLASS(DHUDFont, false, false);
 
 
-CVAR(Color, crosshaircolor, 0x80ffb4, CVAR_ARCHIVE);
-CVAR(Int, crosshairhealth, 0, CVAR_ARCHIVE);
+CVAR(Color, crosshaircolor, 0xff0000, CVAR_ARCHIVE);
+CVAR(Int, crosshairhealth, 2, CVAR_ARCHIVE);
 CVARD(Float, crosshairscale, 0.5, CVAR_ARCHIVE, "changes the size of the crosshair");
 CVAR(Bool, crosshairgrow, false, CVAR_ARCHIVE);
 
@@ -69,7 +69,7 @@ CUSTOM_CVARD(Float, hud_scalefactor, 1.f, CVAR_ARCHIVE, "changes the hud scale")
 	else if (sysCallbacks.HudScaleChanged) sysCallbacks.HudScaleChanged();
 }
 
-CUSTOM_CVARD(Bool, hud_aspectscale, false, CVAR_ARCHIVE, "enables aspect ratio correction for the status bar")
+CUSTOM_CVARD(Bool, hud_aspectscale, true, CVAR_ARCHIVE, "enables aspect ratio correction for the status bar")
 {
 	if (sysCallbacks.HudScaleChanged) sysCallbacks.HudScaleChanged();
 }
@@ -780,7 +780,7 @@ void DStatusBarCore::DrawString(FFont* font, const FString& cstring, double x, d
 		width += font->GetDefaultKerning();
 
 		if (!monospaced) //If we are monospaced lets use the offset
-			x += (c->GetDisplayLeftOffset() * scaleX); //ignore x offsets since we adapt to character size
+			x += (c->GetDisplayLeftOffset() * scaleX + 1); //ignore x offsets since we adapt to character size
 
 		double rx, ry, rw, rh;
 		rx = x + drawOffset.X;

@@ -28,7 +28,7 @@
 #ifndef __P_SETUP__
 #define __P_SETUP__
 
-#include "fs_filesystem.h"
+#include "resourcefile.h"
 #include "doomdata.h"
 #include "r_defs.h"
 #include "nodebuild.h"

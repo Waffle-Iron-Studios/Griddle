@@ -31,7 +31,6 @@
 #include "texturemanager.h"
 #include "modelrenderer.h"
 #include "printf.h"
-#include "m_swap.h"
 
 #ifdef _MSC_VER
 #pragma warning(disable:4244) // warning C4244: conversion from 'double' to 'float', possible loss of data
@@ -177,8 +176,8 @@ bool FDMDModel::Load(const char * path, int lumpnum, const char * buffer, int le
 void FDMDModel::LoadGeometry()
 {
 	static int axis[3] = { VX, VY, VZ };
-	auto lumpdata = fileSystem.ReadFile(mLumpNum);
-	auto buffer = lumpdata.GetString();
+	FileData lumpdata = fileSystem.ReadFile(mLumpNum);
+	const char *buffer = (const char *)lumpdata.GetMem();
 	texCoords = new FTexCoord[info.numTexCoords];
 	memcpy(texCoords, buffer + info.offsetTexCoords, info.numTexCoords * sizeof(FTexCoord));
 
@@ -501,8 +500,8 @@ void FMD2Model::LoadGeometry()
 {
 	static int axis[3] = { VX, VY, VZ };
 	uint8_t   *md2_frames;
-	auto lumpdata = fileSystem.ReadFile(mLumpNum);
-	auto buffer = lumpdata.GetString();
+	FileData lumpdata = fileSystem.ReadFile(mLumpNum);
+	const char *buffer = (const char *)lumpdata.GetMem();
 
 	texCoords = new FTexCoord[info.numTexCoords];
 	memcpy(texCoords, (uint8_t*)buffer + info.offsetTexCoords, info.numTexCoords * sizeof(FTexCoord));

@@ -26,7 +26,6 @@
 #include "zvulkan/vulkanbuilders.h"
 #include "vulkan/system/vk_commandbuffer.h"
 #include "filesystem.h"
-#include "cmdlib.h"
 
 VkPPShader::VkPPShader(VulkanRenderDevice* fb, PPShader *shader) : fb(fb)
 {
@@ -67,8 +66,7 @@ FString VkPPShader::LoadShaderCode(const FString &lumpName, const FString &defin
 {
 	int lump = fileSystem.CheckNumForFullName(lumpName);
 	if (lump == -1) I_FatalError("Unable to load '%s'", lumpName.GetChars());
-	auto sp = fileSystem.ReadFile(lump);
-	FString code = GetStringFromLump(lump);
+	FString code = fileSystem.ReadFile(lump).GetString().GetChars();
 
 	FString patchedCode;
 	patchedCode.AppendFormat("#version %d\n", 450);

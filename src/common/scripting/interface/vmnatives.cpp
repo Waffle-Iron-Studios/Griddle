@@ -424,7 +424,7 @@ DEFINE_ACTION_FUNCTION(_TexMan, GetName)
 		{
 			// Textures for full path names do not have their own name, they merely link to the source lump.
 			auto lump = tex->GetSourceLump();
-			if (TexMan.GetLinkedTexture(lump) == tex)
+			if (fileSystem.GetLinkedTexture(lump) == tex)
 				retval = fileSystem.GetFileFullName(lump);
 		}
 	}
@@ -819,7 +819,9 @@ DEFINE_ACTION_FUNCTION(_Wads, GetLumpName)
 {
 	PARAM_PROLOGUE;
 	PARAM_INT(lump);
-	ACTION_RETURN_STRING(fileSystem.GetFileShortName(lump));
+	FString lumpname;
+	fileSystem.GetFileShortName(lumpname, lump);
+	ACTION_RETURN_STRING(lumpname);
 }
 
 DEFINE_ACTION_FUNCTION(_Wads, GetLumpFullName)
@@ -841,7 +843,7 @@ DEFINE_ACTION_FUNCTION(_Wads, ReadLump)
 	PARAM_PROLOGUE;
 	PARAM_INT(lump);
 	const bool isLumpValid = lump >= 0 && lump < fileSystem.GetNumEntries();
-	ACTION_RETURN_STRING(isLumpValid ? GetStringFromLump(lump) : FString());
+	ACTION_RETURN_STRING(isLumpValid ? fileSystem.ReadFile(lump).GetString() : FString());
 }
 
 //==========================================================================
@@ -1038,8 +1040,7 @@ DEFINE_ACTION_FUNCTION(FKeyBindings, NameAllKeys)
 {
 	PARAM_PROLOGUE;
 	PARAM_POINTER(array, TArray<int>);
-	PARAM_BOOL(colors);
-	auto buffer = C_NameKeys(array->Data(), array->Size(), colors);
+	auto buffer = C_NameKeys(array->Data(), array->Size(), true);
 	ACTION_RETURN_STRING(buffer);
 }
 

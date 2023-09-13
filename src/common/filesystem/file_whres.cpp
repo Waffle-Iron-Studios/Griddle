@@ -1,8 +1,10 @@
 /*
-** file_lump.cpp
+** file_whres.cpp
+**
+** reads a Witchaven/TekWar sound resource file
 **
 **---------------------------------------------------------------------------
-** Copyright 2009 Christoph Oelckers
+** Copyright 2009-2019 Christoph Oelckers
 ** All rights reserved.
 **
 ** Redistribution and use in source and binary forms, with or without
@@ -32,32 +34,55 @@
 **
 */
 
-#include "resourcefile_internal.h"
+#include "resourcefile.h"
+#include "cmdlib.h"
 
-namespace FileSys {
 //==========================================================================
 //
-// Single lump
+//
 //
 //==========================================================================
 
-class FLumpFile : public FUncompressedFile
+struct whresentry
 {
+	int		filepospage, filelen, priority;
+} ;
+
+struct dpackheader_t
+{
+	int		ident;		// == IDPAKHEADER
+	int		dirofs;
+	int		dirlen;
+} ;
+
+
+//==========================================================================
+//
+// Wad file
+//
+//==========================================================================
+
+class FWHResFile : public FUncompressedFile
+{
+	FString basename;
 public:
-	FLumpFile(const char * filename, FileReader &file, StringPool* sp);
+	FWHResFile(const char * filename, FileReader &file);
 	bool Open(LumpFilterInfo* filter);
 };
 
 
 //==========================================================================
 //
-// FLumpFile::FLumpFile
+// FWadFile::FWadFile
+//
+// Initializes a WAD file
 //
 //==========================================================================
 
-FLumpFile::FLumpFile(const char *filename, FileReader &file, StringPool* sp)
-	: FUncompressedFile(filename, file, sp)
+FWHResFile::FWHResFile(const char *filename, FileReader &file) 
+	: FUncompressedFile(filename, file)
 {
+	basename = ExtractFileBase(filename, false);
 }
 
 //==========================================================================
@@ -66,17 +91,36 @@ FLumpFile::FLumpFile(const char *filename, FileReader &file, StringPool* sp)
 //
 //==========================================================================
 
-bool FLumpFile::Open(LumpFilterInfo*)
+bool FWHResFile::Open(LumpFilterInfo*)
 {
-	Lumps.Resize(1);
-	Lumps[0].LumpNameSetup(ExtractBaseName(FileName, true).c_str(), stringpool);
-	Lumps[0].Owner = this;
-	Lumps[0].Position = 0;
-	Lumps[0].LumpSize = (int)Reader.GetLength();
-	Lumps[0].Flags = 0;
-	NumLumps = 1;
+	int directory[1024];
+
+	Reader.Seek(-4096, FileReader::SeekEnd);
+	Reader.Read(directory, 4096);
+
+	int nl =1024/3;
+	Lumps.Resize(nl);
+
+
+	int i = 0;
+	for(int k = 0; k < nl; k++)
+	{
+		int offset = LittleLong(directory[k*3]) * 4096;
+		int length = LittleLong(directory[k*3+1]);
+		if (length <= 0) break;
+		FStringf synthname("%s/%04d", basename.GetChars(), k);
+		Lumps[i].LumpNameSetup(synthname);
+		Lumps[i].Owner = this;
+		Lumps[i].Position = offset;
+		Lumps[i].LumpSize = length;
+		i++;
+	}
+	NumLumps = i;
+	Lumps.Clamp(NumLumps);
+	Lumps.ShrinkToFit();
 	return true;
 }
+
 
 //==========================================================================
 //
@@ -84,14 +128,30 @@ bool FLumpFile::Open(LumpFilterInfo*)
 //
 //==========================================================================
 
-FResourceFile *CheckLump(const char *filename, FileReader &file, LumpFilterInfo* filter, FileSystemMessageFunc Printf, StringPool* sp)
+FResourceFile *CheckWHRes(const char *filename, FileReader &file, LumpFilterInfo* filter, FileSystemMessageFunc Printf)
 {
-	// always succeeds
-	auto rf = new FLumpFile(filename, file, sp);
-	if (rf->Open(filter)) return rf;
-	file = std::move(rf->Reader); // to avoid destruction of reader
-	delete rf;
+	if (file.GetLength() >= 8192) // needs to be at least 8192 to contain one file and the directory.
+	{
+		int directory[1024];
+		int nl =1024/3;
+
+		file.Seek(-4096, FileReader::SeekEnd);
+		file.Read(directory, 4096);
+
+		int checkpos = 0;
+		for(int k = 0; k < nl; k++)
+		{
+			int offset = LittleLong(directory[k*3]);
+			int length = LittleLong(directory[k*3+1]);
+			if (length <= 0 && offset == 0) break;
+			if (offset != checkpos || length <= 0) return nullptr;
+			checkpos += (length+4095) / 4096;
+		}
+		auto rf = new FWHResFile(filename, file);
+		if (rf->Open(filter)) return rf;
+		file = std::move(rf->Reader); // to avoid destruction of reader
+		delete rf;
+	}
 	return NULL;
 }
-
-}
+ 

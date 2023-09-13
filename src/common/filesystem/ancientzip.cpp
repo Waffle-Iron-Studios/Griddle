@@ -46,8 +46,6 @@
 #include <stdlib.h>
 #include "ancientzip.h"
 
-namespace FileSys {
-	
 /****************************************************************
     Bit-I/O variables and routines/macros
 
@@ -312,7 +310,7 @@ int FZipExploder::Explode(unsigned char *out, unsigned int outsize,
 			len += minMatchLen;
 			dist++;
 			if (bIdx + len > outsize) {
-				return -1;
+				throw CExplosionError("Not enough output space");
 			}
 			if ((unsigned int)dist > bIdx) {
 				/* Anything before the first input byte is zero. */
@@ -434,6 +432,4 @@ int ShrinkLoop(unsigned char *out, unsigned int outsize, FileReader &_In, unsign
 		}
 	}
 	return 0;
-}
-
 }

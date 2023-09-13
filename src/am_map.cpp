@@ -1548,7 +1548,7 @@ void DAutomap::Ticker ()
 		return;
 
 	// Backport this from vkDoom
-	if ((primaryLevel->flags9 & LEVEL9_NOAUTOMAP) || (primaryLevel->flags9001 & LEVEL9001_CUTSCENELEVEL))
+	if ((primaryLevel->flags9 & LEVEL9_NOAUTOMAP) || (primaryLevel->wisflags & LEVELWIS_CUTSCENELEVEL))
 	{
 		AM_ToggleMap();
 		return;
@@ -2019,6 +2019,9 @@ void DAutomap::drawSubsectors()
 	PalEntry flatcolor;
 	mpoint_t originpt;
 
+	auto lm = getRealLightmode(Level, false);
+	bool softlightramp = !V_IsHardwareRenderer() || lm == ELightMode::Doom || lm == ELightMode::DoomDark;
+
 	auto &subsectors = Level->subsectors;
 	for (unsigned i = 0; i < subsectors.Size(); ++i)
 	{
@@ -2193,8 +2196,7 @@ void DAutomap::drawSubsectors()
 			// Why the +12? I wish I knew, but experimentation indicates it
 			// is necessary in order to best reproduce Doom's original lighting.
 			double fadelevel;
-
-			if (!V_IsHardwareRenderer() || primaryLevel->lightMode == ELightMode::DoomDark || primaryLevel->lightMode == ELightMode::Doom || primaryLevel->lightMode == ELightMode::ZDoomSoftware || primaryLevel->lightMode == ELightMode::DoomSoftware)
+			if (softlightramp)
 			{
 				double map = (NUMCOLORMAPS * 2.) - ((floorlight + 12) * (NUMCOLORMAPS / 128.));
 				fadelevel = clamp((map - 12) / NUMCOLORMAPS, 0.0, 1.0);

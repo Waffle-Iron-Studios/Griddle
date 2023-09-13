@@ -60,10 +60,10 @@ void FStringTable::LoadStrings (const char *language)
 	lastlump = 0;
 	while ((lump = fileSystem.FindLump ("LANGUAGE", &lastlump)) != -1)
 	{
-		auto lumpdata = fileSystem.ReadFile(lump);
+		auto lumpdata = fileSystem.GetFileData(lump);
 
-		if (!ParseLanguageCSV(lump, lumpdata.GetString(), lumpdata.GetSize()))
- 			LoadLanguage (lump, lumpdata.GetString(), lumpdata.GetSize());
+		if (!ParseLanguageCSV(lump, lumpdata))
+ 			LoadLanguage (lump, lumpdata);
 	}
 	UpdateLanguage(language);
 	allMacros.Clear();
@@ -77,9 +77,9 @@ void FStringTable::LoadStrings (const char *language)
 //==========================================================================
 
 
-TArray<TArray<FString>> FStringTable::parseCSV(const char* buffer, size_t size)
+TArray<TArray<FString>> FStringTable::parseCSV(const TArray<uint8_t> &buffer)
 {
-	const size_t bufLength = size;
+	const size_t bufLength = buffer.Size();
 	TArray<TArray<FString>> data;
 	TArray<FString> row;
 	TArray<char> cell;
@@ -158,8 +158,8 @@ TArray<TArray<FString>> FStringTable::parseCSV(const char* buffer, size_t size)
 
 bool FStringTable::readMacros(int lumpnum)
 {
-	auto lumpdata = fileSystem.ReadFile(lumpnum);
-	auto data = parseCSV(lumpdata.GetString(), lumpdata.GetSize());
+	auto lumpdata = fileSystem.GetFileData(lumpnum);
+	auto data = parseCSV(lumpdata);
 
 	for (unsigned i = 1; i < data.Size(); i++)
 	{
@@ -186,11 +186,11 @@ bool FStringTable::readMacros(int lumpnum)
 //
 //==========================================================================
 
-bool FStringTable::ParseLanguageCSV(int lumpnum, const char* buffer, size_t size)
+bool FStringTable::ParseLanguageCSV(int lumpnum, const TArray<uint8_t> &buffer)
 {
-	if (size < 11) return false;
-	if (strnicmp(buffer, "default,", 8) && strnicmp(buffer, "identifier,", 11 )) return false;
-	auto data = parseCSV(buffer, size);
+	if (buffer.Size() < 11) return false;
+	if (strnicmp((const char*)buffer.Data(), "default,", 8) && strnicmp((const char*)buffer.Data(), "identifier,", 11 )) return false;
+	auto data = parseCSV(buffer);
 
 	int labelcol = -1;
 	int filtercol = -1;
@@ -282,14 +282,14 @@ bool FStringTable::ParseLanguageCSV(int lumpnum, const char* buffer, size_t size
 //
 //==========================================================================
 
-void FStringTable::LoadLanguage (int lumpnum, const char* buffer, size_t size)
+void FStringTable::LoadLanguage (int lumpnum, const TArray<uint8_t> &buffer)
 {
 	bool errordone = false;
 	TArray<uint32_t> activeMaps;
 	FScanner sc;
 	bool hasDefaultEntry = false;
 
-	sc.OpenMem("LANGUAGE", buffer, (int)size);
+	sc.OpenMem("LANGUAGE", buffer);
 	sc.SetCMode (true);
 	while (sc.GetString ())
 	{

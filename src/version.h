@@ -106,6 +106,8 @@ const char *GetVersionString();
 #define GAMENAME "Griddle"
 #define WGAMENAME L"Griddle"
 #define GAMENAMELOWERCASE "griddle"
+#define FORUM_URL "http://www.waffleironstudios.com"
+#define BUGS_FORUM_URL	"http://www.waffleironstudios.com"
 
 #if defined(__APPLE__) || defined(_WIN32)
 #define GAME_DIR GAMENAME

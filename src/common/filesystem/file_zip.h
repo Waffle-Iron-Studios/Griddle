@@ -3,7 +3,6 @@
 
 #include "resourcefile.h"
 
-namespace FileSys {
 //==========================================================================
 //
 // Zip Lump
@@ -20,7 +19,7 @@ struct FZipLump : public FResourceLump
 	unsigned CRC32;
 
 	virtual FileReader *GetReader();
-	virtual int FillCache() override;
+	virtual int FillCache();
 
 private:
 	void SetLumpAddress();
@@ -40,12 +39,11 @@ class FZipFile : public FResourceFile
 	FZipLump *Lumps;
 
 public:
-	FZipFile(const char * filename, FileReader &file, StringPool* sp);
+	FZipFile(const char * filename, FileReader &file);
 	virtual ~FZipFile();
 	bool Open(LumpFilterInfo* filter, FileSystemMessageFunc Printf);
 	virtual FResourceLump *GetLump(int no) { return ((unsigned)no < NumLumps)? &Lumps[no] : NULL; }
 };
 
-}
 
 #endif

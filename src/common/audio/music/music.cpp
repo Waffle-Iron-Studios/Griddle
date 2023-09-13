@@ -55,7 +55,6 @@
 #include "i_specialpaths.h"
 #include "configfile.h"
 #include "c_cvars.h"
-#include "md5.h"
 
 // EXTERNAL FUNCTION PROTOTYPES --------------------------------------------
 

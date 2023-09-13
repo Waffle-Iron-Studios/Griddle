@@ -12,7 +12,6 @@
 #include <stdarg.h>
 #include <time.h>
 #include "zstring.h"
-#include "files.h"
 
 #if !defined(GUID_DEFINED)
 #define GUID_DEFINED
@@ -70,6 +69,13 @@ void CreatePath(const char * fn);
 FString ExpandEnvVars(const char *searchpathstring);
 FString NicePath(const char *path);
 
+struct FFileList
+{
+	FString Filename;
+	bool isDirectory;
+};
+
+bool ScanDirectory(TArray<FFileList> &list, const char *dirpath);
 bool IsAbsPath(const char*);
 FString M_ZLibError(int zerrnum);
 
@@ -83,11 +89,11 @@ inline constexpr double Scale(double a, double b, double c)
 	return (a * b) / c;
 }
 
+class FileReader;
 struct MD5Context;
 
 void md5Update(FileReader& file, MD5Context& md5, unsigned len);
 void uppercopy(char* to, const char* from);
-FString GetStringFromLump(int lump);
 
 inline void fillshort(void* buff, size_t count, uint16_t clear)
 {

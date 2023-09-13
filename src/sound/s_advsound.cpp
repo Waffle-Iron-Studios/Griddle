@@ -50,8 +50,6 @@
 #include "i_system.h"
 #include "s_music.h"
 
-using namespace FileSys;
-
 // MACROS ------------------------------------------------------------------
 
 #define RANDOM		1

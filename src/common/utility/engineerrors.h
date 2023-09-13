@@ -59,13 +59,13 @@ public:
 		strncpy (m_Message, message, MAX_ERRORTEXT-1);
 		m_Message[MAX_ERRORTEXT-1] = '\0';
 	}
-	void AppendMessage(const char *message) noexcept
+	void AppendMessage(const char *message)
 	{
 		size_t len = strlen(m_Message);
 		strncpy(m_Message + len, message, MAX_ERRORTEXT - 1 - len);
 		m_Message[MAX_ERRORTEXT - 1] = '\0';
 	}
-	const char *GetMessage (void) const noexcept
+	const char *GetMessage (void) const
 	{
 		if (m_Message[0] != '\0')
 			return (const char *)m_Message;

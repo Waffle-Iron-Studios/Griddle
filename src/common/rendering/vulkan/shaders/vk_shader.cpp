@@ -28,7 +28,6 @@
 #include "filesystem.h"
 #include "engineerrors.h"
 #include "version.h"
-#include "cmdlib.h"
 
 bool VkShaderManager::CompileNextShader()
 {
@@ -466,15 +465,16 @@ FString VkShaderManager::LoadPublicShaderLump(const char *lumpname)
 	int lump = fileSystem.CheckNumForFullName(lumpname, 0);
 	if (lump == -1) lump = fileSystem.CheckNumForFullName(lumpname);
 	if (lump == -1) I_Error("Unable to load '%s'", lumpname);
-	return GetStringFromLump(lump);
+	FileData data = fileSystem.ReadFile(lump);
+	return data.GetString();
 }
 
 FString VkShaderManager::LoadPrivateShaderLump(const char *lumpname)
 {
 	int lump = fileSystem.CheckNumForFullName(lumpname, 0);
 	if (lump == -1) I_Error("Unable to load '%s'", lumpname);
-	auto data = fileSystem.ReadFile(lump);
-	return GetStringFromLump(lump);
+	FileData data = fileSystem.ReadFile(lump);
+	return data.GetString();
 }
 
 VkPPShader* VkShaderManager::GetVkShader(PPShader* shader)

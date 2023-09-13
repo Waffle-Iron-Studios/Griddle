@@ -295,6 +295,16 @@ FString M_GetConfigPath(bool for_reading)
 	FString oldpath = M_GetOldConfigPath(type);
 	if (!oldpath.IsEmpty())
 	{
+		if (type == 0)
+		{
+			// If we find a local per-user config, ask the user what to do with it.
+			int action = M_MigrateOldConfig();
+			if (action == IDNO)
+			{
+				path.Format("%s" GAMENAMELOWERCASE "_portable.ini", progdir.GetChars());
+				isportable = true;
+			}
+		}
 		bool res = MoveFileExW(WideString(oldpath).c_str(), WideString(path).c_str(), MOVEFILE_COPY_ALLOWED);
 		if (res) return path;
 		else return oldpath;	// if we cannot move, just use the config where it was. It won't be written back, though and never be used again if a new one gets saved.
@@ -330,12 +340,16 @@ FString M_GetScreenshotsPath()
 	{
 		path << progdir << "Screenshots/";
 	}
+	else if (IsWindows8OrGreater())
+	{
+		path = GetKnownFolder(-1, FOLDERID_Screenshots, true);
+
+		path << "/" GAMENAME "/";
+	}
 	else 
 	{
-		// I assume since this isn't a standard folder, it doesn't have a localized name either.
-		path = GetKnownFolder(CSIDL_PERSONAL, FOLDERID_Documents, true);
-		path << "/My Games/" GAMENAME "/";
-		path << "Screenshots/";
+		path = GetKnownFolder(CSIDL_MYPICTURES, FOLDERID_Pictures, true);
+		path << "/Screenshots/" GAMENAME "/";
 	}
 	CreatePath(path);
 	return path;
@@ -360,9 +374,8 @@ FString M_GetSavegamesPath()
 	// Try standard Saved Games folder
 	else
 	{
-		path = GetKnownFolder(CSIDL_PERSONAL, FOLDERID_Documents, true);
-		path << "/My Games/" GAMENAME "/";
-		path << "Save/";
+		path = GetKnownFolder(-1, FOLDERID_SavedGames, true);
+		path << "/" GAMENAME "/";
 	}
 	return path;
 }
@@ -417,7 +430,6 @@ FString M_GetDemoPath()
 		// I assume since this isn't a standard folder, it doesn't have a localized name either.
 		path = GetKnownFolder(CSIDL_PERSONAL, FOLDERID_Documents, true);
 		path << "/My Games/" GAMENAME "/";
-		path << "Demos/";
 	}
 
 	return path;

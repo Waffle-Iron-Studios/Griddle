@@ -48,7 +48,7 @@ class FFlatTexture : public FImageSource
 {
 public:
 	FFlatTexture (int lumpnum);
-	PalettedPixels CreatePalettedPixels(int conversion, int frame = 0) override;
+	PalettedPixels CreatePalettedPixels(int conversion) override;
 };
 
 
@@ -102,7 +102,7 @@ FFlatTexture::FFlatTexture (int lumpnum)
 //
 //==========================================================================
 
-PalettedPixels FFlatTexture::CreatePalettedPixels(int conversion, int frame)
+PalettedPixels FFlatTexture::CreatePalettedPixels(int conversion)
 {
 	auto lump = fileSystem.OpenFileReader (SourceLump);
 	PalettedPixels Pixels(Width*Height);

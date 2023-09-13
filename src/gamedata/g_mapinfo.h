@@ -38,6 +38,7 @@
 #include "doomtype.h"
 #include "vectors.h"
 #include "sc_man.h"
+#include "file_zip.h"
 #include "screenjob.h"
 #include "hwrenderer/postprocessing/hw_postprocess.h"
 #include "hw_viewpointuniforms.h"
@@ -276,9 +277,9 @@ enum ELevelFlags : unsigned int
 	LEVEL9_NOUSERSAVE			= 0x00000001,
 	LEVEL9_NOAUTOMAP			= 0x00000002,
 
-	LEVEL9001_NOTOTALTIME				= 0x00000001,	// Sanya - no time++
-	LEVEL9001_NOAUTOSAVES				= 0x00000002,	// Sanya - no autosaves on this level at all
-	LEVEL9001_CUTSCENELEVEL			= 0x00000004,	// Sanya - Cutscene Level
+	LEVELWIS_NOTOTALTIME				= 0x00000001,	// Sanya - no time++
+	LEVELWIS_NOAUTOSAVES				= 0x00000002,	// Sanya - no autosaves on this level at all
+	LEVELWIS_CUTSCENELEVEL			= 0x00000004,	// Sanya - Cutscene Level
 };
 
 
@@ -352,14 +353,14 @@ struct level_info_t
 	uint32_t	flags2;
 	uint32_t	flags3;
 	uint32_t	flags9;	// backport from vkdoom
-	uint32_t	flags9001;
+	uint32_t	wisflags;
 
 	FString		Music;
 	FString		LevelName;
 	FString		AuthorName;
 	int8_t		WallVertLight, WallHorizLight;
 	int			musicorder;
-	FileSys::FCompressedBuffer	Snapshot;
+	FCompressedBuffer	Snapshot;
 	TArray<acsdefered_t> deferred;
 	float		skyspeed1;
 	float		skyspeed2;

@@ -33,22 +33,18 @@
 **
 */
 
-#include <string>
-#include "files_internal.h"
+#include "files.h"
+#include "utf8.h"
+#include "stb_sprintf.h"
 
-namespace FileSys {
-	
-#ifdef _WIN32
-std::wstring toWide(const char* str);
-#endif
 
 FILE *myfopen(const char *filename, const char *flags)
 {
 #ifndef _WIN32
 	return fopen(filename, flags);
 #else
-	auto widename = toWide(filename);
-	auto wideflags = toWide(flags);
+	auto widename = WideString(filename);
+	auto wideflags = WideString(flags);
 	return _wfopen(widename.c_str(), wideflags.c_str());
 #endif
 }
@@ -275,7 +271,7 @@ long MemoryReader::Seek(long offset, int origin)
 
 	}
 	if (offset < 0 || offset > Length) return -1;
-	FilePos = std::clamp<long>(offset, 0, Length);
+	FilePos = clamp<long>(offset, 0, Length);
 	return 0;
 }
 
@@ -328,26 +324,26 @@ char *MemoryReader::Gets(char *strbuf, int len)
 
 class MemoryArrayReader : public MemoryReader
 {
-	std::vector<uint8_t> buf;
+	TArray<uint8_t> buf;
 
 public:
 	MemoryArrayReader(const char *buffer, long length)
 	{
 		if (length > 0)
 		{
-			buf.resize(length);
+			buf.Resize(length);
 			memcpy(&buf[0], buffer, length);
 		}
 		UpdateBuffer();
 	}
 
-	std::vector<uint8_t> &GetArray() { return buf; }
+	TArray<uint8_t> &GetArray() { return buf; }
 
 	void UpdateBuffer() 
 	{ 
-		bufptr = (const char*)buf.data();
+		bufptr = (const char*)&buf[0];
 		FilePos = 0;
-		Length = (long)buf.size();
+		Length = buf.Size();
 	}
 };
 
@@ -396,7 +392,7 @@ bool FileReader::OpenMemoryArray(const void *mem, FileReader::Size length)
 	return true;
 }
 
-bool FileReader::OpenMemoryArray(std::function<bool(std::vector<uint8_t>&)> getter)
+bool FileReader::OpenMemoryArray(std::function<bool(TArray<uint8_t>&)> getter)
 {
 	auto reader = new MemoryArrayReader(nullptr, 0);
 	if (getter(reader->GetArray()))
@@ -476,16 +472,18 @@ long FileWriter::Seek(long offset, int mode)
 
 size_t FileWriter::Printf(const char *fmt, ...)
 {
-	char c[300];
+	char workbuf[STB_SPRINTF_MIN];
 	va_list arglist;
 	va_start(arglist, fmt);
-	auto n = vsnprintf(c, 300, fmt, arglist);
-	std::string buf;
-	buf.resize(n);
-	va_start(arglist, fmt);
-	vsnprintf(&buf.front(), n, fmt, arglist);
+	auto r = stbsp_vsprintfcb([](const char* cstr, void* data, int len) -> char*
+		{
+			auto fr = (FileWriter*)data;
+			auto writ = fr->Write(cstr, len);
+			return writ == (size_t)len? (char*)cstr : nullptr; // abort if writing caused an error.
+		}, this, workbuf, fmt, arglist);
+
 	va_end(arglist);
-	return Write(buf.c_str(), n);
+	return r;
 }
 
 size_t BufferWriter::Write(const void *buffer, size_t len)
@@ -493,6 +491,4 @@ size_t BufferWriter::Write(const void *buffer, size_t len)
 	unsigned int ofs = mBuffer.Reserve((unsigned)len);
 	memcpy(&mBuffer[ofs], buffer, len);
 	return len;
-}
-
 }

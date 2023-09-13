@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <type_traits>
 #include "tarray.h"
+#include "file_zip.h"
 #include "tflags.h"
 #include "vectors.h"
 #include "palentry.h"
@@ -79,7 +80,7 @@ public:
 	void SetUniqueSoundNames() { soundNamesAreUnique = true; }
 	bool OpenWriter(bool pretty = true);
 	bool OpenReader(const char *buffer, size_t length);
-	bool OpenReader(FileSys::FCompressedBuffer *input);
+	bool OpenReader(FCompressedBuffer *input);
 	void Close();
 	void ReadObjects(bool hubtravel);
 	bool BeginObject(const char *name);
@@ -90,7 +91,7 @@ public:
 	unsigned GetSize(const char *group);
 	const char *GetKey();
 	const char *GetOutput(unsigned *len = nullptr);
-	FileSys::FCompressedBuffer GetCompressedOutput();
+	FCompressedBuffer GetCompressedOutput();
 	// The sprite serializer is a special case because it is needed by the VM to handle its 'spriteid' type.
 	virtual FSerializer &Sprite(const char *key, int32_t &spritenum, int32_t *def);
 	// This is only needed by the type system.

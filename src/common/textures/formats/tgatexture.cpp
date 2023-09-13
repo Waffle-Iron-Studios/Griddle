@@ -39,7 +39,6 @@
 #include "bitmap.h"
 #include "imagehelpers.h"
 #include "image.h"
-#include "m_swap.h"
 
 
 //==========================================================================
@@ -80,11 +79,11 @@ class FTGATexture : public FImageSource
 public:
 	FTGATexture (int lumpnum, TGAHeader *);
 
-	int CopyPixels(FBitmap *bmp, int conversion, int frame = 0) override;
+	int CopyPixels(FBitmap *bmp, int conversion) override;
 
 protected:
 	void ReadCompressed(FileReader &lump, uint8_t * buffer, int bytesperpixel);
-	PalettedPixels CreatePalettedPixels(int conversion, int frame = 0) override;
+	PalettedPixels CreatePalettedPixels(int conversion) override;
 };
 
 //==========================================================================
@@ -178,7 +177,7 @@ void FTGATexture::ReadCompressed(FileReader &lump, uint8_t * buffer, int bytespe
 //
 //==========================================================================
 
-PalettedPixels FTGATexture::CreatePalettedPixels(int conversion, int frame)
+PalettedPixels FTGATexture::CreatePalettedPixels(int conversion)
 {
 	uint8_t PaletteMap[256];
 	auto lump = fileSystem.OpenFileReader (SourceLump);
@@ -385,7 +384,7 @@ PalettedPixels FTGATexture::CreatePalettedPixels(int conversion, int frame)
 //
 //===========================================================================
 
-int FTGATexture::CopyPixels(FBitmap *bmp, int conversion, int frame)
+int FTGATexture::CopyPixels(FBitmap *bmp, int conversion)
 {
 	PalEntry pe[256];
 	auto lump = fileSystem.OpenFileReader (SourceLump);

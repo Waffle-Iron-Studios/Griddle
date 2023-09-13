@@ -33,7 +33,6 @@
 **
 */
 
-#include <memory>
 #include "files.h"
 #include "filesystem.h"
 #include "bitmap.h"
@@ -52,8 +51,8 @@ class FAnmTexture : public FImageSource
 public:
 	FAnmTexture (int lumpnum, int w, int h);
 	void ReadFrame(uint8_t *buffer, uint8_t *palette);
-	PalettedPixels CreatePalettedPixels(int conversion, int frame = 0) override;
-	int CopyPixels(FBitmap *bmp, int conversion, int frame = 0) override;
+	PalettedPixels CreatePalettedPixels(int conversion) override;
+	int CopyPixels(FBitmap *bmp, int conversion) override;
 };
 
 
@@ -73,12 +72,12 @@ FImageSource *AnmImage_TryCreate(FileReader & file, int lumpnum)
 	file.Seek(0, FileReader::SeekSet);
 	auto buffer = file.ReadPadded(1);
 
-	std::unique_ptr<anim_t> anim = std::make_unique<anim_t>(); // note that this struct is very large and should not go onto the stack!
-	if (ANIM_LoadAnim(anim.get(), buffer.data(), buffer.size() - 1) < 0)
+	anim_t anim;
+	if (ANIM_LoadAnim(&anim, buffer.Data(), buffer.Size() - 1) < 0)
 	{
 		return nullptr;
 	}
-	int numframes = ANIM_NumFrames(anim.get());
+	int numframes = ANIM_NumFrames(&anim);
 	if (numframes >= 1)
 	{
 		return new FAnmTexture(lumpnum, 320, 200);
@@ -104,17 +103,17 @@ FAnmTexture::FAnmTexture (int lumpnum, int w, int h)
 
 void FAnmTexture::ReadFrame(uint8_t *pixels, uint8_t *palette)
 {
-	auto lump = fileSystem.ReadFile (SourceLump);
-	auto source = lump.GetBytes(); 
+	FileData lump = fileSystem.ReadFile (SourceLump);
+	uint8_t *source = (uint8_t *)lump.GetMem(); 
 
-	std::unique_ptr<anim_t> anim = std::make_unique<anim_t>(); // note that this struct is very large and should not go onto the stack!
-	if (ANIM_LoadAnim(anim.get(), source, (int)lump.GetSize()) >= 0)
+	anim_t anim;
+	if (ANIM_LoadAnim(&anim, source, (int)lump.GetSize()) >= 0)
 	{
-		int numframes = ANIM_NumFrames(anim.get());
+		int numframes = ANIM_NumFrames(&anim);
 		if (numframes >= 1)
 		{
-			memcpy(palette, ANIM_GetPalette(anim.get()), 768);
-			memcpy(pixels, ANIM_DrawFrame(anim.get(), 1), Width * Height);
+			memcpy(palette, ANIM_GetPalette(&anim), 768);
+			memcpy(pixels, ANIM_DrawFrame(&anim, 1), Width*Height);
 			return;
 		}
 	}
@@ -122,30 +121,25 @@ void FAnmTexture::ReadFrame(uint8_t *pixels, uint8_t *palette)
 	memset(palette, 0, 768);
 }
 
-struct workbuf
-{
-	uint8_t buffer[64000];
-	uint8_t palette[768];
-};
-
 //==========================================================================
 //
 //
 //
 //==========================================================================
 
-PalettedPixels FAnmTexture::CreatePalettedPixels(int conversion, int frame)
+PalettedPixels FAnmTexture::CreatePalettedPixels(int conversion)
 {
 	PalettedPixels pixels(Width*Height);
+	uint8_t buffer[64000];
+	uint8_t palette[768];
 	uint8_t remap[256];
-	std::unique_ptr<workbuf> w = std::make_unique<workbuf>();
 
-	ReadFrame(w->buffer, w->palette);
+	ReadFrame(buffer, palette);
 	for(int i=0;i<256;i++)
 	{
-		remap[i] = ColorMatcher.Pick(w->palette[i*3], w->palette[i*3+1], w->palette[i*3+2]);
+		remap[i] = ColorMatcher.Pick(palette[i*3], palette[i*3+1], palette[i*3+2]);
 	}
-	ImageHelpers::FlipNonSquareBlockRemap (pixels.Data(), w->buffer, Width, Height, Width, remap); 
+	ImageHelpers::FlipNonSquareBlockRemap (pixels.Data(), buffer, Width, Height, Width, remap); 
 	return pixels;
 }
 
@@ -155,19 +149,20 @@ PalettedPixels FAnmTexture::CreatePalettedPixels(int conversion, int frame)
 //
 //==========================================================================
 
-int FAnmTexture::CopyPixels(FBitmap *bmp, int conversion, int frame)
+int FAnmTexture::CopyPixels(FBitmap *bmp, int conversion)
 {
-	std::unique_ptr<workbuf> w = std::make_unique<workbuf>();
-	ReadFrame(w->buffer, w->palette);
+	uint8_t buffer[64000];
+	uint8_t palette[768];
+	ReadFrame(buffer, palette);
 
     auto dpix = bmp->GetPixels();
 	for (int i = 0; i < Width * Height; i++)
 	{
 		int p = i * 4;
-		int index = w->buffer[i];
-		dpix[p + 0] = w->palette[index * 3 + 2];
-		dpix[p + 1] = w->palette[index * 3 + 1];
-		dpix[p + 2] = w->palette[index * 3];
+		int index = buffer[i];
+		dpix[p + 0] = palette[index * 3 + 2];
+		dpix[p + 1] = palette[index * 3 + 1];
+		dpix[p + 2] = palette[index * 3];
 		dpix[p + 3] = 255;
 	}
 

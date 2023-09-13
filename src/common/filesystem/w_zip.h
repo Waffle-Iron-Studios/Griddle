@@ -1,14 +1,8 @@
 #ifndef __W_ZIP
 #define __W_ZIP
 
-#if defined(__GNUC__)
-#define FORCE_PACKED __attribute__((__packed__))
-#else
-#define FORCE_PACKED
-#endif
+#include "basics.h"
 
-namespace FileSys {
-	
 #pragma pack(1)
 // FZipCentralInfo
 struct FZipEndOfCentralDirectory
@@ -91,15 +85,6 @@ struct FZipLocalFileHeader
 
 #pragma pack()
 
-#ifndef MAKE_ID
-#ifndef __BIG_ENDIAN__
-#define MAKE_ID(a,b,c,d)	((uint32_t)((a)|((b)<<8)|((c)<<16)|((d)<<24)))
-#else
-#define MAKE_ID(a,b,c,d)	((uint32_t)((d)|((c)<<8)|((b)<<16)|((a)<<24)))
-#endif
-#endif
-
-
 #define ZIP_LOCALFILE	MAKE_ID('P','K',3,4)
 #define ZIP_CENTRALFILE	MAKE_ID('P','K',1,2)
 #define ZIP_ENDOFDIR	MAKE_ID('P','K',5,6)
@@ -107,5 +92,4 @@ struct FZipLocalFileHeader
 // File header flags.
 #define ZF_ENCRYPTED			0x1
 
-}
 #endif

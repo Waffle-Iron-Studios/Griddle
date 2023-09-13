@@ -1795,7 +1795,9 @@ static INT_PTR CALLBACK OverviewDlgProc (HWND hDlg, UINT message, WPARAM wParam,
 		SendMessageW(edit, EM_AUTOURLDETECT, TRUE, 0);
 		SetWindowTextW(edit, L"Please tell us about this problem.\n"
 			"The information will NOT be sent to Microsoft.\n\n"
-			"An error report has been created that you can submit to help improve " GAMENAME ". ");
+			"An error report has been created that you can submit to help improve " GAMENAME ". "
+			"You can either save it to disk and make a report in the bugs forum at " FORUM_URL ", "
+			"or you can send it directly without letting other people know about it.");
 		SendMessageW(edit, EM_SETSEL, 0, 81);
 		SendMessageW(edit, EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&charFormat);
 		SendMessageW(edit, EM_SETEVENTMASK, 0, ENM_LINK);
@@ -1820,7 +1822,7 @@ static INT_PTR CALLBACK OverviewDlgProc (HWND hDlg, UINT message, WPARAM wParam,
 		{
 			if (link->msg == WM_LBUTTONDOWN)
 			{
-				// ShellExecuteA (NULL, "open", BUGS_FORUM_URL, NULL, NULL, 0);
+				ShellExecuteA (NULL, "open", BUGS_FORUM_URL, NULL, NULL, 0);
 				SetWindowLongPtrW (hDlg, DWLP_MSGRESULT, 1);
 				return TRUE;
 			}

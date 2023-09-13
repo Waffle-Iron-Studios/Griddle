@@ -28,7 +28,6 @@
 #include "hw_shaderpatcher.h"
 #include "filesystem.h"
 #include "printf.h"
-#include "cmdlib.h"
 
 namespace OpenGLRenderer
 {
@@ -89,9 +88,7 @@ void FShaderProgram::Compile(ShaderType type, const char *lumpName, const char *
 {
 	int lump = fileSystem.CheckNumForFullName(lumpName);
 	if (lump == -1) I_FatalError("Unable to load '%s'", lumpName);
-	auto sp = fileSystem.ReadFile(lump);
-	FString code = GetStringFromLump(lump);
-
+	FString code = fileSystem.ReadFile(lump).GetString().GetChars();
 	Compile(type, lumpName, code, defines, maxGlslVersion);
 }
 

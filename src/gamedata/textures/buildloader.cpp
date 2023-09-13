@@ -41,13 +41,12 @@
 #include "colormatcher.h"
 #include "bitmap.h"
 #include "textures.h"
-#include "fs_filesystem.h"
+#include "resourcefile.h"
 #include "image.h"
 #include "animations.h"
 #include "texturemanager.h"
 #include "r_translate.h"
 #include "r_data/sprites.h"
-#include "m_swap.h"
 
 //===========================================================================
 //
@@ -84,8 +83,8 @@ static int BuildPaletteTranslation(int lump)
 		return false;
 	}
 
-	auto data = fileSystem.ReadFile(lump);
-	auto ipal = data.GetBytes();
+	FileData data = fileSystem.ReadFile(lump);
+	const uint8_t *ipal = (const uint8_t *)data.GetMem();
 	FRemapTable opal;
 
 	bool blood = false;

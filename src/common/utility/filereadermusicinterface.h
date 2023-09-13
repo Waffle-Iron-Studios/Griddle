@@ -6,7 +6,6 @@
 
 inline ZMusicCustomReader *GetMusicReader(FileReader& fr)
 {
-	using FileSys::FileReaderInterface;
 	auto zcr = new ZMusicCustomReader;
 
 	zcr->handle = fr.GetInterface();

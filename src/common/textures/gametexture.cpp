@@ -49,7 +49,6 @@
 #include "texturemanager.h"
 #include "c_cvars.h"
 #include "hw_material.h"
-#include "cmdlib.h"
 
 FTexture *CreateBrightmapTexture(FImageSource*);
 
@@ -99,8 +98,8 @@ FGameTexture::~FGameTexture()
 {
 	if (Base != nullptr)
 	{
-		FGameTexture* link = TexMan.GetLinkedTexture(GetSourceLump());
-		if (link == this) TexMan.SetLinkedTexture(GetSourceLump(), nullptr);
+		FGameTexture* link = fileSystem.GetLinkedTexture(GetSourceLump());
+		if (link == this) fileSystem.SetLinkedTexture(GetSourceLump(), nullptr);
 	}
 	if (SoftwareTexture != nullptr)
 	{
@@ -182,7 +181,7 @@ void FGameTexture::AddAutoMaterials()
 		if (this->*(layer.pointer) == nullptr)	// only if no explicit assignment had been done.
 		{
 			FStringf lookup("%s%s%s", layer.path, fullname ? "" : "auto/", searchname.GetChars());
-			auto lump = fileSystem.CheckNumForFullName(lookup, false, FileSys::ns_global, true);
+			auto lump = fileSystem.CheckNumForFullName(lookup, false, ns_global, true);
 			if (lump != -1)
 			{
 				auto bmtex = TexMan.FindGameTexture(fileSystem.GetFileFullName(lump), ETextureType::Any, FTextureManager::TEXMAN_TryAny);
@@ -199,7 +198,7 @@ void FGameTexture::AddAutoMaterials()
 		if (!this->Layers || this->Layers.get()->*(layer.pointer) == nullptr)	// only if no explicit assignment had been done.
 		{
 			FStringf lookup("%s%s%s", layer.path, fullname ? "" : "auto/", searchname.GetChars());
-			auto lump = fileSystem.CheckNumForFullName(lookup, false, FileSys::ns_global, true);
+			auto lump = fileSystem.CheckNumForFullName(lookup, false, ns_global, true);
 			if (lump != -1)
 			{
 				auto bmtex = TexMan.FindGameTexture(fileSystem.GetFileFullName(lump), ETextureType::Any, FTextureManager::TEXMAN_TryAny);

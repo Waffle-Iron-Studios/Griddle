@@ -172,8 +172,8 @@ unsigned FindModel(const char * path, const char * modelfile, bool silent)
 	}
 
 	int len = fileSystem.FileLength(lump);
-	auto lumpd = fileSystem.ReadFile(lump);
-	const char * buffer = lumpd.GetString();
+	FileData lumpd = fileSystem.ReadFile(lump);
+	char * buffer = (char*)lumpd.GetMem();
 
 	if ( (size_t)fullname.LastIndexOf("_d.3d") == fullname.Len()-5 )
 	{

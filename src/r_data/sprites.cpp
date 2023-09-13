@@ -349,13 +349,15 @@ void R_InitSpriteDefs ()
 	memset(vhashes.Data(), -1, sizeof(VHasher)*vmax);
 	for (i = 0; i < vmax; ++i)
 	{
-		if (fileSystem.GetFileNamespace(i) == FileSys::ns_voxels)
+		if (fileSystem.GetFileNamespace(i) == ns_voxels)
 		{
+			char name[9];
 			size_t namelen;
 			int spin;
 			int sign;
 
-			const char* name = fileSystem.GetFileShortName(i);
+			fileSystem.GetFileShortName(name, i);
+			name[8] = 0;
 			namelen = strlen(name);
 			if (namelen < 4)
 			{ // name is too short
@@ -715,7 +717,7 @@ void R_InitSkins (void)
 				int lump = fileSystem.CheckNumForName (sc.String, Skins[i].namespc);
 				if (lump == -1)
 				{
-					lump = fileSystem.CheckNumForFullName (sc.String, true, FileSys::ns_sounds);
+					lump = fileSystem.CheckNumForFullName (sc.String, true, ns_sounds);
 				}
 				if (lump != -1)
 				{
@@ -748,7 +750,7 @@ void R_InitSkins (void)
 						sndlumps[j] = fileSystem.CheckNumForName (sc.String, Skins[i].namespc);
 						if (sndlumps[j] == -1)
 						{ // Replacement not found, try finding it in the global namespace
-							sndlumps[j] = fileSystem.CheckNumForFullName (sc.String, true, FileSys::ns_sounds);
+							sndlumps[j] = fileSystem.CheckNumForFullName (sc.String, true, ns_sounds);
 						}
 					}
 				}
@@ -810,7 +812,9 @@ void R_InitSkins (void)
 			// specified, use whatever immediately follows the specifier lump.
 			if (intname == 0)
 			{
-				memcpy(&intname, fileSystem.GetFileShortName(base + 1), 4);
+				char name[9];
+				fileSystem.GetFileShortName (name, base+1);
+				memcpy(&intname, name, 4);
 			}
 
 			int basens = fileSystem.GetFileNamespace(base);
@@ -841,8 +845,9 @@ void R_InitSkins (void)
 
 				for (k = base + 1; fileSystem.GetFileNamespace(k) == basens; k++)
 				{
-					const char* lname = fileSystem.GetFileShortName(k);
+					char lname[9];
 					uint32_t lnameint;
+					fileSystem.GetFileShortName (lname, k);
 					memcpy(&lnameint, lname, 4);
 					if (lnameint == intname)
 					{
@@ -861,7 +866,7 @@ void R_InitSkins (void)
 					break;
 				}
 
-				memcpy(temp.name, fileSystem.GetFileShortName (base+1), 4);
+				fileSystem.GetFileShortName (temp.name, base+1);
 				temp.name[4] = 0;
 				int sprno = (int)sprites.Push (temp);
 				if (spr==0)	Skins[i].sprite = sprno;
@@ -946,8 +951,8 @@ CCMD (skins)
 
 static void R_CreateSkinTranslation (const char *palname)
 {
-	auto lump =  fileSystem.ReadFile (palname);
-	auto otherPal = lump.GetBytes();
+	FileData lump = fileSystem.ReadFile (palname);
+	const uint8_t *otherPal = (uint8_t *)lump.GetMem();
  
 	for (int i = 0; i < 256; ++i)
 	{
@@ -1016,7 +1021,7 @@ void R_InitSprites ()
 		Skins[i].range0end = basetype->IntVar(NAME_ColorRangeEnd);
 		Skins[i].Scale = basetype->Scale;
 		Skins[i].sprite = basetype->SpawnState->sprite;
-		Skins[i].namespc = FileSys::ns_global;
+		Skins[i].namespc = ns_global;
 
 		PlayerClasses[i].Skins.Push (i);
 

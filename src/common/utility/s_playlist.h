@@ -34,7 +34,7 @@
 #ifndef __S_PLAYLIST_H__
 #define __S_PLAYLIST_H__
 
-#include "files.h"
+class FileReader;
 
 class FPlayList
 {

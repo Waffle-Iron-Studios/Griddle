@@ -410,6 +410,7 @@ void DFsScript::Preprocess(FLevelLocals *Level)
 void DFsScript::ParseInclude(FLevelLocals *Level, char *lumpname)
 {
 	int lumpnum;
+	char *lump;
 	
 	if((lumpnum = fileSystem.CheckNumForName(lumpname)) == -1)
     {
@@ -418,18 +419,21 @@ void DFsScript::ParseInclude(FLevelLocals *Level, char *lumpname)
     }
 	
 	int lumplen=fileSystem.FileLength(lumpnum);
-	TArray<char> lump(lumplen + 10);
-	fileSystem.ReadFile(lumpnum,lump.Data());
+	lump=new char[lumplen+10];
+	fileSystem.ReadFile(lumpnum,lump);
 	
 	lump[lumplen]=0;
 	
 	// preprocess the include
 	// we assume that it does not include sections or labels or 
 	// other nasty things
-	ProcessFindChar(lump.Data(), 0);
+	ProcessFindChar(lump, 0);
 	
 	// now parse the lump
 	FParser parse(Level, this);
-	parse.Run(lump.Data(), lump.Data(), lump.Data() + lumplen);
+	parse.Run(lump, lump, lump+lumplen);
+	
+	// free the lump
+	delete[] lump;
 }
 
