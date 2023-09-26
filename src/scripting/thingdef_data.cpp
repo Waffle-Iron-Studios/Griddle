@@ -397,7 +397,7 @@ static FFlagDef ActorFlagDefs[]=
 	DEFINE_FLAG2(BOUNCE_BounceOnUnrips, BOUNCEONUNRIPPABLES, AActor, BounceFlags),
 	DEFINE_FLAG2(BOUNCE_NotOnSky, DONTBOUNCEONSKY, AActor, BounceFlags),
 
-	DEFINE_FLAG2(OF_Transient, NOSAVEGAME, AActor, ObjectFlags),	// RicardoLuis0's bNoSaveGame backport for GZDoom
+	DEFINE_FLAG2(OF_Transient, NOSAVEGAME, AActor, ObjectFlags),
 };
 
 // These won't be accessible through bitfield variables

@@ -36,7 +36,7 @@
 struct KeyBindings native version("2.4")
 {
 	native static String NameKeys(int k1, int k2);
-	native static String NameAllKeys(array<int> list, bool colors=true);
+	native static String NameAllKeys(array<int> list, bool colors = true);
 
 	native int, int GetKeysForCommand(String cmd);
 	native void GetAllKeysForCommand(out array<int> list, String cmd);
@@ -354,7 +354,7 @@ class Menu : Object native ui version("2.4")
 		return OptionFont().StringWidth(s);
 	}
 
-	static void DrawOptionText(int x, int y, int color, String text, bool grayed = false)
+	static void DrawOptionText(int x, int y, int color, String text, bool grayed = false, bool localise = false)
 	{
 		String label = Stringtable.Localize(text);
 		int overlay = grayed? Color(96,48,0,0) : 0;

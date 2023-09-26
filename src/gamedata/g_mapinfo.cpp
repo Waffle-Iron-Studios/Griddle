@@ -1699,7 +1699,7 @@ enum EMIType
 	MITYPE_SCFLAGS9,
 	MITYPE_SETFLAGWIS,
 	MITYPE_CLRFLAGWIS,
-	MITYPE_SCFLAGS9001,
+	MITYPE_SCFLAGSWIS,
 	MITYPE_COMPATFLAG,
 	MITYPE_CLRCOMPATFLAG,
 };
@@ -1944,7 +1944,7 @@ void FMapInfoParser::ParseMapDefinition(level_info_t &info)
 				info.wisflags |= handler->data2;
 				break;
 
-			case MITYPE_SCFLAGS9001:
+			case MITYPE_SCFLAGSWIS:
 				info.wisflags = (info.wisflags & handler->data2) | handler->data1;
 				break;
 
@@ -2563,7 +2563,7 @@ void G_ParseMapInfo (FString basemapinfo)
 			// If that exists we need to skip this one.
 
 			int wad = fileSystem.GetFileContainer(lump);
-			int altlump = fileSystem.CheckNumForName("ZMAPINFO", ns_global, wad, true);
+			int altlump = fileSystem.CheckNumForName("ZMAPINFO", FileSys::ns_global, wad, true);
 
 			if (altlump >= 0) continue;
 		}
@@ -2571,9 +2571,9 @@ void G_ParseMapInfo (FString basemapinfo)
 		{
 			// MAPINFO and ZMAPINFO will override UMAPINFO if in the same WAD.
 			int wad = fileSystem.GetFileContainer(lump);
-			int altlump = fileSystem.CheckNumForName("ZMAPINFO", ns_global, wad, true);
+			int altlump = fileSystem.CheckNumForName("ZMAPINFO", FileSys::ns_global, wad, true);
 			if (altlump >= 0) continue;
-			altlump = fileSystem.CheckNumForName("MAPINFO", ns_global, wad, true);
+			altlump = fileSystem.CheckNumForName("MAPINFO", FileSys::ns_global, wad, true);
 			if (altlump >= 0) continue;
 		}
 		if (nindex != 2)

@@ -424,7 +424,7 @@ DEFINE_ACTION_FUNCTION(_TexMan, GetName)
 		{
 			// Textures for full path names do not have their own name, they merely link to the source lump.
 			auto lump = tex->GetSourceLump();
-			if (fileSystem.GetLinkedTexture(lump) == tex)
+			if (TexMan.GetLinkedTexture(lump) == tex)
 				retval = fileSystem.GetFileFullName(lump);
 		}
 	}
@@ -667,9 +667,9 @@ DEFINE_ACTION_FUNCTION_NATIVE(FFont, GetBottomAlignOffset, GetBottomAlignOffset)
 	ACTION_RETURN_FLOAT(GetBottomAlignOffset(self, code));
 }
 
-static int StringWidth(FFont *font, const FString &str)
+static int StringWidth(FFont *font, const FString &str, bool localize)
 {
-	const char *txt = str[0] == '$' ? GStrings(&str[1]) : str.GetChars();
+	const char *txt = (localize && str[0] == '$') ? GStrings(&str[1]) : str.GetChars();
 	return font->StringWidth(txt);
 }
 
@@ -677,12 +677,13 @@ DEFINE_ACTION_FUNCTION_NATIVE(FFont, StringWidth, StringWidth)
 {
 	PARAM_SELF_STRUCT_PROLOGUE(FFont);
 	PARAM_STRING(str);
-	ACTION_RETURN_INT(StringWidth(self, str));
+	PARAM_BOOL(localize);
+	ACTION_RETURN_INT(StringWidth(self, str, localize));
 }
 
-static int GetMaxAscender(FFont* font, const FString& str)
+static int GetMaxAscender(FFont* font, const FString& str, bool localize)
 {
-	const char* txt = str[0] == '$' ? GStrings(&str[1]) : str.GetChars();
+	const char* txt = (localize && str[0] == '$') ? GStrings(&str[1]) : str.GetChars();
 	return font->GetMaxAscender(txt);
 }
 
@@ -690,12 +691,13 @@ DEFINE_ACTION_FUNCTION_NATIVE(FFont, GetMaxAscender, GetMaxAscender)
 {
 	PARAM_SELF_STRUCT_PROLOGUE(FFont);
 	PARAM_STRING(str);
-	ACTION_RETURN_INT(GetMaxAscender(self, str));
+	PARAM_BOOL(localize);
+	ACTION_RETURN_INT(GetMaxAscender(self, str, localize));
 }
 
-static int CanPrint(FFont *font, const FString &str)
+static int CanPrint(FFont *font, const FString &str, bool localize)
 {
-	const char *txt = str[0] == '$' ? GStrings(&str[1]) : str.GetChars();
+	const char *txt = (localize && str[0] == '$') ? GStrings(&str[1]) : str.GetChars();
 	return font->CanPrint(txt);
 }
 
@@ -703,7 +705,8 @@ DEFINE_ACTION_FUNCTION_NATIVE(FFont, CanPrint, CanPrint)
 {
 	PARAM_SELF_STRUCT_PROLOGUE(FFont);
 	PARAM_STRING(str);
-	ACTION_RETURN_INT(CanPrint(self, str));
+	PARAM_BOOL(localize);
+	ACTION_RETURN_INT(CanPrint(self, str, localize));
 }
 
 static int FindFontColor(int name)
@@ -819,9 +822,7 @@ DEFINE_ACTION_FUNCTION(_Wads, GetLumpName)
 {
 	PARAM_PROLOGUE;
 	PARAM_INT(lump);
-	FString lumpname;
-	fileSystem.GetFileShortName(lumpname, lump);
-	ACTION_RETURN_STRING(lumpname);
+	ACTION_RETURN_STRING(fileSystem.GetFileShortName(lump));
 }
 
 DEFINE_ACTION_FUNCTION(_Wads, GetLumpFullName)
@@ -843,7 +844,7 @@ DEFINE_ACTION_FUNCTION(_Wads, ReadLump)
 	PARAM_PROLOGUE;
 	PARAM_INT(lump);
 	const bool isLumpValid = lump >= 0 && lump < fileSystem.GetNumEntries();
-	ACTION_RETURN_STRING(isLumpValid ? fileSystem.ReadFile(lump).GetString() : FString());
+	ACTION_RETURN_STRING(isLumpValid ? GetStringFromLump(lump, false) : FString());
 }
 
 //==========================================================================
@@ -1040,8 +1041,8 @@ DEFINE_ACTION_FUNCTION(FKeyBindings, NameAllKeys)
 {
 	PARAM_PROLOGUE;
 	PARAM_POINTER(array, TArray<int>);
-	PARAM_BOOL(colors);
-	auto buffer = C_NameKeys(array->Data(), array->Size(), colors);
+	PARAM_BOOL(color);
+	auto buffer = C_NameKeys(array->Data(), array->Size(), color);
 	ACTION_RETURN_STRING(buffer);
 }
 

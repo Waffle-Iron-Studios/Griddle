@@ -36,6 +36,7 @@
 #include "version.h"
 #include "d_defcvars.h"
 
+
 void D_GrabCVarDefaults()
 {
 	int lump, lastlump = 0;

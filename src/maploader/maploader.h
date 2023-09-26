@@ -130,7 +130,7 @@ private:
 	// Polyobject init
 	TArray<int32_t> KnownPolySides;
 
-	FName CheckCompatibility(MapData* map);
+	FName CheckCompatibility(MapData *map);
 	void PostProcessLevel(FName checksum);
 
 	// Slopes

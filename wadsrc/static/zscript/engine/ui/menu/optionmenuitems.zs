@@ -61,9 +61,9 @@ class OptionMenuItem : MenuItemBase
 		return x;
 	}
 
-	protected void drawValue(int indent, int y, int color, String text, bool grayed = false)
+	protected void drawValue(int indent, int y, int color, String text, bool grayed = false, bool localize = true)
 	{
-		Menu.DrawOptionText(indent + CursorSpace(), y, color, text, grayed);
+		Menu.DrawOptionText(indent + CursorSpace(), y, color, text, grayed, localize);
 	}
 
 

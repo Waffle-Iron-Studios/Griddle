@@ -1603,6 +1603,9 @@ DEFINE_ACTION_FUNCTION(AActor, PoisonMobj)
 
 bool AActor::OkayToSwitchTarget(AActor *other)
 {
+	if (other == nullptr)
+		return false;
+
 	if (other == this)
 		return false;		// [RH] Don't hate self (can happen when shooting barrels)
 

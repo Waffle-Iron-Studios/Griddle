@@ -56,7 +56,7 @@ extern uint8_t globalfreeze, globalchangefreeze;
 bool P_CheckTickerPaused ()
 {
 	// pause if in menu or console and at least one tic has been run
-	if (!netgame
+	if ( !netgame
 		&& gamestate != GS_TITLELEVEL
 		&& ((menuactive != MENU_Off && menuactive != MENU_OnNoPause) ||
 			ConsoleState == c_down || ConsoleState == c_falling)
@@ -180,11 +180,8 @@ void P_Ticker (void)
 		}
 
 		// for par times
-
 		Level->time++;
 		Level->maptime++;
-
-		if (!(Level->wisflags & LEVELWIS_NOTOTALTIME) && !(Level->wisflags & LEVELWIS_CUTSCENELEVEL))
 			Level->totaltime++;
 	}
 	if (players[consoleplayer].mo != NULL) {

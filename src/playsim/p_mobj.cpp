@@ -1863,8 +1863,8 @@ static double P_XYMovement (AActor *mo, DVector2 scroll)
 	// [anon] When friction is turned off, turn off the crouching and water
 	//  speed caps as well, since it is a sort of friction, and the modders
 	//  most likely want to deal with that themselves.
-	if (((mo->waterlevel >= 1 ||
-		(mo->player != NULL && mo->player->crouchfactor < 0.75)) && !(mo->flags8 & MF8_NOFRICTION)))
+	if ((mo->player != NULL && mo->waterlevel >= 1) ||
+		(mo->player != NULL && mo->player->crouchfactor < 0.75) && !(mo->flags8 & MF8_NOFRICTION))
 	{
 		// preserve the direction instead of clamping x and y independently.
 		double cx = mo->Vel.X == 0 ? 1. : clamp(mo->Vel.X, -maxmove, maxmove) / mo->Vel.X;
@@ -5692,6 +5692,10 @@ AActor *FLevelLocals::SpawnMapThing (FMapThing *mthing, int position)
 	if (sz == ONFLOORZ)
 	{
 		mobj->AddZ(mthing->pos.Z);
+		if ((mobj->flags2 & MF2_FLOATBOB))
+		{
+			mobj->specialf1 = mthing->pos.Z;
+		}
 	}
 	else if (sz == ONCEILINGZ)
 		mobj->AddZ(-mthing->pos.Z);

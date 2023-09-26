@@ -37,7 +37,7 @@
 #define RAPIDJSON_HAS_CXX11_RANGE_FOR 1
 #define RAPIDJSON_PARSE_DEFAULT_FLAGS kParseFullPrecisionFlag
 
-#include <zlib.h>
+#include <miniz.h>
 #include "rapidjson/rapidjson.h"
 #include "rapidjson/writer.h"
 #include "rapidjson/prettywriter.h"
@@ -56,6 +56,8 @@
 #include "texturemanager.h"
 #include "base64.h"
 #include "vm.h"
+
+using namespace FileSys;
 
 extern DObject *WP_NOCHANGE;
 bool save_full = false;	// for testing. Should be removed afterward.
@@ -602,6 +604,8 @@ void FSerializer::WriteObjects()
 		{
 			auto obj = w->mDObjects[i];
 
+			if(obj->ObjectFlags & OF_Transient) continue;
+
 			BeginObject(nullptr);
 			w->Key("classtype");
 			w->String(obj->GetClass()->TypeName.GetChars());
@@ -694,7 +698,6 @@ void FSerializer::ReadObjects(bool hubtravel)
 			}
 			EndArray();
 
-			assert(!founderrors);
 			if (founderrors)
 			{
 				Printf(TEXTCOLOR_RED "Failed to restore all objects in savegame\n");
@@ -747,6 +750,7 @@ FCompressedBuffer FSerializer::GetCompressedOutput()
 	FCompressedBuffer buff;
 	WriteObjects();
 	EndObject();
+	buff.filename = nullptr;
 	buff.mSize = (unsigned)w->mOutString.GetSize();
 	buff.mZipFlags = 0;
 	buff.mCRC32 = crc32(0, (const Bytef*)w->mOutString.GetString(), buff.mSize);
@@ -1135,7 +1139,7 @@ FSerializer &Serialize(FSerializer &arc, const char *key, FTextureID &value, FTe
 			const char *name;
 			auto lump = pic->GetSourceLump();
 
-			if (fileSystem.GetLinkedTexture(lump) == pic)
+			if (TexMan.GetLinkedTexture(lump) == pic)
 			{
 				name = fileSystem.GetFileFullName(lump);
 			}

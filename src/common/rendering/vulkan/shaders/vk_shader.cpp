@@ -28,6 +28,7 @@
 #include "filesystem.h"
 #include "engineerrors.h"
 #include "version.h"
+#include "cmdlib.h"
 
 bool VkShaderManager::CompileNextShader()
 {
@@ -351,7 +352,8 @@ std::unique_ptr<VulkanShader> VkShaderManager::LoadVertShader(FString shadername
 	code << LoadPrivateShaderLump(vert_lump).GetChars() << "\n";
 
 	return ShaderBuilder()
-		.VertexShader(code.GetChars())
+		.Type(ShaderType::Vertex)
+		.AddSource(shadername.GetChars(), code.GetChars())
 		.DebugName(shadername.GetChars())
 		.Create(shadername.GetChars(), fb->device.get());
 }
@@ -443,7 +445,8 @@ std::unique_ptr<VulkanShader> VkShaderManager::LoadFragShader(FString shadername
 	}
 
 	return ShaderBuilder()
-		.FragmentShader(code.GetChars())
+		.Type(ShaderType::Fragment)
+		.AddSource(shadername.GetChars(), code.GetChars())
 		.DebugName(shadername.GetChars())
 		.Create(shadername.GetChars(), fb->device.get());
 }
@@ -465,16 +468,15 @@ FString VkShaderManager::LoadPublicShaderLump(const char *lumpname)
 	int lump = fileSystem.CheckNumForFullName(lumpname, 0);
 	if (lump == -1) lump = fileSystem.CheckNumForFullName(lumpname);
 	if (lump == -1) I_Error("Unable to load '%s'", lumpname);
-	FileData data = fileSystem.ReadFile(lump);
-	return data.GetString();
+	return GetStringFromLump(lump);
 }
 
 FString VkShaderManager::LoadPrivateShaderLump(const char *lumpname)
 {
 	int lump = fileSystem.CheckNumForFullName(lumpname, 0);
 	if (lump == -1) I_Error("Unable to load '%s'", lumpname);
-	FileData data = fileSystem.ReadFile(lump);
-	return data.GetString();
+	auto data = fileSystem.ReadFile(lump);
+	return GetStringFromLump(lump);
 }
 
 VkPPShader* VkShaderManager::GetVkShader(PPShader* shader)

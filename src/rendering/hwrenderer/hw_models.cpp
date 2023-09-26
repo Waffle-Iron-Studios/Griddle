@@ -45,7 +45,6 @@
 #include "hw_models.h"
 
 CVAR(Bool, gl_light_models, true, CVAR_ARCHIVE)
-EXTERN_CVAR(Bool, gl_texture);
 
 VSMatrix FHWModelRenderer::GetViewToWorldMatrix()
 {
@@ -58,14 +57,6 @@ void FHWModelRenderer::BeginDrawModel(FRenderStyle style, FSpriteModelFrame *smf
 {
 	state.SetDepthFunc(DF_LEqual);
 	state.EnableTexture(true);
-
-	// vkdoom backport
-	if (!gl_texture)
-	{
-		state.SetTextureMode(TM_STENCIL);
-		state.SetRenderStyle(STYLE_Stencil);
-	}
-
 	// [BB] In case the model should be rendered translucent, do back face culling.
 	// This solves a few of the problems caused by the lack of depth sorting.
 	// [Nash] Don't do back face culling if explicitly specified in MODELDEF
@@ -91,15 +82,7 @@ void FHWModelRenderer::EndDrawModel(FRenderStyle style, FSpriteModelFrame *smf)
 void FHWModelRenderer::BeginDrawHUDModel(FRenderStyle style, const VSMatrix &objectToWorldMatrix, bool mirrored)
 {
 	state.SetDepthFunc(DF_LEqual);
-
-	// vkdoom backport
-	state.EnableTexture(true);
-	
-	if (!gl_texture)
-	{
-		state.SetTextureMode(TM_STENCIL);
-		state.SetRenderStyle(STYLE_Stencil);
-	}
+	state.SetDepthClamp(true);
 
 	// [BB] In case the model should be rendered translucent, do back face culling.
 	// This solves a few of the problems caused by the lack of depth sorting.

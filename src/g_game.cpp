@@ -90,6 +90,7 @@
 #include "doommenu.h"
 #include "screenjob.h"
 #include "i_interface.h"
+#include "fs_findfile.h"
 
 
 static FRandom pr_dmspawn ("DMSpawn");
@@ -111,7 +112,6 @@ void	G_DoAutoSave ();
 void	G_DoQuickSave ();
 
 void STAT_Serialize(FSerializer &file);
-bool WriteZip(const char *filename, TArray<FString> &filenames, TArray<FCompressedBuffer> &content);
 
 CVARD_NAMED(Int, gameskill, skill, 2, CVAR_SERVERINFO|CVAR_LATCH, "sets the skill for the next newly started game")
 CVAR(Bool, save_formatted, false, CVAR_ARCHIVE | CVAR_GLOBALCONFIG)	// use formatted JSON for saves (more readable but a larger files and a bit slower.
@@ -973,7 +973,7 @@ bool G_Responder (event_t *ev)
 	{
 		return ScreenJobResponder(ev);
 	}
-
+	
 	// any other key pops up menu if in demos
 	// [RH] But only if the key isn't bound to a "special" command
 	if (gameaction == ga_nothing && 
@@ -1003,10 +1003,9 @@ bool G_Responder (event_t *ev)
 			}
 			else
 			{
-				return C_DoKey(ev, &Bindings, &DoubleBindings);
+				return C_DoKey (ev, &Bindings, &DoubleBindings);
 			}
 		}
-
 		if (cmd && cmd[0] == '+')
 			return C_DoKey (ev, &Bindings, &DoubleBindings);
 
@@ -1027,7 +1026,6 @@ bool G_Responder (event_t *ev)
 	switch (ev->type)
 	{
 	case EV_KeyDown:
-
 		if (C_DoKey (ev, &Bindings, &DoubleBindings))
 			return true;
 		break;
@@ -1986,7 +1984,7 @@ void G_DoLoadGame ()
 		LoadGameError("TXT_COULDNOTREAD");
 		return;
 	}
-	FResourceLump *info = resfile->FindLump("info.json");
+	auto info = resfile->FindLump("info.json");
 	if (info == nullptr)
 	{
 		LoadGameError("TXT_NOINFOJSON");
@@ -2208,7 +2206,7 @@ void G_DoAutoSave ()
 	UCVarValue num;
 	const char *readableTime;
 	int count = autosavecount != 0 ? autosavecount : 1;
-
+	
 	if (nextautosave == -1) 
 	{
 		nextautosave = (autosavenum + 1) % count;
@@ -2413,7 +2411,7 @@ void G_DoSaveGame (bool okForQuicksave, bool forceQuicksave, FString filename, c
 	}
 
 	auto picdata = savepic.GetBuffer();
-	FCompressedBuffer bufpng = { picdata->Size(), picdata->Size(), METHOD_STORED, 0, static_cast<unsigned int>(crc32(0, &(*picdata)[0], picdata->Size())), (char*)&(*picdata)[0] };
+	FCompressedBuffer bufpng = { picdata->Size(), picdata->Size(), FileSys::METHOD_STORED, 0, static_cast<unsigned int>(crc32(0, &(*picdata)[0], picdata->Size())), (char*)&(*picdata)[0] };
 
 	savegame_content.Push(bufpng);
 	savegame_filenames.Push("savepic.png");
@@ -2423,10 +2421,12 @@ void G_DoSaveGame (bool okForQuicksave, bool forceQuicksave, FString filename, c
 	savegame_filenames.Push("globals.json");
 	G_WriteSnapshots (savegame_filenames, savegame_content);
 	
+	for (unsigned i = 0; i < savegame_content.Size(); i++)
+		savegame_content[i].filename = savegame_filenames[i].GetChars();
 
 	bool succeeded = false;
 
-	if (WriteZip(filename, savegame_filenames, savegame_content))
+	if (WriteZip(filename, savegame_content.Data(), savegame_content.Size()))
 	{
 		// Check whether the file is ok by trying to open it.
 		FResourceFile *test = FResourceFile::OpenResourceFile(filename, true);

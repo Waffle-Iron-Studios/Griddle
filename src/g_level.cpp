@@ -151,25 +151,24 @@ CUSTOM_CVAR(Int, gl_maplightmode, -1, CVAR_NOINITCALL) // this is just for testi
 	if (self > 5 || self < -1) self = -1;
 }
 
-CUSTOM_CVAR(Int, gl_lightmode, 1, CVAR_ARCHIVE | CVAR_NOINITCALL)
+CUSTOM_CVARD(Int, gl_lightmode, 1, CVAR_ARCHIVE, "Select lighting mode. 2 is vanilla accurate, 1 is accurate to the ZDoom software renderer and 0 is a less demanding non-shader implementation")
 {
-	if (self < 0 || self > 2) self = 2;
+	if (self < 0 || self > 2) self = 1;
 }
 
 ELightMode getRealLightmode(FLevelLocals* Level, bool for3d)
 {
-	auto lightmode = Level->info->lightmode;
-	if (lightmode == ELightMode::NotSet)
-	{
-		if (gl_maplightmode != -1) lightmode = (ELightMode)*gl_maplightmode;
-		else lightmode = ELightMode::Doom;
-	}
-	if (lightmode == ELightMode::Doom && for3d)
-	{
-		if (gl_lightmode == 1) lightmode = ELightMode::ZDoomSoftware;
-		else if (gl_lightmode == 2) lightmode = ELightMode::DoomSoftware;
-	}
-	return lightmode;
+	// The rules are:
+	// 1) if the map sets a proper light mode, it is taken unconditionally.
+	if (Level->info->lightmode != ELightMode::NotSet) return Level->info->lightmode;
+	// 2) if the user sets gl_maplightmode, this is being used.
+	if (gl_maplightmode != -1) return (ELightMode)*gl_maplightmode;
+	// 3) if not for 3D use lightmode Doom. This is for the automap where the software light modes do not work
+	if (!for3d) return ELightMode::Doom;
+	// otherwise use lightmode Doom or software lighting based on user preferences.
+	if (gl_lightmode == 1) return ELightMode::ZDoomSoftware;
+	else if (gl_lightmode == 2) return ELightMode::DoomSoftware;
+	return ELightMode::Doom;
 }
 
 CVAR(Int, sv_alwaystally, 0, CVAR_SERVERINFO)
@@ -271,7 +270,7 @@ void G_DeferedInitNew (const char *mapname, int newskill)
 
 void G_DeferedInitNew (FNewGameStartup *gs)
 {
-	if (gs->PlayerClass != NULL) playerclass = gs->PlayerClass;
+	if (gs->hasPlayerClass) playerclass = gs->PlayerClass;
 	d_mapname = AllEpisodes[gs->Episode].mEpisodeMap;
 	d_skill = gs->Skill;
 	CheckWarpTransMap (d_mapname, true);
@@ -1790,8 +1789,8 @@ void FLevelLocals::Init()
 {
 	P_InitParticles(this);
 	P_ClearParticles(this);
-
-	gravity = sv_gravity * 35 / TICRATE;
+	
+	gravity = sv_gravity * 35/TICRATE;
 	aircontrol = sv_aircontrol;
 	AirControlChanged();
 	teamdamage = ::teamdamage;
@@ -1803,7 +1802,7 @@ void FLevelLocals::Init()
 	ImpactDecalCount = 0;
 	frozenstate = 0;
 
-	info = FindLevelInfo(MapName);
+	info = FindLevelInfo (MapName);
 
 	skyspeed1 = info->skyspeed1;
 	skyspeed2 = info->skyspeed2;
@@ -1815,18 +1814,18 @@ void FLevelLocals::Init()
 	FromSnapshot = false;
 	if (fadeto == 0)
 	{
-		if (strnicmp(info->FadeTable, "COLORMAP", 8) != 0)
+		if (strnicmp (info->FadeTable, "COLORMAP", 8) != 0)
 		{
 			flags |= LEVEL_HASFADETABLE;
 		}
 	}
-	airsupply = info->airsupply * TICRATE;
+	airsupply = info->airsupply*TICRATE;
 	outsidefog = info->outsidefog;
-	WallVertLight = info->WallVertLight * 2;
-	WallHorizLight = info->WallHorizLight * 2;
+	WallVertLight = info->WallVertLight*2;
+	WallHorizLight = info->WallHorizLight*2;
 	if (info->gravity != 0.f)
 	{
-		gravity = info->gravity * 35 / TICRATE;
+		gravity = info->gravity * 35/TICRATE;
 	}
 	if (info->aircontrol != 0.f)
 	{
@@ -1837,9 +1836,9 @@ void FLevelLocals::Init()
 		teamdamage = info->teamdamage;
 	}
 
-	AirControlChanged();
+	AirControlChanged ();
 
-	cluster_info_t* clus = FindClusterInfo(info->cluster);
+	cluster_info_t *clus = FindClusterInfo (info->cluster);
 
 	partime = info->partime;
 	sucktime = info->sucktime;
@@ -2001,7 +2000,7 @@ void G_ReadSnapshots(FResourceFile *resf)
 
 	for (unsigned j = 0; j < resf->LumpCount(); j++)
 	{
-		FResourceLump * resl = resf->GetLump(j);
+		auto resl = resf->GetLump(j);
 		if (resl != nullptr)
 		{
 			auto name = resl->getName();
