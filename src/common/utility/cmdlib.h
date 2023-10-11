@@ -85,7 +85,7 @@ inline constexpr double Scale(double a, double b, double c)
 
 struct MD5Context;
 
-void md5Update(FileReader& file, MD5Context& md5, unsigned int len);
+void md5Update(FileReader& file, MD5Context& md5, unsigned len);
 void uppercopy(char* to, const char* from);
 FString GetStringFromLump(int lump, bool zerotruncate = true);
 
