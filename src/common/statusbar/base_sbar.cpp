@@ -57,8 +57,8 @@ IMPLEMENT_CLASS(DStatusBarCore, false, false)
 IMPLEMENT_CLASS(DHUDFont, false, false);
 
 
-CVAR(Color, crosshaircolor, 0xff0000, CVAR_ARCHIVE);
-CVAR(Int, crosshairhealth, 2, CVAR_ARCHIVE);
+CVAR(Color, crosshaircolor, 0x80ffb4, CVAR_ARCHIVE);
+CVAR(Int, crosshairhealth, 0, CVAR_ARCHIVE);
 CVARD(Float, crosshairscale, 0.5, CVAR_ARCHIVE, "changes the size of the crosshair");
 CVAR(Bool, crosshairgrow, false, CVAR_ARCHIVE);
 

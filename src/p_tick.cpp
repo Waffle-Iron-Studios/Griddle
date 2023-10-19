@@ -182,6 +182,8 @@ void P_Ticker (void)
 		// for par times
 		Level->time++;
 		Level->maptime++;
+
+		if (!(Level->info->wisflags & LEVELWIS_NOTOTALTIME))
 			Level->totaltime++;
 	}
 	if (players[consoleplayer].mo != NULL) {
