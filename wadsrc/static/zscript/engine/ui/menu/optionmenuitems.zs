@@ -848,13 +848,17 @@ class OptionMenuSliderBase : OptionMenuItem
 	override bool MouseEvent(int type, int x, int y)
 	{
 		let lm = OptionMenu(Menu.GetCurrentMenu());
+		
+		if (!lm) return true;
+		
 		if (type != Menu.MOUSE_Click)
 		{
 			if (!lm.CheckFocus(self)) return false;
 		}
 		if (type == Menu.MOUSE_Release)
 		{
-			lm.ReleaseFocus();
+			if (lm)
+				lm.ReleaseFocus();
 		}
 
 		int slide_left = mDrawX+16*CleanXfac_1;
