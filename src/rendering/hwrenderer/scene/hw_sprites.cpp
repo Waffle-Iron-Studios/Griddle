@@ -355,8 +355,8 @@ void HWSprite::DrawSprite(HWDrawInfo *di, FRenderState &state, bool translucent)
 		state.SetDynLight(0, 0, 0);
 		state.SetRenderStyle(STYLE_Normal);
 		state.SetTextureMode(TM_NORMAL);
-		di->SetFog(state, 0, 0, false, &Colormap, true);
-		di->SetColor(state, 255, 0, true, Colormap, true);
+		SetFog(state, di->Level, di->lightmode, 0, 0, false, &Colormap, true);
+		SetColor(state, di->Level, di->lightmode, 255, 0, true, Colormap, true);
 		state.EnableTexture(false);
 		int scales[12][6] =
 		{

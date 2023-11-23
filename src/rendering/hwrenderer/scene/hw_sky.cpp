@@ -174,7 +174,7 @@ void HWWall::SkyPlane(HWWallDispatcher *di, sector_t *sector, int plane, bool al
 			break;
 		}
 	}
-	else if (allowreflect && sector->GetReflect(plane) > 0 && !(di->Level->ib_compatflags & BCOMPATF_NOMIRRORS))
+	else if (allowreflect && sector->GetReflect(plane) > 0)
 	{
 		if (di->di)
 		{
