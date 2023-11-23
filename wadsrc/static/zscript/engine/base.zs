@@ -749,10 +749,13 @@ class Object native
 	private native static void BuiltinRandomSeed(voidptr rng, int seed);
 	private native static Class<Object> BuiltinNameToClass(Name nm, Class<Object> filter);
 	private native static Object BuiltinClassCast(Object inptr, Class<Object> test);
+	private native static Function<void> BuiltinFunctionPtrCast(Function<void> inptr, voidptr newtype);
 	
 	native static uint MSTime();
 	native static double MSTimeF();
 	native vararg static void ThrowAbortException(String fmt, ...);
+
+	native static Function<void> FindFunction(Class<Object> cls, Name fn);
 
 	native virtualscope void Destroy();
 
@@ -860,6 +863,7 @@ struct Wads	// todo: make FileSystem an alias to 'Wads'
 	native static int FindLump(string name, int startlump = 0, FindLumpNamespace ns = GlobalNamespace);
 	native static int FindLumpFullName(string name, int startlump = 0, bool noext = false);
 	native static string ReadLump(int lump);
+	native static int GetLumpLength(int lump);
 
 	native static int GetNumLumps();
 	native static string GetLumpName(int lump);
@@ -916,10 +920,11 @@ struct StringStruct native
 
 struct Translation version("2.4")
 {
-	static int MakeID(int group, int num)
-	{
-		return (group << 16) + num;
-	}
+	Color colors[256];
+	
+	native TranslationID AddTranslation();
+	native static TranslationID MakeID(int group, int num);
+	native static TranslationID GetID(Name transname);
 }
 
 // Convenient way to attach functions to Quat
@@ -934,4 +939,9 @@ struct QuatStruct native
 	// native double Length();
 	// native double LengthSquared();
 	// native Quat Unit();
+}
+
+// this struct does not exist. It is just a type for being referenced by an opaque pointer.
+struct VMFunction native version("4.10")
+{
 }

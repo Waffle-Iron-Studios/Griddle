@@ -960,14 +960,14 @@ public:
 
 	double Distance2DSquared(AActor *other, bool absolute = false)
 	{
-		DVector2 otherpos = absolute ? other->Pos() : other->PosRelative(this);
-		return (Pos().XY() - otherpos).LengthSquared();
+		DVector3 otherpos = absolute ? other->Pos() : other->PosRelative(this);
+		return (Pos().XY() - otherpos.XY()).LengthSquared();
 	}
 
 	double Distance2D(AActor *other, bool absolute = false) const
 	{
-		DVector2 otherpos = absolute ? other->Pos() : other->PosRelative(this);
-		return (Pos().XY() - otherpos).Length();
+		DVector3 otherpos = absolute ? other->Pos() : other->PosRelative(this);
+		return (Pos().XY() - otherpos.XY()).Length();
 	}
 
 	double Distance2D(double x, double y) const
@@ -997,19 +997,19 @@ public:
 
 	DAngle AngleTo(AActor *other, bool absolute = false)
 	{
-		DVector2 otherpos = absolute ? other->Pos() : other->PosRelative(this);
-		return VecToAngle(otherpos - Pos().XY());
+		DVector3 otherpos = absolute ? other->Pos() : other->PosRelative(this);
+		return VecToAngle(otherpos.XY() - Pos().XY());
 	}
 
 	DAngle AngleTo(AActor *other, double oxofs, double oyofs, bool absolute = false) const
 	{
-		DVector2 otherpos = absolute ? other->Pos() : other->PosRelative(this);
-		return VecToAngle(otherpos - Pos() + DVector2(oxofs, oyofs));
+		DVector3 otherpos = absolute ? other->Pos() : other->PosRelative(this);
+		return VecToAngle(otherpos.XY() - Pos().XY() + DVector2(oxofs, oyofs));
 	}
 
 	DVector2 Vec2To(AActor *other) const
 	{
-		return other->PosRelative(this) - Pos();
+		return other->PosRelative(this).XY() - Pos().XY();
 	}
 
 	DVector3 Vec3To(AActor *other) const
@@ -1082,7 +1082,7 @@ public:
 	FRenderStyle	RenderStyle;		// Style to draw this actor with
 	FTextureID		picnum;				// Draw this instead of sprite if valid
 	uint32_t			fillcolor;			// Color to draw when STYLE_Shaded
-	uint32_t			Translation;
+	FTranslationID			Translation;
 
 	uint32_t			RenderRequired;		// current renderer must have this feature set
 	uint32_t			RenderHidden;		// current renderer must *not* have any of these features
@@ -1262,7 +1262,7 @@ public:
 	uint8_t FriendPlayer;				// [RH] Player # + 1 this friendly monster works for (so 0 is no player, 1 is player 0, etc)
 	double FloatBobStrength;
 	PalEntry BloodColor;
-	uint32_t BloodTranslation;
+	FTranslationID BloodTranslation;
 
 	// [RH] Stuff that used to be part of an Actor Info
 	FSoundID SeeSound;

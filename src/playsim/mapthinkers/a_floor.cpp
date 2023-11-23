@@ -798,7 +798,7 @@ bool FLevelLocals::EV_DoDonut (int tag, line_t *line, double pillarspeed, double
 		s2 = getNextSector (s1->Lines[0], s1);	// s2 is pool's sector
 		if (!s2)								// note lowest numbered line around
 			continue;							// pillar must be two-sided
-
+		
 		for (auto ln : s2->Lines)
 		{
 			if (ln->backsector == nullptr || ln->backsector == s1)

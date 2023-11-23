@@ -1145,7 +1145,7 @@ FSerializer &Serialize(FSerializer &arc, const char *key, FTextureID &value, FTe
 			}
 			else
 			{
-				name = pic->GetName();
+				name = pic->GetName().GetChars();
 			}
 			arc.WriteKey(key);
 			arc.w->StartArray();
@@ -1193,6 +1193,21 @@ FSerializer &Serialize(FSerializer &arc, const char *key, FTextureID &value, FTe
 			}
 		}
 	}
+	return arc;
+}
+
+//==========================================================================
+//
+//
+//
+//==========================================================================
+
+FSerializer& Serialize(FSerializer& arc, const char* key, FTranslationID& value, FTranslationID* defval)
+{
+	int v = value.index();
+	int* defv = (int*)defval;
+	Serialize(arc, key, v, defv);
+	value = FTranslationID::fromInt(v);
 	return arc;
 }
 
@@ -1507,8 +1522,8 @@ FString DictionaryToString(const Dictionary &dict)
 
 	while (i.NextPair(pair))
 	{
-		writer.Key(pair->Key);
-		writer.String(pair->Value);
+		writer.Key(pair->Key.GetChars());
+		writer.String(pair->Value.GetChars());
 	}
 
 	writer.EndObject();
@@ -1654,6 +1669,84 @@ FSerializer &Serialize(FSerializer &arc, const char *key, NumericValue &value, N
 		}
 	}
 	return arc;
+}
+
+//==========================================================================
+//
+// PFunctionPointer
+//
+//==========================================================================
+
+void SerializeFunctionPointer(FSerializer &arc, const char *key, FunctionPointerValue *&p)
+{
+	if (arc.isWriting())
+	{
+		if(p)
+		{
+			arc.BeginObject(key);
+			arc("Class",p->ClassName);
+			arc("Function",p->FunctionName);
+			arc.EndObject();
+		}
+		else
+		{
+			arc.WriteKey(key);
+			arc.w->Null();
+		}
+	}
+	else
+	{
+		assert(p);
+		auto v = arc.r->FindKey(key);
+		if(!v || v->IsNull())
+		{
+			p = nullptr;
+		}
+		else if(v->IsObject())
+		{
+			arc.r->mObjects.Push(FJSONObject(v)); // BeginObject
+
+			const char * cstr;
+			arc.StringPtr("Class", cstr);
+
+			if(!cstr)
+			{
+				arc.StringPtr("Function", cstr);
+				if(!cstr)
+				{
+					Printf(TEXTCOLOR_RED "Function Pointer missing Class and Function Fields in Object\n");
+				}
+				else
+				{
+					Printf(TEXTCOLOR_RED "Function Pointer missing Class Field in Object\n");
+				}
+				arc.mErrors++;
+				arc.EndObject();
+				p = nullptr;
+				return;
+			}
+
+			p->ClassName = FString(cstr);
+			arc.StringPtr("Function", cstr);
+
+			if(!cstr)
+			{
+				Printf(TEXTCOLOR_RED "Function Pointer missing Function Field in Object\n");
+				arc.mErrors++;
+				arc.EndObject();
+				p = nullptr;
+				return;
+			}
+			p->FunctionName = FString(cstr);
+			arc.EndObject();
+		}
+		else
+		{
+			Printf(TEXTCOLOR_RED "Function Pointer is not an Object\n");
+			arc.mErrors++;
+			p = nullptr;
+		}
+	}
 }
 
 #include "renderstyle.h"

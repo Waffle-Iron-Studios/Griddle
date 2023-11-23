@@ -339,6 +339,7 @@ struct level_info_t
 	FString		SkyPic1;
 	FString		SkyPic2;
 	FString		FadeTable;
+	FString		CustomColorMap;
 	FString		F1Pic;
 	FString		BorderTexture;
 	FString		MapBackground;

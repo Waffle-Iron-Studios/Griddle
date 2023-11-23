@@ -217,7 +217,7 @@ FName MapLoader::CheckCompatibility(MapData *map)
 {
 	FMD5Holder md5;
 	FCompatValues *flags;
-
+	
 	map->GetChecksum(md5.Bytes);
 
 	flags = BCompatMap.CheckKey(md5);

@@ -58,14 +58,14 @@ float pauseTimeOffset = .0f;
 extern TDeletingArray<FVoxel *> Voxels;
 extern TDeletingArray<FVoxelDef *> VoxelDefs;
 
-void RenderFrameModels(FModelRenderer* renderer, FLevelLocals* Level, const FSpriteModelFrame *smf, const FState* curState, const int curTics, const PClass* ti, int translation, AActor* actor);
+void RenderFrameModels(FModelRenderer* renderer, FLevelLocals* Level, const FSpriteModelFrame *smf, const FState* curState, const int curTics, const PClass* ti, FTranslationID translation, AActor* actor);
 
 
 void RenderModel(FModelRenderer *renderer, float x, float y, float z, FSpriteModelFrame *smf, AActor *actor, double ticFrac)
 {
 	// Setup transformation.
 
-	int translation = 0;
+	FTranslationID translation = NO_TRANSLATION;
 	if (!(smf->flags & MDL_IGNORETRANSLATION))
 		translation = actor->Translation;
 
@@ -262,14 +262,18 @@ void RenderHUDModel(FModelRenderer *renderer, DPSprite *psp, FVector3 translatio
 
 	float orientation = smf->xscale * smf->yscale * smf->zscale;
 
-	renderer->BeginDrawHUDModel(playermo->RenderStyle, objectToWorldMatrix, orientation < 0);
-	uint32_t trans = psp->GetTranslation() != 0 ? psp->GetTranslation() : 0;
+	renderer->BeginDrawHUDModel(playermo->RenderStyle, objectToWorldMatrix, orientation < 0, smf);
+	auto trans = psp->GetTranslation();
 	if ((psp->Flags & PSPF_PLAYERTRANSLATED)) trans = psp->Owner->mo->Translation;
-	RenderFrameModels(renderer, playermo->Level, smf, psp->GetState(), psp->GetTics(), psp->Caller->modelData != nullptr ? psp->Caller->modelData->modelDef != NAME_None ? PClass::FindActor(psp->Caller->modelData->modelDef) : psp->Caller->GetClass() : psp->Caller->GetClass(), trans, psp->Caller);
-	renderer->EndDrawHUDModel(playermo->RenderStyle);
+
+	auto callerclass = psp->Caller->modelData != nullptr && psp->Caller->modelData->modelDef != NAME_None ?
+		PClass::FindActor(psp->Caller->modelData->modelDef) : psp->Caller->GetClass();
+
+	RenderFrameModels(renderer, playermo->Level, smf, psp->GetState(), psp->GetTics(), callerclass, trans, psp->Caller);
+	renderer->EndDrawHUDModel(playermo->RenderStyle, smf);
 }
 
-void RenderFrameModels(FModelRenderer *renderer, FLevelLocals *Level, const FSpriteModelFrame *smf, const FState *curState, const int curTics, const PClass *ti, int translation, AActor* actor)
+void RenderFrameModels(FModelRenderer *renderer, FLevelLocals *Level, const FSpriteModelFrame *smf, const FState *curState, const int curTics, const PClass *ti, FTranslationID translation, AActor* actor)
 {
 	// [BB] Frame interpolation: Find the FSpriteModelFrame smfNext which follows after smf in the animation
 	// and the scalar value inter ( element of [0,1) ), both necessary to determine the interpolated frame.
@@ -948,6 +952,10 @@ static void ParseModelDefLump(int Lump)
 				else if (sc.Compare("correctpixelstretch"))
 				{
 					smf.flags |= MDL_CORRECTPIXELSTRETCH;
+				}
+				else if (sc.Compare("forcecullbackfaces"))
+				{
+					smf.flags |= MDL_FORCECULLBACKFACES;
 				}
 				else
 				{

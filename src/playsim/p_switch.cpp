@@ -194,7 +194,7 @@ bool P_CheckSwitchRange(AActor *user, line_t *line, int sideno, const DVector3 *
 				return true;
 			}
 		}
-
+		
 		return user->Top() > open.top;
 	}
 	if ((TexAnim.FindSwitch(side->GetTexture(side_t::bottom))) != NULL)

@@ -218,7 +218,7 @@ class Actor : Thinker native
 	native Inventory Inv;
 	native uint8 smokecounter;
 	native uint8 FriendPlayer;
-	native uint Translation;
+	native TranslationID Translation;
 	native sound AttackSound;
 	native sound DeathSound;
 	native sound SeeSound;
@@ -253,7 +253,7 @@ class Actor : Thinker native
 	native double StealthAlpha;
 	native int WoundHealth;		// Health needed to enter wound state
 	native readonly color BloodColor;
-	native readonly int BloodTranslation;
+	native readonly TranslationID BloodTranslation;
 	native int RenderHidden;
 	native int RenderRequired;
 	native int FriendlySeeBlocks;
@@ -1321,7 +1321,7 @@ class Actor : Thinker native
 	{
 		if (DeathSound)
 		{
-			A_StartSound(DeathSound, CHAN_VOICE, CHANF_DEFAULT, 1, bBoss? ATTN_NONE : ATTN_NORM);
+			A_StartSound(DeathSound, CHAN_VOICE, CHANF_DEFAULT, 1, bBoss || bFullvolDeath? ATTN_NONE : ATTN_NORM);
 		}
 	}
 

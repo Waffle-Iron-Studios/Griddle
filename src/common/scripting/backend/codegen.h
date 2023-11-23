@@ -48,6 +48,7 @@
 #include "types.h"
 #include "vmintern.h"
 #include "c_cvars.h"
+#include "palettecontainer.h"
 
 struct FState; // needed for FxConstant. Maybe move the state constructor to a subclass later?
 
@@ -232,6 +233,7 @@ enum EFxType
 	EFX_StringCast,
 	EFX_ColorCast,
 	EFX_SoundCast,
+	EFX_TranslationCast,
 	EFX_TypeCast,
 	EFX_PlusSign,
 	EFX_MinusSign,
@@ -277,6 +279,7 @@ enum EFxType
 	EFX_ReturnStatement,
 	EFX_ClassTypeCast,
 	EFX_ClassPtrCast,
+	EFX_FunctionPtrCast,
 	EFX_StateByIndex,
 	EFX_RuntimeStateIndex,
 	EFX_MultiNameState,
@@ -506,6 +509,27 @@ public:
 		isresolved = true;
 	}
 
+	FxConstant(FTranslationID state, const FScriptPosition& pos) : FxExpression(EFX_Constant, pos)
+	{
+		value.Int = state.index();
+		ValueType = value.Type = TypeTranslationID;
+		isresolved = true;
+	}
+
+	FxConstant(VMFunction* state, const FScriptPosition& pos) : FxExpression(EFX_Constant, pos)
+	{
+		value.pointer = state;
+		ValueType = value.Type = TypeVMFunction;
+		isresolved = true;
+	}
+	
+	FxConstant(PFunction* rawptr, const FScriptPosition& pos) : FxExpression(EFX_Constant, pos)
+	{
+		value.pointer = rawptr;
+		ValueType = value.Type = TypeRawFunction;
+		isresolved = true;
+	}
+
 	FxConstant(const FScriptPosition &pos) : FxExpression(EFX_Constant, pos)
 	{
 		value.pointer = nullptr;
@@ -550,6 +574,8 @@ public:
 		return value;
 	}
 	ExpEmit Emit(VMFunctionBuilder *build);
+
+	friend class FxTypeCast;
 };
 
 //==========================================================================
@@ -698,6 +724,19 @@ public:
 	ExpEmit Emit(VMFunctionBuilder *build);
 };
 
+class FxTranslationCast : public FxExpression
+{
+	FxExpression* basex;
+
+public:
+
+	FxTranslationCast(FxExpression* x);
+	~FxTranslationCast();
+	FxExpression* Resolve(FCompileContext&);
+
+	ExpEmit Emit(VMFunctionBuilder* build);
+};
+
 class FxFontCast : public FxExpression
 {
 	FxExpression *basex;
@@ -728,6 +767,8 @@ public:
 	FxExpression *Resolve(FCompileContext&);
 
 	ExpEmit Emit(VMFunctionBuilder *build);
+
+	static FxConstant * convertRawFunctionToFunctionPointer(FxExpression * in, FScriptPosition &ScriptPosition);
 };
 
 //==========================================================================
@@ -1811,6 +1852,7 @@ class FxVMFunctionCall : public FxExpression
 	bool CheckAccessibility(const VersionInfo &ver);
 
 public:
+	const bool FnPtrCall;
 
 	FArgumentList ArgList;
 	PFunction* Function;
@@ -2110,6 +2152,24 @@ public:
 
 	FxClassPtrCast(PClass *dtype, FxExpression *x);
 	~FxClassPtrCast();
+	FxExpression *Resolve(FCompileContext&);
+	ExpEmit Emit(VMFunctionBuilder *build);
+};
+
+//==========================================================================
+//
+//
+//
+//==========================================================================
+
+class FxFunctionPtrCast : public FxExpression
+{
+	FxExpression *basex;
+
+public:
+
+	FxFunctionPtrCast (PFunctionPointer *ftype, FxExpression *x);
+	~FxFunctionPtrCast();
 	FxExpression *Resolve(FCompileContext&);
 	ExpEmit Emit(VMFunctionBuilder *build);
 };
