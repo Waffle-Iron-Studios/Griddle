@@ -42,42 +42,44 @@
 #include "textureid.h"
 #include "maps.h"
 #include "palettecontainer.h"
+#include "texturemanager.h"
+#include "i_interface.h"
 
 
 FTypeTable TypeTable;
 
-PErrorType *TypeError;
-PErrorType *TypeAuto;
-PVoidType *TypeVoid;
-PInt *TypeSInt8,  *TypeUInt8;
-PInt *TypeSInt16, *TypeUInt16;
-PInt *TypeSInt32, *TypeUInt32;
-PBool *TypeBool;
-PFloat *TypeFloat32, *TypeFloat64;
-PString *TypeString;
-PName *TypeName;
-PSound *TypeSound;
-PColor *TypeColor;
-PTextureID *TypeTextureID;
+PErrorType* TypeError;
+PErrorType* TypeAuto;
+PVoidType* TypeVoid;
+PInt* TypeSInt8, * TypeUInt8;
+PInt* TypeSInt16, * TypeUInt16;
+PInt* TypeSInt32, * TypeUInt32;
+PBool* TypeBool;
+PFloat* TypeFloat32, * TypeFloat64;
+PString* TypeString;
+PName* TypeName;
+PSound* TypeSound;
+PColor* TypeColor;
+PTextureID* TypeTextureID;
 PTranslationID* TypeTranslationID;
-PSpriteID *TypeSpriteID;
-PStatePointer *TypeState;
-PPointer *TypeFont;
-PStateLabel *TypeStateLabel;
-PStruct *TypeVector2;
-PStruct *TypeVector3;
+PSpriteID* TypeSpriteID;
+PStatePointer* TypeState;
+PPointer* TypeFont;
+PStateLabel* TypeStateLabel;
+PStruct* TypeVector2;
+PStruct* TypeVector3;
 PStruct* TypeVector4;
 PStruct* TypeQuaternion;
 PStruct* TypeFVector2;
 PStruct* TypeFVector3;
 PStruct* TypeFVector4;
 PStruct* TypeFQuaternion;
-PStruct *TypeColorStruct;
-PStruct *TypeStringStruct;
+PStruct* TypeColorStruct;
+PStruct* TypeStringStruct;
 PStruct* TypeQuaternionStruct;
-PPointer *TypeNullPtr;
-PPointer *TypeVoidPtr;
-PPointer *TypeRawFunction;
+PPointer* TypeNullPtr;
+PPointer* TypeVoidPtr;
+PPointer* TypeRawFunction;
 PPointer* TypeVMFunction;
 
 
@@ -89,12 +91,12 @@ void DumpTypeTable()
 	int min = INT_MAX;
 	int max = 0;
 	int all = 0;
-	int lens[10] = {0};
+	int lens[10] = { 0 };
 	for (size_t i = 0; i < countof(TypeTable.TypeHash); ++i)
 	{
 		int len = 0;
 		Printf("%4zu:", i);
-		for (PType *ty = TypeTable.TypeHash[i]; ty != nullptr; ty = ty->HashNext)
+		for (PType* ty = TypeTable.TypeHash[i]; ty != nullptr; ty = ty->HashNext)
 		{
 			Printf(" -> %s", ty->DescriptiveName());
 			len++;
@@ -114,16 +116,16 @@ void DumpTypeTable()
 		}
 		Printf("\n");
 	}
-	Printf("Used buckets: %d/%lu (%.2f%%) for %d entries\n", used, countof(TypeTable.TypeHash), double(used)/countof(TypeTable.TypeHash)*100, all);
+	Printf("Used buckets: %d/%lu (%.2f%%) for %d entries\n", used, countof(TypeTable.TypeHash), double(used) / countof(TypeTable.TypeHash) * 100, all);
 	Printf("Min bucket size: %d\n", min);
 	Printf("Max bucket size: %d\n", max);
 	Printf("Avg bucket size: %.2f\n", double(all) / used);
-	int j,k;
-	for (k = countof(lens)-1; k > 0; --k)
+	int j, k;
+	for (k = countof(lens) - 1; k > 0; --k)
 		if (lens[k])
 			break;
 	for (j = 0; j <= k; ++j)
-		Printf("Buckets of len %d: %d (%.2f%%)\n", j, lens[j], j!=0?double(lens[j])/used*100:-1.0);
+		Printf("Buckets of len %d: %d (%.2f%%)\n", j, lens[j], j != 0 ? double(lens[j]) / used * 100 : -1.0);
 }
 
 /* PType ******************************************************************/
@@ -135,7 +137,7 @@ void DumpTypeTable()
 //==========================================================================
 
 PType::PType(unsigned int size, unsigned int align)
-: Size(size), Align(align), HashNext(nullptr)
+	: Size(size), Align(align), HashNext(nullptr)
 {
 	mDescriptiveName = "Type";
 	loadOp = OP_NOP;
@@ -161,7 +163,7 @@ PType::~PType()
 //
 //==========================================================================
 
-void PType::WriteValue(FSerializer &ar, const char *key,const void *addr) const
+void PType::WriteValue(FSerializer& ar, const char* key, const void* addr) const
 {
 	assert(0 && "Cannot write value for this type");
 }
@@ -172,7 +174,7 @@ void PType::WriteValue(FSerializer &ar, const char *key,const void *addr) const
 //
 //==========================================================================
 
-bool PType::ReadValue(FSerializer &ar, const char *key, void *addr) const
+bool PType::ReadValue(FSerializer& ar, const char* key, void* addr) const
 {
 	assert(0 && "Cannot read value for this type");
 	return false;
@@ -184,7 +186,7 @@ bool PType::ReadValue(FSerializer &ar, const char *key, void *addr) const
 //
 //==========================================================================
 
-void PType::SetDefaultValue(void *base, unsigned offset, TArray<FTypeAndOffset> *stroffs)
+void PType::SetDefaultValue(void* base, unsigned offset, TArray<FTypeAndOffset>* stroffs)
 {
 }
 
@@ -194,15 +196,15 @@ void PType::SetDefaultValue(void *base, unsigned offset, TArray<FTypeAndOffset> 
 //
 //==========================================================================
 
-void PType::SetPointer(void *base, unsigned offset, TArray<size_t> *stroffs)
+void PType::SetPointer(void* base, unsigned offset, TArray<size_t>* stroffs)
 {
 }
 
-void PType::SetPointerArray(void *base, unsigned offset, TArray<size_t> *stroffs)
+void PType::SetPointerArray(void* base, unsigned offset, TArray<size_t>* stroffs)
 {
 }
 
-void PType::SetPointerMap(void *base, unsigned offset, TArray<std::pair<size_t,PType *>> *ptrofs)
+void PType::SetPointerMap(void* base, unsigned offset, TArray<std::pair<size_t, PType*>>* ptrofs)
 {
 }
 
@@ -212,7 +214,7 @@ void PType::SetPointerMap(void *base, unsigned offset, TArray<std::pair<size_t,P
 //
 //==========================================================================
 
-void PType::InitializeValue(void *addr, const void *def) const
+void PType::InitializeValue(void* addr, const void* def) const
 {
 }
 
@@ -222,7 +224,7 @@ void PType::InitializeValue(void *addr, const void *def) const
 //
 //==========================================================================
 
-void PType::DestroyValue(void *addr) const
+void PType::DestroyValue(void* addr) const
 {
 }
 
@@ -232,12 +234,12 @@ void PType::DestroyValue(void *addr) const
 //
 //==========================================================================
 
-void PType::SetValue(void *addr, int val)
+void PType::SetValue(void* addr, int val)
 {
 	assert(0 && "Cannot set int value for this type");
 }
 
-void PType::SetValue(void *addr, double val)
+void PType::SetValue(void* addr, double val)
 {
 	assert(0 && "Cannot set float value for this type");
 }
@@ -248,13 +250,13 @@ void PType::SetValue(void *addr, double val)
 //
 //==========================================================================
 
-int PType::GetValueInt(void *addr) const
+int PType::GetValueInt(void* addr) const
 {
 	assert(0 && "Cannot get value for this type");
 	return 0;
 }
 
-double PType::GetValueFloat(void *addr) const
+double PType::GetValueFloat(void* addr) const
 {
 	assert(0 && "Cannot get value for this type");
 	return 0;
@@ -277,7 +279,7 @@ bool PType::IsMatch(intptr_t id1, intptr_t id2) const
 //
 //==========================================================================
 
-void PType::GetTypeIDs(intptr_t &id1, intptr_t &id2) const
+void PType::GetTypeIDs(intptr_t& id1, intptr_t& id2) const
 {
 	id1 = 0;
 	id2 = 0;
@@ -289,7 +291,7 @@ void PType::GetTypeIDs(intptr_t &id1, intptr_t &id2) const
 //
 //==========================================================================
 
-const char *PType::DescriptiveName() const
+const char* PType::DescriptiveName() const
 {
 	return mDescriptiveName.GetChars();
 }
@@ -328,7 +330,7 @@ void PType::StaticInit()
 
 	TypeVoidPtr = NewPointer(TypeVoid, false);
 	TypeRawFunction = new PPointer;
-		TypeRawFunction->mDescriptiveName = "Raw Function Pointer";
+	TypeRawFunction->mDescriptiveName = "Raw Function Pointer";
 	TypeVMFunction = NewPointer(NewStruct("VMFunction", nullptr, true));
 	TypeColorStruct = NewStruct("@ColorStruct", nullptr);	//This name is intentionally obfuscated so that it cannot be used explicitly. The point of this type is to gain access to the single channels of a color value.
 	TypeStringStruct = NewStruct("Stringstruct", nullptr, true);
@@ -499,7 +501,7 @@ void PType::StaticInit()
 //==========================================================================
 
 PBasicType::PBasicType(unsigned int size, unsigned int align)
-: PType(size, align)
+	: PType(size, align)
 {
 	mDescriptiveName = "BasicType";
 	Flags |= TYPE_Scalar;
@@ -529,7 +531,7 @@ PCompoundType::PCompoundType(unsigned int size, unsigned int align)
 
 bool PContainerType::IsMatch(intptr_t id1, intptr_t id2) const
 {
-	const PTypeBase *outer = (const PTypeBase *)id1;
+	const PTypeBase* outer = (const PTypeBase*)id1;
 	FName name = (ENamedName)(intptr_t)id2;
 
 	return Outer == outer && TypeName == name;
@@ -541,7 +543,7 @@ bool PContainerType::IsMatch(intptr_t id1, intptr_t id2) const
 //
 //==========================================================================
 
-void PContainerType::GetTypeIDs(intptr_t &id1, intptr_t &id2) const
+void PContainerType::GetTypeIDs(intptr_t& id1, intptr_t& id2) const
 {
 	id1 = (intptr_t)Outer;
 	id2 = TypeName.GetIndex();
@@ -556,9 +558,9 @@ void PContainerType::GetTypeIDs(intptr_t &id1, intptr_t &id2) const
 //==========================================================================
 
 PInt::PInt(unsigned int size, bool unsign, bool compatible)
-: PBasicType(size, size), Unsigned(unsign), IntCompatible(compatible)
+	: PBasicType(size, size), Unsigned(unsign), IntCompatible(compatible)
 {
-	mDescriptiveName.Format("%cInt%d", unsign? 'U':'S', size);
+	mDescriptiveName.Format("%cInt%d", unsign ? 'U' : 'S', size);
 	Flags |= TYPE_Int;
 
 	MemberOnly = (size < 4);
@@ -572,7 +574,7 @@ PInt::PInt(unsigned int size, bool unsign, bool compatible)
 	else
 	{
 		Symbols.AddSymbol(Create<PSymbolConstNumeric>(NAME_Min, this, 0u));
-		Symbols.AddSymbol(Create<PSymbolConstNumeric>(NAME_Max, this, (uint32_t) (((uint64_t) 1u << (size * 8)) - 1uL)));
+		Symbols.AddSymbol(Create<PSymbolConstNumeric>(NAME_Max, this, (uint32_t)(((uint64_t)1u << (size * 8)) - 1uL)));
 	}
 	SetOps();
 }
@@ -609,7 +611,7 @@ void PInt::SetOps()
 //
 //==========================================================================
 
-void PInt::WriteValue(FSerializer &ar, const char *key,const void *addr) const
+void PInt::WriteValue(FSerializer& ar, const char* key, const void* addr) const
 {
 	if (Size == 8 && Unsigned)
 	{
@@ -651,7 +653,7 @@ void PInt::WriteValue(FSerializer &ar, const char *key,const void *addr) const
 //
 //==========================================================================
 
-bool PInt::ReadValue(FSerializer &ar, const char *key, void *addr) const
+bool PInt::ReadValue(FSerializer& ar, const char* key, void* addr) const
 {
 	NumericValue val;
 
@@ -691,24 +693,24 @@ bool PInt::ReadValue(FSerializer &ar, const char *key, void *addr) const
 //
 //==========================================================================
 
-void PInt::SetValue(void *addr, int val)
+void PInt::SetValue(void* addr, int val)
 {
 	assert(((intptr_t)addr & (Align - 1)) == 0 && "unaligned address");
 	if (Size == 4)
 	{
-		*(int *)addr = val;
+		*(int*)addr = val;
 	}
 	else if (Size == 1)
 	{
-		*(uint8_t *)addr = val;
+		*(uint8_t*)addr = val;
 	}
 	else if (Size == 2)
 	{
-		*(uint16_t *)addr = val;
+		*(uint16_t*)addr = val;
 	}
 	else if (Size == 8)
 	{
-		*(uint64_t *)addr = val;
+		*(uint64_t*)addr = val;
 	}
 	else
 	{
@@ -716,7 +718,7 @@ void PInt::SetValue(void *addr, int val)
 	}
 }
 
-void PInt::SetValue(void *addr, double val)
+void PInt::SetValue(void* addr, double val)
 {
 	SetValue(addr, (int)val);
 }
@@ -727,24 +729,24 @@ void PInt::SetValue(void *addr, double val)
 //
 //==========================================================================
 
-int PInt::GetValueInt(void *addr) const
+int PInt::GetValueInt(void* addr) const
 {
 	assert(((intptr_t)addr & (Align - 1)) == 0 && "unaligned address");
 	if (Size == 4)
 	{
-		return *(int *)addr;
+		return *(int*)addr;
 	}
 	else if (Size == 1)
 	{
-		return Unsigned ? *(uint8_t *)addr : *(int8_t *)addr;
+		return Unsigned ? *(uint8_t*)addr : *(int8_t*)addr;
 	}
 	else if (Size == 2)
 	{
-		return Unsigned ? *(uint16_t *)addr : *(int16_t *)addr;
+		return Unsigned ? *(uint16_t*)addr : *(int16_t*)addr;
 	}
 	else if (Size == 8)
 	{ // truncated output
-		return (int)*(uint64_t *)addr;
+		return (int)*(uint64_t*)addr;
 	}
 	else
 	{
@@ -759,7 +761,7 @@ int PInt::GetValueInt(void *addr) const
 //
 //==========================================================================
 
-double PInt::GetValueFloat(void *addr) const
+double PInt::GetValueFloat(void* addr) const
 {
 	return GetValueInt(addr);
 }
@@ -778,24 +780,24 @@ double PInt::GetValueFloat(void *addr) const
 //
 //==========================================================================
 
-void PBool::SetValue(void *addr, int val)
+void PBool::SetValue(void* addr, int val)
 {
 	*(bool*)addr = !!val;
 }
 
-void PBool::SetValue(void *addr, double val)
+void PBool::SetValue(void* addr, double val)
 {
 	*(bool*)addr = val != 0.;
 }
 
-int PBool::GetValueInt(void *addr) const
+int PBool::GetValueInt(void* addr) const
 {
-	return *(bool *)addr;
+	return *(bool*)addr;
 }
 
-double PBool::GetValueFloat(void *addr) const
+double PBool::GetValueFloat(void* addr) const
 {
-	return *(bool *)addr;
+	return *(bool*)addr;
 }
 
 //==========================================================================
@@ -805,7 +807,7 @@ double PBool::GetValueFloat(void *addr) const
 //==========================================================================
 
 PBool::PBool()
-: PInt(sizeof(bool), true)
+	: PInt(sizeof(bool), true)
 {
 	mDescriptiveName = "Bool";
 	MemberOnly = false;
@@ -821,7 +823,7 @@ PBool::PBool()
 //==========================================================================
 
 PFloat::PFloat(unsigned int size)
-: PBasicType(size, size)
+	: PBasicType(size, size)
 {
 	mDescriptiveName.Format("Float%d", size);
 	Flags |= TYPE_Float;
@@ -918,7 +920,7 @@ void PFloat::SetSingleSymbols()
 //
 //==========================================================================
 
-void PFloat::SetSymbols(const PFloat::SymbolInitF *sym, size_t count)
+void PFloat::SetSymbols(const PFloat::SymbolInitF* sym, size_t count)
 {
 	for (size_t i = 0; i < count; ++i)
 	{
@@ -926,7 +928,7 @@ void PFloat::SetSymbols(const PFloat::SymbolInitF *sym, size_t count)
 	}
 }
 
-void PFloat::SetSymbols(const PFloat::SymbolInitI *sym, size_t count)
+void PFloat::SetSymbols(const PFloat::SymbolInitI* sym, size_t count)
 {
 	for (size_t i = 0; i < count; ++i)
 	{
@@ -940,7 +942,7 @@ void PFloat::SetSymbols(const PFloat::SymbolInitI *sym, size_t count)
 //
 //==========================================================================
 
-void PFloat::WriteValue(FSerializer &ar, const char *key,const void *addr) const
+void PFloat::WriteValue(FSerializer& ar, const char* key, const void* addr) const
 {
 	if (Size == 8)
 	{
@@ -958,7 +960,7 @@ void PFloat::WriteValue(FSerializer &ar, const char *key,const void *addr) const
 //
 //==========================================================================
 
-bool PFloat::ReadValue(FSerializer &ar, const char *key, void *addr) const
+bool PFloat::ReadValue(FSerializer& ar, const char* key, void* addr) const
 {
 	NumericValue val;
 
@@ -984,22 +986,22 @@ bool PFloat::ReadValue(FSerializer &ar, const char *key, void *addr) const
 //
 //==========================================================================
 
-void PFloat::SetValue(void *addr, int val)
+void PFloat::SetValue(void* addr, int val)
 {
 	return SetValue(addr, (double)val);
 }
 
-void PFloat::SetValue(void *addr, double val)
+void PFloat::SetValue(void* addr, double val)
 {
 	assert(((intptr_t)addr & (Align - 1)) == 0 && "unaligned address");
 	if (Size == 4)
 	{
-		*(float *)addr = (float)val;
+		*(float*)addr = (float)val;
 	}
 	else
 	{
 		assert(Size == 8);
-		*(double *)addr = val;
+		*(double*)addr = val;
 	}
 }
 
@@ -1009,7 +1011,7 @@ void PFloat::SetValue(void *addr, double val)
 //
 //==========================================================================
 
-int PFloat::GetValueInt(void *addr) const
+int PFloat::GetValueInt(void* addr) const
 {
 	return int(GetValueFloat(addr));
 }
@@ -1020,17 +1022,17 @@ int PFloat::GetValueInt(void *addr) const
 //
 //==========================================================================
 
-double PFloat::GetValueFloat(void *addr) const
+double PFloat::GetValueFloat(void* addr) const
 {
 	assert(((intptr_t)addr & (Align - 1)) == 0 && "unaligned address");
 	if (Size == 4)
 	{
-		return *(float *)addr;
+		return *(float*)addr;
 	}
 	else
 	{
 		assert(Size == 8);
-		return *(double *)addr;
+		return *(double*)addr;
 	}
 }
 
@@ -1066,7 +1068,7 @@ void PFloat::SetOps()
 //==========================================================================
 
 PString::PString()
-: PBasicType(sizeof(FString), alignof(FString))
+	: PBasicType(sizeof(FString), alignof(FString))
 {
 	mDescriptiveName = "String";
 	storeOp = OP_SS;
@@ -1082,7 +1084,7 @@ PString::PString()
 //
 //==========================================================================
 
-void PString::WriteValue(FSerializer &ar, const char *key,const void *addr) const
+void PString::WriteValue(FSerializer& ar, const char* key, const void* addr) const
 {
 	ar(key, *(FString*)addr);
 }
@@ -1093,9 +1095,9 @@ void PString::WriteValue(FSerializer &ar, const char *key,const void *addr) cons
 //
 //==========================================================================
 
-bool PString::ReadValue(FSerializer &ar, const char *key, void *addr) const
+bool PString::ReadValue(FSerializer& ar, const char* key, void* addr) const
 {
-	const char *cptr;
+	const char* cptr;
 	ar.StringPtr(key, cptr);
 	if (cptr == nullptr)
 	{
@@ -1114,9 +1116,9 @@ bool PString::ReadValue(FSerializer &ar, const char *key, void *addr) const
 //
 //==========================================================================
 
-void PString::SetDefaultValue(void *base, unsigned offset, TArray<FTypeAndOffset> *special)
+void PString::SetDefaultValue(void* base, unsigned offset, TArray<FTypeAndOffset>* special)
 {
-	if (base != nullptr) new((uint8_t *)base + offset) FString;
+	if (base != nullptr) new((uint8_t*)base + offset) FString;
 	if (special != nullptr)
 	{
 		special->Push(std::make_pair(this, offset));
@@ -1129,11 +1131,11 @@ void PString::SetDefaultValue(void *base, unsigned offset, TArray<FTypeAndOffset
 //
 //==========================================================================
 
-void PString::InitializeValue(void *addr, const void *def) const
+void PString::InitializeValue(void* addr, const void* def) const
 {
 	if (def != nullptr)
 	{
-		new(addr) FString(*(FString *)def);
+		new(addr) FString(*(FString*)def);
 	}
 	else
 	{
@@ -1147,9 +1149,9 @@ void PString::InitializeValue(void *addr, const void *def) const
 //
 //==========================================================================
 
-void PString::DestroyValue(void *addr) const
+void PString::DestroyValue(void* addr) const
 {
-	((FString *)addr)->~FString();
+	((FString*)addr)->~FString();
 }
 
 /* PName ******************************************************************/
@@ -1161,7 +1163,7 @@ void PString::DestroyValue(void *addr) const
 //==========================================================================
 
 PName::PName()
-: PInt(sizeof(FName), true, false)
+	: PInt(sizeof(FName), true, false)
 {
 	mDescriptiveName = "Name";
 	Flags |= TYPE_IntNotInt;
@@ -1174,9 +1176,9 @@ PName::PName()
 //
 //==========================================================================
 
-void PName::WriteValue(FSerializer &ar, const char *key,const void *addr) const
+void PName::WriteValue(FSerializer& ar, const char* key, const void* addr) const
 {
-	const char *cptr = ((const FName*)addr)->GetChars();
+	const char* cptr = ((const FName*)addr)->GetChars();
 	ar.StringPtr(key, cptr);
 }
 
@@ -1186,9 +1188,9 @@ void PName::WriteValue(FSerializer &ar, const char *key,const void *addr) const
 //
 //==========================================================================
 
-bool PName::ReadValue(FSerializer &ar, const char *key, void *addr) const
+bool PName::ReadValue(FSerializer& ar, const char* key, void* addr) const
 {
-	const char *cptr;
+	const char* cptr;
 	ar.StringPtr(key, cptr);
 	if (cptr == nullptr)
 	{
@@ -1262,7 +1264,7 @@ PSpriteID::PSpriteID()
 //
 //==========================================================================
 
-void PSpriteID::WriteValue(FSerializer &ar, const char *key, const void *addr) const
+void PSpriteID::WriteValue(FSerializer& ar, const char* key, const void* addr) const
 {
 	int32_t val = *(int*)addr;
 	ar.Sprite(key, val, nullptr);
@@ -1274,7 +1276,7 @@ void PSpriteID::WriteValue(FSerializer &ar, const char *key, const void *addr) c
 //
 //==========================================================================
 
-bool PSpriteID::ReadValue(FSerializer &ar, const char *key, void *addr) const
+bool PSpriteID::ReadValue(FSerializer& ar, const char* key, void* addr) const
 {
 	int32_t val = 0;
 	ar.Sprite(key, val, nullptr);
@@ -1304,7 +1306,7 @@ PTextureID::PTextureID()
 //
 //==========================================================================
 
-void PTextureID::WriteValue(FSerializer &ar, const char *key, const void *addr) const
+void PTextureID::WriteValue(FSerializer& ar, const char* key, const void* addr) const
 {
 	FTextureID val = *(FTextureID*)addr;
 	ar(key, val);
@@ -1316,7 +1318,7 @@ void PTextureID::WriteValue(FSerializer &ar, const char *key, const void *addr) 
 //
 //==========================================================================
 
-bool PTextureID::ReadValue(FSerializer &ar, const char *key, void *addr) const
+bool PTextureID::ReadValue(FSerializer& ar, const char* key, void* addr) const
 {
 	FTextureID val;
 	ar(key, val);
@@ -1375,7 +1377,7 @@ bool PTranslationID::ReadValue(FSerializer& ar, const char* key, void* addr) con
 //==========================================================================
 
 PSound::PSound()
-: PInt(sizeof(FSoundID), true)
+	: PInt(sizeof(FSoundID), true)
 {
 	mDescriptiveName = "Sound";
 	Flags |= TYPE_IntNotInt;
@@ -1388,9 +1390,9 @@ PSound::PSound()
 //
 //==========================================================================
 
-void PSound::WriteValue(FSerializer &ar, const char *key,const void *addr) const
+void PSound::WriteValue(FSerializer& ar, const char* key, const void* addr) const
 {
-	const char *cptr = soundEngine->GetSoundName(*(const FSoundID *)addr);
+	const char* cptr = soundEngine->GetSoundName(*(const FSoundID*)addr);
 	ar.StringPtr(key, cptr);
 }
 
@@ -1400,9 +1402,9 @@ void PSound::WriteValue(FSerializer &ar, const char *key,const void *addr) const
 //
 //==========================================================================
 
-bool PSound::ReadValue(FSerializer &ar, const char *key, void *addr) const
+bool PSound::ReadValue(FSerializer& ar, const char* key, void* addr) const
 {
-	const char *cptr;
+	const char* cptr;
 	ar.StringPtr(key, cptr);
 	if (cptr == nullptr)
 	{
@@ -1410,7 +1412,7 @@ bool PSound::ReadValue(FSerializer &ar, const char *key, void *addr) const
 	}
 	else
 	{
-		*(FSoundID *)addr = S_FindSound(cptr);
+		*(FSoundID*)addr = S_FindSound(cptr);
 		return true;
 	}
 }
@@ -1424,7 +1426,7 @@ bool PSound::ReadValue(FSerializer &ar, const char *key, void *addr) const
 //==========================================================================
 
 PColor::PColor()
-: PInt(sizeof(PalEntry), true)
+	: PInt(sizeof(PalEntry), true)
 {
 	mDescriptiveName = "Color";
 	Flags |= TYPE_IntNotInt;
@@ -1455,7 +1457,7 @@ PStateLabel::PStateLabel()
 //==========================================================================
 
 PPointer::PPointer()
-: PBasicType(sizeof(void *), alignof(void *)), PointedType(nullptr), IsConst(false)
+	: PBasicType(sizeof(void*), alignof(void*)), PointedType(nullptr), IsConst(false)
 {
 	mDescriptiveName = "NullPointer";
 	loadOp = OP_LP;
@@ -1471,8 +1473,8 @@ PPointer::PPointer()
 //
 //==========================================================================
 
-PPointer::PPointer(PType *pointsat, bool isconst)
-: PBasicType(sizeof(void *), alignof(void *)), PointedType(pointsat), IsConst(isconst)
+PPointer::PPointer(PType* pointsat, bool isconst)
+	: PBasicType(sizeof(void*), alignof(void*)), PointedType(pointsat), IsConst(isconst)
 {
 	if (pointsat != nullptr)
 	{
@@ -1500,7 +1502,7 @@ PPointer::PPointer(PType *pointsat, bool isconst)
 bool PPointer::IsMatch(intptr_t id1, intptr_t id2) const
 {
 	assert(id2 == 0 || id2 == 1);
-	PType *pointat = (PType *)id1;
+	PType* pointat = (PType*)id1;
 
 	return pointat == PointedType && (!!id2) == IsConst;
 }
@@ -1511,7 +1513,7 @@ bool PPointer::IsMatch(intptr_t id1, intptr_t id2) const
 //
 //==========================================================================
 
-void PPointer::GetTypeIDs(intptr_t &id1, intptr_t &id2) const
+void PPointer::GetTypeIDs(intptr_t& id1, intptr_t& id2) const
 {
 	id1 = (intptr_t)PointedType;
 	id2 = 0;
@@ -1523,7 +1525,7 @@ void PPointer::GetTypeIDs(intptr_t &id1, intptr_t &id2) const
 //
 //==========================================================================
 
-void PPointer::WriteValue(FSerializer &ar, const char *key,const void *addr) const
+void PPointer::WriteValue(FSerializer& ar, const char* key, const void* addr) const
 {
 	if (writer != nullptr)
 	{
@@ -1541,7 +1543,7 @@ void PPointer::WriteValue(FSerializer &ar, const char *key,const void *addr) con
 //
 //==========================================================================
 
-bool PPointer::ReadValue(FSerializer &ar, const char *key, void *addr) const
+bool PPointer::ReadValue(FSerializer& ar, const char* key, void* addr) const
 {
 	if (reader != nullptr)
 	{
@@ -1558,7 +1560,7 @@ bool PPointer::ReadValue(FSerializer &ar, const char *key, void *addr) const
 //
 //==========================================================================
 
-PObjectPointer::PObjectPointer(PClass *cls, bool isconst)
+PObjectPointer::PObjectPointer(PClass* cls, bool isconst)
 	: PPointer(cls->VMType, isconst)
 {
 	loadOp = OP_LO;
@@ -1573,7 +1575,7 @@ PObjectPointer::PObjectPointer(PClass *cls, bool isconst)
 //
 //==========================================================================
 
-void PObjectPointer::SetPointer(void *base, unsigned offset, TArray<size_t> *special)
+void PObjectPointer::SetPointer(void* base, unsigned offset, TArray<size_t>* special)
 {
 	// Add to the list of pointers for this class.
 	special->Push(offset);
@@ -1585,9 +1587,9 @@ void PObjectPointer::SetPointer(void *base, unsigned offset, TArray<size_t> *spe
 //
 //==========================================================================
 
-void PObjectPointer::WriteValue(FSerializer &ar, const char *key, const void *addr) const
+void PObjectPointer::WriteValue(FSerializer& ar, const char* key, const void* addr) const
 {
-	ar(key, *(DObject **)addr);
+	ar(key, *(DObject**)addr);
 }
 
 //==========================================================================
@@ -1596,10 +1598,10 @@ void PObjectPointer::WriteValue(FSerializer &ar, const char *key, const void *ad
 //
 //==========================================================================
 
-bool PObjectPointer::ReadValue(FSerializer &ar, const char *key, void *addr) const
+bool PObjectPointer::ReadValue(FSerializer& ar, const char* key, void* addr) const
 {
 	bool res;
-	::Serialize(ar, key, *(DObject **)addr, nullptr, &res);
+	::Serialize(ar, key, *(DObject**)addr, nullptr, &res);
 	return res;
 }
 
@@ -1611,34 +1613,34 @@ bool PObjectPointer::ReadValue(FSerializer &ar, const char *key, void *addr) con
 //
 //==========================================================================
 
-PPointer *NewPointer(PType *type, bool isconst)
+PPointer* NewPointer(PType* type, bool isconst)
 {
 	auto cp = PType::toClass(type);
 	if (cp) return NewPointer(cp->Descriptor, isconst);
 
 	size_t bucket;
-	PType *ptype = TypeTable.FindType(NAME_Pointer, (intptr_t)type, isconst ? 1 : 0, &bucket);
+	PType* ptype = TypeTable.FindType(NAME_Pointer, (intptr_t)type, isconst ? 1 : 0, &bucket);
 	if (ptype == nullptr)
 	{
 		ptype = new PPointer(type, isconst);
 		TypeTable.AddType(ptype, NAME_Pointer, (intptr_t)type, isconst ? 1 : 0, bucket);
 	}
-	return static_cast<PPointer *>(ptype);
+	return static_cast<PPointer*>(ptype);
 }
 
-PPointer *NewPointer(PClass *cls, bool isconst)
+PPointer* NewPointer(PClass* cls, bool isconst)
 {
 	assert(cls->VMType != nullptr);
 
 	auto type = cls->VMType;
 	size_t bucket;
-	PType *ptype = TypeTable.FindType(NAME_Pointer, (intptr_t)type, isconst ? 1 : 0, &bucket);
+	PType* ptype = TypeTable.FindType(NAME_Pointer, (intptr_t)type, isconst ? 1 : 0, &bucket);
 	if (ptype == nullptr)
 	{
 		ptype = new PObjectPointer(cls, isconst);
 		TypeTable.AddType(ptype, NAME_Pointer, (intptr_t)type, isconst ? 1 : 0, bucket);
 	}
-	return static_cast<PPointer *>(ptype);
+	return static_cast<PPointer*>(ptype);
 }
 
 
@@ -1651,15 +1653,16 @@ PPointer *NewPointer(PClass *cls, bool isconst)
 //
 //==========================================================================
 
-PClassPointer::PClassPointer(PClass *restrict)
-: PPointer(restrict->VMType), ClassRestriction(restrict)
+PClassPointer::PClassPointer(PClass* restrict)
+	: PPointer(restrict->VMType), ClassRestriction(restrict)
 {
 	if (restrict) mDescriptiveName.Format("ClassPointer<%s>", restrict->TypeName.GetChars());
 	else mDescriptiveName = "ClassPointer";
 	loadOp = OP_LP;
 	storeOp = OP_SP;
 	Flags |= TYPE_ClassPointer;
-	mVersion = restrict->VMType->mVersion;
+	if (restrict) mVersion = restrict->VMType->mVersion;
+	else mVersion = 0;
 }
 
 //==========================================================================
@@ -1668,9 +1671,9 @@ PClassPointer::PClassPointer(PClass *restrict)
 //
 //==========================================================================
 
-void PClassPointer::WriteValue(FSerializer &ar, const char *key, const void *addr) const
+void PClassPointer::WriteValue(FSerializer& ar, const char* key, const void* addr) const
 {
-	ar(key, *(PClass **)addr);
+	ar(key, *(PClass**)addr);
 }
 
 //==========================================================================
@@ -1679,9 +1682,9 @@ void PClassPointer::WriteValue(FSerializer &ar, const char *key, const void *add
 //
 //==========================================================================
 
-bool PClassPointer::ReadValue(FSerializer &ar, const char *key, void *addr) const
+bool PClassPointer::ReadValue(FSerializer& ar, const char* key, void* addr) const
 {
-	::Serialize(ar, key, *(PClass **)addr, (PClass**)nullptr);
+	::Serialize(ar, key, *(PClass**)addr, (PClass**)nullptr);
 	return false;
 }
 
@@ -1691,7 +1694,7 @@ bool PClassPointer::ReadValue(FSerializer &ar, const char *key, void *addr) cons
 //
 //==========================================================================
 
-bool PClassPointer::isCompatible(PType *type)
+bool PClassPointer::isCompatible(PType* type)
 {
 	auto other = PType::toClassPointer(type);
 	return (other != nullptr && other->ClassRestriction->IsDescendantOf(ClassRestriction));
@@ -1703,7 +1706,7 @@ bool PClassPointer::isCompatible(PType *type)
 //
 //==========================================================================
 
-void PClassPointer::SetPointer(void *base, unsigned offset, TArray<size_t> *special)
+void PClassPointer::SetPointer(void* base, unsigned offset, TArray<size_t>* special)
 {
 }
 
@@ -1715,7 +1718,7 @@ void PClassPointer::SetPointer(void *base, unsigned offset, TArray<size_t> *spec
 
 bool PClassPointer::IsMatch(intptr_t id1, intptr_t id2) const
 {
-	const PClass *classat = (const PClass *)id2;
+	const PClass* classat = (const PClass*)id2;
 	return classat == ClassRestriction;
 }
 
@@ -1725,7 +1728,7 @@ bool PClassPointer::IsMatch(intptr_t id1, intptr_t id2) const
 //
 //==========================================================================
 
-void PClassPointer::GetTypeIDs(intptr_t &id1, intptr_t &id2) const
+void PClassPointer::GetTypeIDs(intptr_t& id1, intptr_t& id2) const
 {
 	id1 = 0;
 	id2 = (intptr_t)ClassRestriction;
@@ -1739,16 +1742,16 @@ void PClassPointer::GetTypeIDs(intptr_t &id1, intptr_t &id2) const
 //
 //==========================================================================
 
-PClassPointer *NewClassPointer(PClass *restrict)
+PClassPointer* NewClassPointer(PClass* restrict)
 {
 	size_t bucket;
-	PType *ptype = TypeTable.FindType(NAME_Class, 0, (intptr_t)restrict, &bucket);
+	PType* ptype = TypeTable.FindType(NAME_Class, 0, (intptr_t)restrict, &bucket);
 	if (ptype == nullptr)
 	{
 		ptype = new PClassPointer(restrict);
 		TypeTable.AddType(ptype, NAME_Class, 0, (intptr_t)restrict, bucket);
 	}
-	return static_cast<PClassPointer *>(ptype);
+	return static_cast<PClassPointer*>(ptype);
 }
 
 /* PEnum ******************************************************************/
@@ -1759,8 +1762,8 @@ PClassPointer *NewClassPointer(PClass *restrict)
 //
 //==========================================================================
 
-PEnum::PEnum(FName name, PTypeBase *outer)
-: PInt(4, false), Outer(outer), EnumName(name)
+PEnum::PEnum(FName name, PTypeBase* outer)
+	: PInt(4, false), Outer(outer), EnumName(name)
 {
 	Flags |= TYPE_IntNotInt;
 	mDescriptiveName.Format("Enum<%s>", name.GetChars());
@@ -1775,17 +1778,17 @@ PEnum::PEnum(FName name, PTypeBase *outer)
 //
 //==========================================================================
 
-PEnum *NewEnum(FName name, PTypeBase *outer)
+PEnum* NewEnum(FName name, PTypeBase* outer)
 {
 	size_t bucket;
 	if (outer == nullptr) outer = Namespaces.GlobalNamespace;
-	PType *etype = TypeTable.FindType(NAME_Enum, (intptr_t)outer, name.GetIndex(), &bucket);
+	PType* etype = TypeTable.FindType(NAME_Enum, (intptr_t)outer, name.GetIndex(), &bucket);
 	if (etype == nullptr)
 	{
 		etype = new PEnum(name, outer);
 		TypeTable.AddType(etype, NAME_Enum, (intptr_t)outer, name.GetIndex(), bucket);
 	}
-	return static_cast<PEnum *>(etype);
+	return static_cast<PEnum*>(etype);
 }
 
 /* PArray *****************************************************************/
@@ -1796,8 +1799,8 @@ PEnum *NewEnum(FName name, PTypeBase *outer)
 //
 //==========================================================================
 
-PArray::PArray(PType *etype, unsigned int ecount)
-: ElementType(etype), ElementCount(ecount)
+PArray::PArray(PType* etype, unsigned int ecount)
+	: ElementType(etype), ElementCount(ecount)
 {
 	mDescriptiveName.Format("Array<%s>[%d]", etype->DescriptiveName(), ecount);
 
@@ -1817,7 +1820,7 @@ PArray::PArray(PType *etype, unsigned int ecount)
 
 bool PArray::IsMatch(intptr_t id1, intptr_t id2) const
 {
-	const PType *elemtype = (const PType *)id1;
+	const PType* elemtype = (const PType*)id1;
 	unsigned int count = (unsigned int)(intptr_t)id2;
 
 	return elemtype == ElementType && count == ElementCount;
@@ -1829,7 +1832,7 @@ bool PArray::IsMatch(intptr_t id1, intptr_t id2) const
 //
 //==========================================================================
 
-void PArray::GetTypeIDs(intptr_t &id1, intptr_t &id2) const
+void PArray::GetTypeIDs(intptr_t& id1, intptr_t& id2) const
 {
 	id1 = (intptr_t)ElementType;
 	id2 = ElementCount;
@@ -1841,11 +1844,11 @@ void PArray::GetTypeIDs(intptr_t &id1, intptr_t &id2) const
 //
 //==========================================================================
 
-void PArray::WriteValue(FSerializer &ar, const char *key,const void *addr) const
+void PArray::WriteValue(FSerializer& ar, const char* key, const void* addr) const
 {
 	if (ar.BeginArray(key))
 	{
-		const uint8_t *addrb = (const uint8_t *)addr;
+		const uint8_t* addrb = (const uint8_t*)addr;
 		for (unsigned i = 0; i < ElementCount; ++i)
 		{
 			ElementType->WriteValue(ar, nullptr, addrb);
@@ -1861,15 +1864,15 @@ void PArray::WriteValue(FSerializer &ar, const char *key,const void *addr) const
 //
 //==========================================================================
 
-bool PArray::ReadValue(FSerializer &ar, const char *key, void *addr) const
+bool PArray::ReadValue(FSerializer& ar, const char* key, void* addr) const
 {
 	if (ar.BeginArray(key))
 	{
 		bool readsomething = false;
 		unsigned count = ar.ArraySize();
 		unsigned loop = min(count, ElementCount);
-		uint8_t *addrb = (uint8_t *)addr;
-		for(unsigned i=0;i<loop;i++)
+		uint8_t* addrb = (uint8_t*)addr;
+		for (unsigned i = 0; i < loop; i++)
 		{
 			readsomething |= ElementType->ReadValue(ar, nullptr, addrb);
 			addrb += ElementSize;
@@ -1891,11 +1894,11 @@ bool PArray::ReadValue(FSerializer &ar, const char *key, void *addr) const
 //
 //==========================================================================
 
-void PArray::SetDefaultValue(void *base, unsigned offset, TArray<FTypeAndOffset> *special)
+void PArray::SetDefaultValue(void* base, unsigned offset, TArray<FTypeAndOffset>* special)
 {
 	for (unsigned i = 0; i < ElementCount; ++i)
 	{
-		ElementType->SetDefaultValue(base, offset + i*ElementSize, special);
+		ElementType->SetDefaultValue(base, offset + i * ElementSize, special);
 	}
 }
 
@@ -1905,11 +1908,11 @@ void PArray::SetDefaultValue(void *base, unsigned offset, TArray<FTypeAndOffset>
 //
 //==========================================================================
 
-void PArray::SetPointer(void *base, unsigned offset, TArray<size_t> *special)
+void PArray::SetPointer(void* base, unsigned offset, TArray<size_t>* special)
 {
 	for (unsigned i = 0; i < ElementCount; ++i)
 	{
-		ElementType->SetPointer(base, offset + i*ElementSize, special);
+		ElementType->SetPointer(base, offset + i * ElementSize, special);
 	}
 }
 
@@ -1919,7 +1922,7 @@ void PArray::SetPointer(void *base, unsigned offset, TArray<size_t> *special)
 //
 //==========================================================================
 
-void PArray::SetPointerArray(void *base, unsigned offset, TArray<size_t> *special)
+void PArray::SetPointerArray(void* base, unsigned offset, TArray<size_t>* special)
 {
 	if (ElementType->isStruct() || ElementType->isDynArray())
 	{
@@ -1936,9 +1939,9 @@ void PArray::SetPointerArray(void *base, unsigned offset, TArray<size_t> *specia
 //
 //==========================================================================
 
-void PArray::SetPointerMap(void *base, unsigned offset, TArray<std::pair<size_t,PType *>> *special)
+void PArray::SetPointerMap(void* base, unsigned offset, TArray<std::pair<size_t, PType*>>* special)
 {
-	if(ElementType->isStruct() || ElementType->isMap())
+	if (ElementType->isStruct() || ElementType->isMap())
 	{
 		for (unsigned int i = 0; i < ElementCount; ++i)
 		{
@@ -1956,16 +1959,16 @@ void PArray::SetPointerMap(void *base, unsigned offset, TArray<std::pair<size_t,
 //
 //==========================================================================
 
-PArray *NewArray(PType *type, unsigned int count)
+PArray* NewArray(PType* type, unsigned int count)
 {
 	size_t bucket;
-	PType *atype = TypeTable.FindType(NAME_Array, (intptr_t)type, count, &bucket);
+	PType* atype = TypeTable.FindType(NAME_Array, (intptr_t)type, count, &bucket);
 	if (atype == nullptr)
 	{
 		atype = new PArray(type, count);
 		TypeTable.AddType(atype, NAME_Array, (intptr_t)type, count, bucket);
 	}
-	return (PArray *)atype;
+	return (PArray*)atype;
 }
 
 /* PArray *****************************************************************/
@@ -1976,7 +1979,7 @@ PArray *NewArray(PType *type, unsigned int count)
 //
 //==========================================================================
 
-PStaticArray::PStaticArray(PType *etype)
+PStaticArray::PStaticArray(PType* etype)
 	: PArray(etype, 0)
 {
 	mDescriptiveName.Format("ResizableArray<%s>", etype->DescriptiveName());
@@ -1990,7 +1993,7 @@ PStaticArray::PStaticArray(PType *etype)
 
 bool PStaticArray::IsMatch(intptr_t id1, intptr_t id2) const
 {
-	const PType *elemtype = (const PType *)id1;
+	const PType* elemtype = (const PType*)id1;
 	unsigned int count = (unsigned int)(intptr_t)id2;
 
 	return elemtype == ElementType && count == 0;
@@ -2002,7 +2005,7 @@ bool PStaticArray::IsMatch(intptr_t id1, intptr_t id2) const
 //
 //==========================================================================
 
-void PStaticArray::GetTypeIDs(intptr_t &id1, intptr_t &id2) const
+void PStaticArray::GetTypeIDs(intptr_t& id1, intptr_t& id2) const
 {
 	id1 = (intptr_t)ElementType;
 	id2 = 0;
@@ -2017,16 +2020,16 @@ void PStaticArray::GetTypeIDs(intptr_t &id1, intptr_t &id2) const
 //
 //==========================================================================
 
-PStaticArray *NewStaticArray(PType *type)
+PStaticArray* NewStaticArray(PType* type)
 {
 	size_t bucket;
-	PType *atype = TypeTable.FindType(NAME_StaticArray, (intptr_t)type, 0, &bucket);
+	PType* atype = TypeTable.FindType(NAME_StaticArray, (intptr_t)type, 0, &bucket);
 	if (atype == nullptr)
 	{
 		atype = new PStaticArray(type);
 		TypeTable.AddType(atype, NAME_StaticArray, (intptr_t)type, 0, bucket);
 	}
-	return (PStaticArray *)atype;
+	return (PStaticArray*)atype;
 }
 
 /* PDynArray **************************************************************/
@@ -2054,8 +2057,8 @@ enum OverrideFunctionArgType {
 	OFN_ARG_INT_ELEM,
 };
 
-template<OverrideFunctionRetType RetType, OverrideFunctionArgType ArgType , int ExtraFlags = 0, class MT>
-void CreateOverrideFunction(MT *self, FName name)
+template<OverrideFunctionRetType RetType, OverrideFunctionArgType ArgType, int ExtraFlags = 0, class MT>
+void CreateOverrideFunction(MT* self, FName name)
 {
 	auto Fn = Create<PFunction>(self->BackingType, name);
 	auto NativeFn = FindFunction(self->BackingType, name.GetChars());
@@ -2068,24 +2071,24 @@ void CreateOverrideFunction(MT *self, FName name)
 	TArray<uint32_t> argflags;
 	TArray<FName> argnames;
 
-	if constexpr(RetType == OFN_RET_VAL)
+	if constexpr (RetType == OFN_RET_VAL)
 	{
 		ret.Push(self->ValueType);
 	}
-	else if constexpr(RetType == OFN_RET_KEY)
+	else if constexpr (RetType == OFN_RET_KEY)
 	{
 		ret.Push(self->KeyType);
 	}
-	else if constexpr(RetType == OFN_RET_BOOL)
+	else if constexpr (RetType == OFN_RET_BOOL)
 	{
 		ret.Push(TypeBool);
 	}
-	else if constexpr(RetType == OFN_RET_VAL_BOOL)
+	else if constexpr (RetType == OFN_RET_VAL_BOOL)
 	{
 		ret.Push(self->ValueType);
 		ret.Push(TypeBool);
 	}
-	else if constexpr(RetType == OFN_RET_INT)
+	else if constexpr (RetType == OFN_RET_INT)
 	{
 		ret.Push(TypeSInt32);
 	}
@@ -2094,20 +2097,20 @@ void CreateOverrideFunction(MT *self, FName name)
 	argnames.Push(NAME_self);
 	argflags.Push(VARF_Implicit | VARF_ReadOnly);
 
-	if constexpr(ArgType == OFN_ARG_KEY)
+	if constexpr (ArgType == OFN_ARG_KEY)
 	{
 		args.Push(self->KeyType);
 		argflags.Push(0);
 		argnames.Push(NAME_Key);
 	}
-	else if constexpr(ArgType == OFN_ARG_VAL)
+	else if constexpr (ArgType == OFN_ARG_VAL)
 	{
 
 		args.Push(self->ValueType);
 		argflags.Push(0);
 		argnames.Push(NAME_Value);
 	}
-	else if constexpr(ArgType == OFN_ARG_KEY_VAL)
+	else if constexpr (ArgType == OFN_ARG_KEY_VAL)
 	{
 		args.Push(self->KeyType);
 		args.Push(self->ValueType);
@@ -2116,13 +2119,13 @@ void CreateOverrideFunction(MT *self, FName name)
 		argnames.Push(NAME_Key);
 		argnames.Push(NAME_Value);
 	}
-	else if constexpr(ArgType == OFN_ARG_ELEM)
+	else if constexpr (ArgType == OFN_ARG_ELEM)
 	{
 		args.Push(self->ElementType);
 		argflags.Push(0);
 		argnames.Push(NAME_Item);
 	}
-	else if constexpr(ArgType == OFN_ARG_INT_ELEM)
+	else if constexpr (ArgType == OFN_ARG_INT_ELEM)
 	{
 		args.Push(TypeSInt32);
 		args.Push(self->ElementType);
@@ -2136,15 +2139,15 @@ void CreateOverrideFunction(MT *self, FName name)
 	self->FnOverrides.Insert(name, Fn);
 }
 
-PDynArray::PDynArray(PType *etype,PStruct *backing)
-: ElementType(etype), BackingType(backing)
+PDynArray::PDynArray(PType* etype, PStruct* backing)
+	: ElementType(etype), BackingType(backing)
 {
 	mDescriptiveName.Format("DynArray<%s>", etype->DescriptiveName());
 	Size = sizeof(FArray);
 	Align = alignof(FArray);
-	CreateOverrideFunction<OFN_RET_INT ,  OFN_ARG_ELEM     , VARF_ReadOnly> (this, NAME_Find);
-	CreateOverrideFunction<OFN_RET_INT ,  OFN_ARG_ELEM     > (this, NAME_Push);
-	CreateOverrideFunction<OFN_RET_VOID , OFN_ARG_INT_ELEM > (this, NAME_Insert);
+	CreateOverrideFunction<OFN_RET_INT, OFN_ARG_ELEM, VARF_ReadOnly>(this, NAME_Find);
+	CreateOverrideFunction<OFN_RET_INT, OFN_ARG_ELEM     >(this, NAME_Push);
+	CreateOverrideFunction<OFN_RET_VOID, OFN_ARG_INT_ELEM >(this, NAME_Insert);
 }
 
 //==========================================================================
@@ -2156,7 +2159,7 @@ PDynArray::PDynArray(PType *etype,PStruct *backing)
 bool PDynArray::IsMatch(intptr_t id1, intptr_t id2) const
 {
 	assert(id2 == 0);
-	const PType *elemtype = (const PType *)id1;
+	const PType* elemtype = (const PType*)id1;
 
 	return elemtype == ElementType;
 }
@@ -2167,7 +2170,7 @@ bool PDynArray::IsMatch(intptr_t id1, intptr_t id2) const
 //
 //==========================================================================
 
-void PDynArray::GetTypeIDs(intptr_t &id1, intptr_t &id2) const
+void PDynArray::GetTypeIDs(intptr_t& id1, intptr_t& id2) const
 {
 	id1 = (intptr_t)ElementType;
 	id2 = 0;
@@ -2179,10 +2182,10 @@ void PDynArray::GetTypeIDs(intptr_t &id1, intptr_t &id2) const
 //
 //==========================================================================
 
-void PDynArray::InitializeValue(void *addr, const void *deff) const
+void PDynArray::InitializeValue(void* addr, const void* deff) const
 {
-	const FArray *def = (const FArray*)deff;
-	FArray *aray = (FArray*)addr;
+	const FArray* def = (const FArray*)deff;
+	FArray* aray = (FArray*)addr;
 
 	if (def == nullptr || def->Count == 0)
 	{
@@ -2210,9 +2213,9 @@ void PDynArray::InitializeValue(void *addr, const void *deff) const
 //
 //==========================================================================
 
-void PDynArray::DestroyValue(void *addr) const
+void PDynArray::DestroyValue(void* addr) const
 {
-	FArray *aray = (FArray*)addr;
+	FArray* aray = (FArray*)addr;
 
 	if (aray->Array != nullptr)
 	{
@@ -2236,7 +2239,7 @@ void PDynArray::DestroyValue(void *addr) const
 //
 //==========================================================================
 
-void PDynArray::SetDefaultValue(void *base, unsigned offset, TArray<FTypeAndOffset> *special)
+void PDynArray::SetDefaultValue(void* base, unsigned offset, TArray<FTypeAndOffset>* special)
 {
 	if (base != nullptr) memset((char*)base + offset, 0, sizeof(FArray));	// same as constructing an empty array.
 	if (special != nullptr)
@@ -2251,7 +2254,7 @@ void PDynArray::SetDefaultValue(void *base, unsigned offset, TArray<FTypeAndOffs
 //
 //==========================================================================
 
-void PDynArray::SetPointerArray(void *base, unsigned offset, TArray<size_t> *special)
+void PDynArray::SetPointerArray(void* base, unsigned offset, TArray<size_t>* special)
 {
 	if (ElementType->isObjectPointer())
 	{
@@ -2266,17 +2269,17 @@ void PDynArray::SetPointerArray(void *base, unsigned offset, TArray<size_t> *spe
 //
 //==========================================================================
 
-void PDynArray::WriteValue(FSerializer &ar, const char *key, const void *addr) const
+void PDynArray::WriteValue(FSerializer& ar, const char* key, const void* addr) const
 {
-	FArray *aray = (FArray*)addr;
+	FArray* aray = (FArray*)addr;
 	// We may skip an empty array only if it gets stored under a named key.
 	// If no name is given, i.e. it's part of an outer array's element list, even empty arrays must be stored,
 	// because otherwise the array would lose its entry.
-	if (aray->Count > 0 || key == nullptr)	
+	if (aray->Count > 0 || key == nullptr)
 	{
 		if (ar.BeginArray(key))
 		{
-			const uint8_t *addrb = (const uint8_t *)aray->Array;
+			const uint8_t* addrb = (const uint8_t*)aray->Array;
 			for (unsigned i = 0; i < aray->Count; ++i)
 			{
 				ElementType->WriteValue(ar, nullptr, addrb);
@@ -2293,9 +2296,9 @@ void PDynArray::WriteValue(FSerializer &ar, const char *key, const void *addr) c
 //
 //==========================================================================
 
-bool PDynArray::ReadValue(FSerializer &ar, const char *key, void *addr) const
+bool PDynArray::ReadValue(FSerializer& ar, const char* key, void* addr) const
 {
-	FArray *aray = (FArray*)addr;
+	FArray* aray = (FArray*)addr;
 	DestroyValue(addr);	// note that even after calling this we still got a validly constructed empty array.
 
 	if (ar.BeginArray(key))
@@ -2308,8 +2311,8 @@ bool PDynArray::ReadValue(FSerializer &ar, const char *key, void *addr) const
 		memset(aray->Array, 0, blocksize);
 		aray->Most = aray->Count = count;
 
-		uint8_t *addrb = (uint8_t *)aray->Array;
-		for (unsigned i = 0; i<count; i++)
+		uint8_t* addrb = (uint8_t*)aray->Array;
+		for (unsigned i = 0; i < count; i++)
 		{
 			// Strings must be constructed first.
 			if (ElementType->GetRegType() == REGT_STRING) new(addrb) FString;
@@ -2331,10 +2334,10 @@ bool PDynArray::ReadValue(FSerializer &ar, const char *key, void *addr) const
 //
 //==========================================================================
 
-PDynArray *NewDynArray(PType *type)
+PDynArray* NewDynArray(PType* type)
 {
 	size_t bucket;
-	PType *atype = TypeTable.FindType(NAME_DynArray, (intptr_t)type, 0, &bucket);
+	PType* atype = TypeTable.FindType(NAME_DynArray, (intptr_t)type, 0, &bucket);
 	if (atype == nullptr)
 	{
 		FString backingname;
@@ -2369,7 +2372,7 @@ PDynArray *NewDynArray(PType *type)
 		atype = new PDynArray(type, backing);
 		TypeTable.AddType(atype, NAME_DynArray, (intptr_t)type, 0, bucket);
 	}
-	return (PDynArray *)atype;
+	return (PDynArray*)atype;
 }
 
 /* PMap *******************************************************************/
@@ -2380,19 +2383,19 @@ PDynArray *NewDynArray(PType *type)
 //
 //==========================================================================
 
-PMap::PMap(PType *keytype, PType *valtype, PStruct *backing, int backing_class)
-: KeyType(keytype), ValueType(valtype), BackingType(backing), BackingClass((decltype(BackingClass)) backing_class)
+PMap::PMap(PType* keytype, PType* valtype, PStruct* backing, int backing_class)
+	: KeyType(keytype), ValueType(valtype), BackingType(backing), BackingClass((decltype(BackingClass))backing_class)
 {
 	mDescriptiveName.Format("Map<%s, %s>", keytype->DescriptiveName(), valtype->DescriptiveName());
 	Size = sizeof(ZSFMap);
 	Align = alignof(ZSFMap);
-	CreateOverrideFunction< OFN_RET_VAL      , OFN_ARG_KEY     > (this, NAME_Get);
-	CreateOverrideFunction< OFN_RET_VAL      , OFN_ARG_KEY     , VARF_ReadOnly> (this, NAME_GetIfExists);
-	CreateOverrideFunction< OFN_RET_BOOL     , OFN_ARG_KEY     , VARF_ReadOnly> (this, NAME_CheckKey);
-	CreateOverrideFunction< OFN_RET_VAL_BOOL , OFN_ARG_KEY     , VARF_ReadOnly> (this, NAME_CheckValue);
-	CreateOverrideFunction< OFN_RET_VOID     , OFN_ARG_KEY_VAL > (this, NAME_Insert);
-	CreateOverrideFunction< OFN_RET_VOID     , OFN_ARG_KEY     > (this, NAME_InsertNew);
-	CreateOverrideFunction< OFN_RET_VOID     , OFN_ARG_KEY     > (this, NAME_Remove);
+	CreateOverrideFunction< OFN_RET_VAL, OFN_ARG_KEY     >(this, NAME_Get);
+	CreateOverrideFunction< OFN_RET_VAL, OFN_ARG_KEY, VARF_ReadOnly>(this, NAME_GetIfExists);
+	CreateOverrideFunction< OFN_RET_BOOL, OFN_ARG_KEY, VARF_ReadOnly>(this, NAME_CheckKey);
+	CreateOverrideFunction< OFN_RET_VAL_BOOL, OFN_ARG_KEY, VARF_ReadOnly>(this, NAME_CheckValue);
+	CreateOverrideFunction< OFN_RET_VOID, OFN_ARG_KEY_VAL >(this, NAME_Insert);
+	CreateOverrideFunction< OFN_RET_VOID, OFN_ARG_KEY     >(this, NAME_InsertNew);
+	CreateOverrideFunction< OFN_RET_VOID, OFN_ARG_KEY     >(this, NAME_Remove);
 }
 
 //==========================================================================
@@ -2403,8 +2406,8 @@ PMap::PMap(PType *keytype, PType *valtype, PStruct *backing, int backing_class)
 
 bool PMap::IsMatch(intptr_t id1, intptr_t id2) const
 {
-	const PType *keyty = (const PType *)id1;
-	const PType *valty = (const PType *)id2;
+	const PType* keyty = (const PType*)id1;
+	const PType* valty = (const PType*)id2;
 
 	return keyty == KeyType && valty == ValueType;
 }
@@ -2415,7 +2418,7 @@ bool PMap::IsMatch(intptr_t id1, intptr_t id2) const
 //
 //==========================================================================
 
-void PMap::GetTypeIDs(intptr_t &id1, intptr_t &id2) const
+void PMap::GetTypeIDs(intptr_t& id1, intptr_t& id2) const
 {
 	id1 = (intptr_t)KeyType;
 	id2 = (intptr_t)ValueType;
@@ -2461,17 +2464,17 @@ void PMap::GetTypeIDs(intptr_t &id1, intptr_t &id2) const
 		case PMap::MAP_STR_STR: \
 			FN( FString , FString )
 
-void PMap::Construct(void * addr) const {
-	switch(BackingClass)
+void PMap::Construct(void* addr) const {
+	switch (BackingClass)
 	{
-		#define MAP_CONSTRUCT(KT, VT) new(addr) ZSMap< KT, VT >(); break;
+#define MAP_CONSTRUCT(KT, VT) new(addr) ZSMap< KT, VT >(); break;
 		FOR_EACH_MAP_TYPE(MAP_CONSTRUCT)
-		#undef MAP_CONSTRUCT
+#undef MAP_CONSTRUCT
 	};
 }
 
 
-void PMap::InitializeValue(void *addr, const void *def) const
+void PMap::InitializeValue(void* addr, const void* def) const
 {
 	Construct(addr);
 }
@@ -2482,13 +2485,13 @@ void PMap::InitializeValue(void *addr, const void *def) const
 //
 //==========================================================================
 
-void PMap::DestroyValue(void *addr) const
+void PMap::DestroyValue(void* addr) const
 {
-	switch(BackingClass)
+	switch (BackingClass)
 	{
-		#define MAP_DESTRUCT(KT, VT) static_cast<ZSMap< KT, VT >*>(addr)->~ZSMap(); break;
+#define MAP_DESTRUCT(KT, VT) static_cast<ZSMap< KT, VT >*>(addr)->~ZSMap(); break;
 		FOR_EACH_MAP_TYPE(MAP_DESTRUCT)
-		#undef MAP_DESTRUCT
+#undef MAP_DESTRUCT
 	}
 }
 
@@ -2498,12 +2501,12 @@ void PMap::DestroyValue(void *addr) const
 //
 //==========================================================================
 
-void PMap::SetDefaultValue(void *base, unsigned offset, TArray<FTypeAndOffset> *special)
+void PMap::SetDefaultValue(void* base, unsigned offset, TArray<FTypeAndOffset>* special)
 {
 	if (base != nullptr)
 	{
-		Construct(((uint8_t*)base)+offset); // is this needed? string/dynarray do this initialization if base != nullptr, but their initialization doesn't need to allocate
-											// it might lead to double allocations (and memory leakage) for Map if both base and special != nullptr
+		Construct(((uint8_t*)base) + offset); // is this needed? string/dynarray do this initialization if base != nullptr, but their initialization doesn't need to allocate
+		// it might lead to double allocations (and memory leakage) for Map if both base and special != nullptr
 	}
 	if (special != nullptr)
 	{
@@ -2521,12 +2524,12 @@ void PMap::SetDefaultValue(void *base, unsigned offset, TArray<FTypeAndOffset> *
 //
 //==========================================================================
 
-void PMap::SetPointerMap(void *base, unsigned offset, TArray<std::pair<size_t,PType *>> *special)
+void PMap::SetPointerMap(void* base, unsigned offset, TArray<std::pair<size_t, PType*>>* special)
 {
 	if (ValueType->isObjectPointer())
 	{
 		// Add to the list of pointer arrays for this class.
-		special->Push(std::make_pair(offset,KeyType));
+		special->Push(std::make_pair(offset, KeyType));
 	}
 }
 
@@ -2537,56 +2540,89 @@ void PMap::SetPointerMap(void *base, unsigned offset, TArray<std::pair<size_t,PT
 //==========================================================================
 
 template<typename M>
-static void PMapValueWriter(FSerializer &ar, const M *map, const PMap *m)
+static void PMapValueWriter(FSerializer& ar, const M* map, const PMap* m)
 {
 	TMapConstIterator<typename M::KeyType, typename M::ValueType> it(*map);
-	const typename M::Pair * p;
-	if(m->KeyType == TypeName)
+	const typename M::Pair* p;
+	while (it.NextPair(p))
 	{
-		while(it.NextPair(p))
+		if constexpr (std::is_same_v<typename M::KeyType, FString>)
 		{
-			if constexpr(std::is_same_v<typename M::KeyType,uint32_t>)
+			m->ValueType->WriteValue(ar, p->Key.GetChars(), static_cast<const void*>(&p->Value));
+		}
+		else if constexpr (std::is_same_v<typename M::KeyType, uint32_t>)
+		{
+			if (m->KeyType->Flags & 8 /*TYPE_IntNotInt*/)
 			{
-				m->ValueType->WriteValue(ar,FName(ENamedName(p->Key)).GetChars(),static_cast<const void *>(&p->Value));
+				if (m->KeyType == TypeName)
+				{
+					m->ValueType->WriteValue(ar, FName(ENamedName(p->Key)).GetChars(), static_cast<const void*>(&p->Value));
+				}
+				else if (m->KeyType == TypeSound)
+				{
+					m->ValueType->WriteValue(ar, soundEngine->GetSoundName(FSoundID::fromInt(p->Key)), static_cast<const void*>(&p->Value));
+				}
+				else if (m->KeyType == TypeTextureID)
+				{
+					if (!!(p->Key & 0x8000000))
+					{ // invalid
+						m->ValueType->WriteValue(ar, "invalid", static_cast<const void*>(&p->Value));
+					}
+					else if (p->Key == 0 || p->Key >= TexMan.NumTextures())
+					{ // null
+						m->ValueType->WriteValue(ar, "null", static_cast<const void*>(&p->Value));
+					}
+					else
+					{
+						FTextureID tid;
+						tid.SetIndex(p->Key);
+						FGameTexture* tex = TexMan.GetGameTexture(tid);
+						int lump = tex->GetSourceLump();
+						unsigned useType = static_cast<unsigned>(tex->GetUseType());
+
+						FString name;
+
+						if (TexMan.GetLinkedTexture(lump) == tex)
+						{
+							name = fileSystem.GetFileFullName(lump);
+						}
+						else
+						{
+							name = tex->GetName().GetChars();
+						}
+
+						name.AppendFormat(":%u", useType);
+
+						m->ValueType->WriteValue(ar, name.GetChars(), static_cast<const void*>(&p->Value));
+					}
+				}
+				else
+				{ // bool/color/enum/sprite/translationID
+					FString key;
+					key.Format("%u", p->Key);
+					m->ValueType->WriteValue(ar, key.GetChars(), static_cast<const void*>(&p->Value));
+				}
 			}
 			else
 			{
-				#ifdef __GNUC__
-					__builtin_unreachable();
-				#elif defined(_MSC_VER)
-					__assume(0);
-				#endif
-			}
-		}
-	}
-	else
-	{
-		while(it.NextPair(p))
-		{
-			if constexpr(std::is_same_v<typename M::KeyType,FString>)
-			{
-				m->ValueType->WriteValue(ar,p->Key.GetChars(),static_cast<const void *>(&p->Value));
-			}
-			else if constexpr(std::is_same_v<typename M::KeyType,uint32_t>)
-			{
 				FString key;
-				key.Format("%u",p->Key);
-				m->ValueType->WriteValue(ar,key.GetChars(),static_cast<const void *>(&p->Value));
+				key.Format("%u", p->Key);
+				m->ValueType->WriteValue(ar, key.GetChars(), static_cast<const void*>(&p->Value));
 			}
-			//else unknown key type
 		}
+		//else unknown key type
 	}
 }
 
-void PMap::WriteValue(FSerializer &ar, const char *key, const void *addr) const
+void PMap::WriteValue(FSerializer& ar, const char* key, const void* addr) const
 {
-	if(ar.BeginObject(key))
+	if (ar.BeginObject(key))
 	{
-		switch(BackingClass)
+		switch (BackingClass)
 		{
-			#define MAP_WRITE(KT, VT) PMapValueWriter(ar, static_cast<const ZSMap< KT, VT >*>(addr), this); break;
+#define MAP_WRITE(KT, VT) PMapValueWriter(ar, static_cast<const ZSMap< KT, VT >*>(addr), this); break;
 			FOR_EACH_MAP_TYPE(MAP_WRITE)
-			#undef MAP_WRITE
+#undef MAP_WRITE
 		}
 		ar.EndObject();
 	}
@@ -2600,57 +2636,95 @@ void PMap::WriteValue(FSerializer &ar, const char *key, const void *addr) const
 
 
 template<typename M>
-static bool PMapValueReader(FSerializer &ar, M *map, const PMap *m)
+static bool PMapValueReader(FSerializer& ar, M* map, const PMap* m)
 {
-	const char * k;
-	if(m->KeyType == TypeName)
+	const char* k;
+	while ((k = ar.GetKey()))
 	{
-		while((k = ar.GetKey()))
+		typename M::ValueType* val = nullptr;
+		if constexpr (std::is_same_v<typename M::KeyType, FString>)
 		{
-			typename M::ValueType * val;
-			if constexpr(std::is_same_v<typename M::KeyType,uint32_t>)
+			val = &map->InsertNew(k);
+		}
+		else if constexpr (std::is_same_v<typename M::KeyType, uint32_t>)
+		{
+			if (m->KeyType->Flags & 8 /*TYPE_IntNotInt*/)
 			{
-				val = &map->InsertNew(FName(k).GetIndex());
+				if (m->KeyType == TypeName)
+				{
+					val = &map->InsertNew(FName(k).GetIndex());
+				}
+				else if (m->KeyType == TypeSound)
+				{
+					val = &map->InsertNew(S_FindSound(k).index());
+				}
+				else if (m->KeyType == TypeTextureID)
+				{
+					FString s(k);
+					FTextureID tex;
+					if (s.Compare("invalid") == 0)
+					{
+						tex.SetInvalid();
+					}
+					else if (s.Compare("null") == 0)
+					{
+						tex.SetNull();
+					}
+					else
+					{
+						ptrdiff_t sep = s.LastIndexOf(":");
+						if (sep < 0)
+						{
+							ar.EndObject();
+							return false;
+						}
+						FString texName = s.Left(sep);
+						FString useType = s.Mid(sep + 1);
+
+						tex = TexMan.GetTextureID(texName.GetChars(), (ETextureType)useType.ToULong());
+					}
+					val = &map->InsertNew(tex.GetIndex());
+				}
+				else if (m->KeyType == TypeTranslationID)
+				{
+					FString s(k);
+					if (!s.IsInt())
+					{
+						ar.EndObject();
+						return false;
+					}
+					int v = s.ToULong();
+
+					if (sysCallbacks.RemapTranslation) v = sysCallbacks.RemapTranslation(FTranslationID::fromInt(v)).index();
+
+					val = &map->InsertNew(v);
+				}
+				else
+				{ // bool/color/enum/sprite
+					FString s(k);
+					if (!s.IsInt())
+					{
+						ar.EndObject();
+						return false;
+					}
+					val = &map->InsertNew(static_cast<uint32_t>(s.ToULong()));
+				}
 			}
 			else
 			{
-				#ifdef __GNUC__
-					__builtin_unreachable();
-				#elif defined(_MSC_VER)
-					__assume(0);
-				#endif
-			}
-			if (!m->ValueType->ReadValue(ar,nullptr,static_cast<void*>(val)))
-			{
-				ar.EndObject();
-				return false;
-			}
-		}
-	}
-	else
-	{
-		while((k = ar.GetKey()))
-		{
-			typename M::ValueType * val;
-			if constexpr(std::is_same_v<typename M::KeyType,FString>)
-			{
-				val = &map->InsertNew(k);
-			}
-			else if constexpr(std::is_same_v<typename M::KeyType,uint32_t>)
-			{
 				FString s(k);
-				if(!s.IsInt())
+				if (!s.IsInt())
 				{
 					ar.EndObject();
 					return false;
 				}
 				val = &map->InsertNew(static_cast<uint32_t>(s.ToULong()));
 			}
-			if (!m->ValueType->ReadValue(ar,nullptr,static_cast<void*>(val)))
-			{
-				ar.EndObject();
-				return false;
-			}
+		}
+		if (!m->ValueType->ReadValue(ar, nullptr, static_cast<void*>(val)))
+		{
+			ar.EndObject();
+			return false;
 		}
 	}
 	ar.EndObject();
@@ -2658,17 +2732,17 @@ static bool PMapValueReader(FSerializer &ar, M *map, const PMap *m)
 }
 
 
-bool PMap::ReadValue(FSerializer &ar, const char *key, void *addr) const
+bool PMap::ReadValue(FSerializer& ar, const char* key, void* addr) const
 {
 	DestroyValue(addr);
 	InitializeValue(addr, nullptr);
-	if(ar.BeginObject(key))
+	if (ar.BeginObject(key))
 	{
-		switch(BackingClass)
+		switch (BackingClass)
 		{
-			#define MAP_READ(KT, VT) return PMapValueReader(ar, static_cast<ZSMap< KT, VT >*>(addr), this);
+#define MAP_READ(KT, VT) return PMapValueReader(ar, static_cast<ZSMap< KT, VT >*>(addr), this);
 			FOR_EACH_MAP_TYPE(MAP_READ)
-			#undef MAP_READ
+#undef MAP_READ
 		}
 	}
 	return false;
@@ -2683,13 +2757,13 @@ bool PMap::ReadValue(FSerializer &ar, const char *key, void *addr) const
 //
 //==========================================================================
 
-int PMapBackingClass(PType *keytype, PType *valuetype, FString &backingName) {
+int PMapBackingClass(PType* keytype, PType* valuetype, FString& backingName) {
 	int backingClass;
 	auto key_rtype = keytype->GetRegType();
 	auto value_rtype = valuetype->GetRegType();
 	if (key_rtype == REGT_INT)
 	{
-		if(keytype->Size != 4)
+		if (keytype->Size != 4)
 		{
 			I_Error("Unsupported map requested");
 		}
@@ -2742,21 +2816,21 @@ int PMapBackingClass(PType *keytype, PType *valuetype, FString &backingName) {
 	return backingClass;
 }
 
-PMap *NewMap(PType *keyType, PType *valueType)
+PMap* NewMap(PType* keyType, PType* valueType)
 {
 	size_t bucket;
-	PType *mapType = TypeTable.FindType(NAME_Map, (intptr_t)keyType, (intptr_t)valueType, &bucket);
+	PType* mapType = TypeTable.FindType(NAME_Map, (intptr_t)keyType, (intptr_t)valueType, &bucket);
 	if (mapType == nullptr)
 	{
 		FString backingName = "Map_";
 		int backingClass = PMapBackingClass(keyType, valueType, backingName);
-		
+
 		auto backing = NewStruct(backingName, nullptr, true);
 		mapType = new PMap(keyType, valueType, backing, backingClass);
 		TypeTable.AddType(mapType, NAME_Map, (intptr_t)keyType, (intptr_t)valueType, bucket);
-		
+
 	}
-	return (PMap *)mapType;
+	return (PMap*)mapType;
 }
 
 /* PMapIterator ***********************************************************/
@@ -2767,14 +2841,14 @@ PMap *NewMap(PType *keyType, PType *valueType)
 //
 //==========================================================================
 
-PMapIterator::PMapIterator(PType *keytype, PType *valtype, PStruct *backing, int backing_class)
-	: KeyType(keytype), ValueType(valtype), BackingType(backing), BackingClass((decltype(BackingClass)) backing_class)
+PMapIterator::PMapIterator(PType* keytype, PType* valtype, PStruct* backing, int backing_class)
+	: KeyType(keytype), ValueType(valtype), BackingType(backing), BackingClass((decltype(BackingClass))backing_class)
 {
 	mDescriptiveName.Format("MapIterator<%s, %s>", keytype->DescriptiveName(), valtype->DescriptiveName());
 	Size = sizeof(ZSFMap);
 	Align = alignof(ZSFMap);
-	CreateOverrideFunction<OFN_RET_KEY,  OFN_ARG_VOID>(this, NAME_GetKey);
-	CreateOverrideFunction<OFN_RET_VAL,  OFN_ARG_VOID>(this, NAME_GetValue);
+	CreateOverrideFunction<OFN_RET_KEY, OFN_ARG_VOID>(this, NAME_GetKey);
+	CreateOverrideFunction<OFN_RET_VAL, OFN_ARG_VOID>(this, NAME_GetValue);
 	CreateOverrideFunction<OFN_RET_VOID, OFN_ARG_VAL>(this, NAME_SetValue);
 }
 
@@ -2786,8 +2860,8 @@ PMapIterator::PMapIterator(PType *keytype, PType *valtype, PStruct *backing, int
 
 bool PMapIterator::IsMatch(intptr_t id1, intptr_t id2) const
 {
-	const PType *keyty = (const PType *)id1;
-	const PType *valty = (const PType *)id2;
+	const PType* keyty = (const PType*)id1;
+	const PType* valty = (const PType*)id2;
 
 	return keyty == KeyType && valty == ValueType;
 }
@@ -2798,7 +2872,7 @@ bool PMapIterator::IsMatch(intptr_t id1, intptr_t id2) const
 //
 //==========================================================================
 
-void PMapIterator::GetTypeIDs(intptr_t &id1, intptr_t &id2) const
+void PMapIterator::GetTypeIDs(intptr_t& id1, intptr_t& id2) const
 {
 	id1 = (intptr_t)KeyType;
 	id2 = (intptr_t)ValueType;
@@ -2810,16 +2884,16 @@ void PMapIterator::GetTypeIDs(intptr_t &id1, intptr_t &id2) const
 //
 //==========================================================================
 
-void PMapIterator::Construct(void * addr) const {
-	switch(BackingClass)
+void PMapIterator::Construct(void* addr) const {
+	switch (BackingClass)
 	{
-		#define MAP_IT_CONSTRUCT(KT, VT) new(addr) ZSMapIterator< KT, VT >(); break;
+#define MAP_IT_CONSTRUCT(KT, VT) new(addr) ZSMapIterator< KT, VT >(); break;
 		FOR_EACH_MAP_TYPE(MAP_IT_CONSTRUCT)
-		#undef MAP_IT_CONSTRUCT
+#undef MAP_IT_CONSTRUCT
 	};
 }
 
-void PMapIterator::InitializeValue(void *addr, const void *def) const
+void PMapIterator::InitializeValue(void* addr, const void* def) const
 {
 	Construct(addr);
 }
@@ -2830,13 +2904,13 @@ void PMapIterator::InitializeValue(void *addr, const void *def) const
 //
 //==========================================================================
 
-void PMapIterator::DestroyValue(void *addr) const
+void PMapIterator::DestroyValue(void* addr) const
 {
-	switch(BackingClass)
+	switch (BackingClass)
 	{
-		#define MAP_IT_DESTROY(KT, VT) static_cast<ZSMapIterator< KT, VT >*>(addr)->~ZSMapIterator(); break;
+#define MAP_IT_DESTROY(KT, VT) static_cast<ZSMapIterator< KT, VT >*>(addr)->~ZSMapIterator(); break;
 		FOR_EACH_MAP_TYPE(MAP_IT_DESTROY)
-		#undef MAP_IT_DESTROY
+#undef MAP_IT_DESTROY
 	}
 }
 
@@ -2846,11 +2920,11 @@ void PMapIterator::DestroyValue(void *addr) const
 //
 //==========================================================================
 
-void PMapIterator::SetDefaultValue(void *base, unsigned offset, TArray<FTypeAndOffset> *special)
+void PMapIterator::SetDefaultValue(void* base, unsigned offset, TArray<FTypeAndOffset>* special)
 {
 	if (base != nullptr)
 	{
-		Construct(((uint8_t*)base)+offset);
+		Construct(((uint8_t*)base) + offset);
 	}
 	if (special != nullptr)
 	{
@@ -2868,7 +2942,7 @@ void PMapIterator::SetDefaultValue(void *base, unsigned offset, TArray<FTypeAndO
 //
 //==========================================================================
 
-void PMapIterator::WriteValue(FSerializer &ar, const char *key, const void *addr) const
+void PMapIterator::WriteValue(FSerializer& ar, const char* key, const void* addr) const
 {
 	ar.BeginObject(key);
 	ar.EndObject();
@@ -2880,7 +2954,7 @@ void PMapIterator::WriteValue(FSerializer &ar, const char *key, const void *addr
 //
 //==========================================================================
 
-bool PMapIterator::ReadValue(FSerializer &ar, const char *key, void *addr) const
+bool PMapIterator::ReadValue(FSerializer& ar, const char* key, void* addr) const
 {
 	DestroyValue(addr);
 	InitializeValue(addr, nullptr);
@@ -2898,10 +2972,10 @@ bool PMapIterator::ReadValue(FSerializer &ar, const char *key, void *addr) const
 //
 //==========================================================================
 
-PMapIterator *NewMapIterator(PType *keyType, PType *valueType)
+PMapIterator* NewMapIterator(PType* keyType, PType* valueType)
 {
 	size_t bucket;
-	PType *mapIteratorType = TypeTable.FindType(NAME_MapIterator, (intptr_t)keyType, (intptr_t)valueType, &bucket);
+	PType* mapIteratorType = TypeTable.FindType(NAME_MapIterator, (intptr_t)keyType, (intptr_t)valueType, &bucket);
 	if (mapIteratorType == nullptr)
 	{
 		FString backingName = "MapIterator_";
@@ -2911,7 +2985,7 @@ PMapIterator *NewMapIterator(PType *keyType, PType *valueType)
 		mapIteratorType = new PMapIterator(keyType, valueType, backing, backingClass);
 		TypeTable.AddType(mapIteratorType, NAME_MapIterator, (intptr_t)keyType, (intptr_t)valueType, bucket);
 	}
-	return (PMapIterator *)mapIteratorType;
+	return (PMapIterator*)mapIteratorType;
 }
 
 /* PFunctionPointer *******************************************************/
@@ -2922,12 +2996,12 @@ PMapIterator *NewMapIterator(PType *keyType, PType *valueType)
 //
 //==========================================================================
 
-static FString MakeFunctionPointerDescriptiveName(PPrototype * proto,const TArray<uint32_t> &ArgFlags, int scope)
+static FString MakeFunctionPointerDescriptiveName(PPrototype* proto, const TArray<uint32_t>& ArgFlags, int scope)
 {
 	FString mDescriptiveName;
 
 	mDescriptiveName = "Function<";
-	switch(scope)
+	switch (scope)
 	{
 	case FScopeBarrier::Side_PlainData:
 		mDescriptiveName += "clearscope ";
@@ -2939,12 +3013,12 @@ static FString MakeFunctionPointerDescriptiveName(PPrototype * proto,const TArra
 		mDescriptiveName += "ui ";
 		break;
 	}
-	if(proto->ReturnTypes.Size() > 0)
+	if (proto->ReturnTypes.Size() > 0)
 	{
 		mDescriptiveName += proto->ReturnTypes[0]->DescriptiveName();
 
 		const unsigned n = proto->ReturnTypes.Size();
-		for(unsigned i = 1; i < n; i++)
+		for (unsigned i = 1; i < n; i++)
 		{
 			mDescriptiveName += ", ";
 			mDescriptiveName += proto->ReturnTypes[i]->DescriptiveName();
@@ -2955,15 +3029,15 @@ static FString MakeFunctionPointerDescriptiveName(PPrototype * proto,const TArra
 	{
 		mDescriptiveName += "void (";
 	}
-	if(proto->ArgumentTypes.Size() > 0)
+	if (proto->ArgumentTypes.Size() > 0)
 	{
-		if(ArgFlags[0] == VARF_Out) mDescriptiveName += "out ";
+		if (ArgFlags[0] == VARF_Out) mDescriptiveName += "out ";
 		mDescriptiveName += proto->ArgumentTypes[0]->DescriptiveName();
 		const unsigned n = proto->ArgumentTypes.Size();
-		for(unsigned i = 1; i < n; i++)
+		for (unsigned i = 1; i < n; i++)
 		{
 			mDescriptiveName += ", ";
-			if(ArgFlags[i] == VARF_Out) mDescriptiveName += "out ";
+			if (ArgFlags[i] == VARF_Out) mDescriptiveName += "out ";
 			mDescriptiveName += proto->ArgumentTypes[i]->DescriptiveName();
 		}
 		mDescriptiveName += ")>";
@@ -2977,15 +3051,15 @@ static FString MakeFunctionPointerDescriptiveName(PPrototype * proto,const TArra
 }
 
 
-FString PFunctionPointer::GenerateNameForError(const PFunction * from)
+FString PFunctionPointer::GenerateNameForError(const PFunction* from)
 {
 	return MakeFunctionPointerDescriptiveName(from->Variants[0].Proto, from->Variants[0].ArgFlags, FScopeBarrier::SideFromFlags(from->Variants[0].Flags));
 }
 
-PFunctionPointer::PFunctionPointer(PPrototype * proto, TArray<uint32_t> && argflags, int scope)
-	: PPointer(proto ? (PType*) proto : TypeVoid, false), ArgFlags(std::move(argflags)), Scope(scope)
+PFunctionPointer::PFunctionPointer(PPrototype* proto, TArray<uint32_t>&& argflags, int scope)
+	: PPointer(proto ? (PType*)proto : TypeVoid, false), ArgFlags(std::move(argflags)), Scope(scope)
 {
-	if(!proto)
+	if (!proto)
 	{
 		mDescriptiveName = "Function<void>";
 	}
@@ -2996,13 +3070,13 @@ PFunctionPointer::PFunctionPointer(PPrototype * proto, TArray<uint32_t> && argfl
 
 	Flags |= TYPE_FunctionPointer;
 
-	if(proto)
+	if (proto)
 	{
 		assert(Scope != -1); // for now, a scope is always required
 
 		TArray<FName> ArgNames;
 		TArray<uint32_t> ArgFlags2(ArgFlags); // AddVariant calls std::move on this, so it needs to be a copy,
-											  // but it takes it as a regular reference, so it needs to be a full variable instead of a temporary
+		// but it takes it as a regular reference, so it needs to be a full variable instead of a temporary
 		ArgNames.Resize(ArgFlags.Size());
 		FakeFunction = Create<PFunction>();
 		FakeFunction->AddVariant(proto, ArgFlags2, ArgNames, nullptr, FScopeBarrier::FlagsFromSide(Scope), 0);
@@ -3013,38 +3087,38 @@ PFunctionPointer::PFunctionPointer(PPrototype * proto, TArray<uint32_t> && argfl
 	}
 }
 
-void PFunctionPointer::WriteValue(FSerializer &ar, const char *key, const void *addr) const
+void PFunctionPointer::WriteValue(FSerializer& ar, const char* key, const void* addr) const
 {
 	auto p = *(const PFunction**)(addr);
-	if(p)
+	if (p)
 	{
 		FunctionPointerValue val;
-		FunctionPointerValue *fpv = &val;
+		FunctionPointerValue* fpv = &val;
 		val.ClassName = FString((p->OwningClass ? p->OwningClass->TypeName : NAME_None).GetChars());
 		val.FunctionName = FString(p->SymbolName.GetChars());
 		SerializeFunctionPointer(ar, key, fpv);
 	}
 	else
 	{
-		FunctionPointerValue *fpv = nullptr;
+		FunctionPointerValue* fpv = nullptr;
 		SerializeFunctionPointer(ar, key, fpv);
 	}
 }
 
-PFunction *NativeFunctionPointerCast(PFunction *from, const PFunctionPointer *to);
+PFunction* NativeFunctionPointerCast(PFunction* from, const PFunctionPointer* to);
 
-bool PFunctionPointer::ReadValue(FSerializer &ar, const char *key, void *addr) const
+bool PFunctionPointer::ReadValue(FSerializer& ar, const char* key, void* addr) const
 {
 	FunctionPointerValue val;
-	FunctionPointerValue *fpv = &val;
+	FunctionPointerValue* fpv = &val;
 	SerializeFunctionPointer(ar, key, fpv);
 
-	PFunction ** fn = (PFunction**)(addr);
+	PFunction** fn = (PFunction**)(addr);
 
-	if(fpv)
+	if (fpv)
 	{
 		auto cls = PClass::FindClass(val.ClassName);
-		if(!cls)
+		if (!cls)
 		{
 			*fn = nullptr;
 			Printf(TEXTCOLOR_RED "Function Pointer ('%s::%s'): '%s' is not a valid class\n",
@@ -3056,7 +3130,7 @@ bool PFunctionPointer::ReadValue(FSerializer &ar, const char *key, void *addr) c
 			return false;
 		}
 		auto sym = cls->FindSymbol(FName(val.FunctionName), true);
-		if(!sym)
+		if (!sym)
 		{
 			*fn = nullptr;
 			Printf(TEXTCOLOR_RED "Function Pointer ('%s::%s'): symbol '%s' does not exist in class '%s'\n",
@@ -3069,7 +3143,7 @@ bool PFunctionPointer::ReadValue(FSerializer &ar, const char *key, void *addr) c
 			return false;
 		}
 		PFunction* p = dyn_cast<PFunction>(sym);
-		if(!p)
+		if (!p)
 		{
 			*fn = nullptr;
 			Printf(TEXTCOLOR_RED "Function Pointer (%s::%s): '%s' in class '%s' is a variable, not a function\n",
@@ -3082,9 +3156,9 @@ bool PFunctionPointer::ReadValue(FSerializer &ar, const char *key, void *addr) c
 			return false;
 		}
 		*fn = NativeFunctionPointerCast(p, this);
-		if(!*fn)
+		if (!*fn)
 		{
-			if((p->Variants[0].Flags & (VARF_Action | VARF_Virtual)) != 0)
+			if ((p->Variants[0].Flags & (VARF_Action | VARF_Virtual)) != 0)
 			{
 				*fn = nullptr;
 				Printf(TEXTCOLOR_RED "Function Pointer (%s::%s): function '%s' in class '%s' is %s, not a static function\n",
@@ -3097,12 +3171,12 @@ bool PFunctionPointer::ReadValue(FSerializer &ar, const char *key, void *addr) c
 			}
 			else
 			{
-				FString fn_name = MakeFunctionPointerDescriptiveName(p->Variants[0].Proto,p->Variants[0].ArgFlags, FScopeBarrier::SideFromFlags(p->Variants[0].Flags));
+				FString fn_name = MakeFunctionPointerDescriptiveName(p->Variants[0].Proto, p->Variants[0].ArgFlags, FScopeBarrier::SideFromFlags(p->Variants[0].Flags));
 				Printf(TEXTCOLOR_RED "Function Pointer (%s::%s) has incompatible type (Pointer is '%s', Function is '%s')\n",
-							val.ClassName.GetChars(),
-							val.FunctionName.GetChars(),
-							fn_name.GetChars(),
-							mDescriptiveName.GetChars()
+					val.ClassName.GetChars(),
+					val.FunctionName.GetChars(),
+					fn_name.GetChars(),
+					mDescriptiveName.GetChars()
 				);
 			}
 			ar.mErrors++;
@@ -3119,32 +3193,32 @@ bool PFunctionPointer::ReadValue(FSerializer &ar, const char *key, void *addr) c
 
 bool PFunctionPointer::IsMatch(intptr_t id1, intptr_t id2) const
 {
-	const PPrototype * proto = (const PPrototype*) id1;
-	const PFunctionPointer::FlagsAndScope * flags_and_scope = (const PFunctionPointer::FlagsAndScope *) id2;
+	const PPrototype* proto = (const PPrototype*)id1;
+	const PFunctionPointer::FlagsAndScope* flags_and_scope = (const PFunctionPointer::FlagsAndScope*)id2;
 	return (proto == (PointedType == TypeVoid ? nullptr : PointedType))
 		&& (Scope == flags_and_scope->Scope)
 		&& (ArgFlags == *flags_and_scope->ArgFlags);
 }
 
-void PFunctionPointer::GetTypeIDs(intptr_t &id1, intptr_t &id2) const
+void PFunctionPointer::GetTypeIDs(intptr_t& id1, intptr_t& id2) const
 {	//NOT SUPPORTED
 	assert(0 && "GetTypeIDs not supported for PFunctionPointer");
 }
 
-PFunctionPointer * NewFunctionPointer(PPrototype * proto, TArray<uint32_t> && argflags, int scope)
+PFunctionPointer* NewFunctionPointer(PPrototype* proto, TArray<uint32_t>&& argflags, int scope)
 {
 	size_t bucket;
 
-	PFunctionPointer::FlagsAndScope flags_and_scope { &argflags, scope };
+	PFunctionPointer::FlagsAndScope flags_and_scope{ &argflags, scope };
 
-	PType *fn = TypeTable.FindType(NAME_Function, (intptr_t)proto, (intptr_t)&flags_and_scope, &bucket);
+	PType* fn = TypeTable.FindType(NAME_Function, (intptr_t)proto, (intptr_t)&flags_and_scope, &bucket);
 	if (fn == nullptr)
 	{
 		fn = new PFunctionPointer(proto, std::move(argflags), scope);
-		flags_and_scope.ArgFlags = &static_cast<PFunctionPointer *>(fn)->ArgFlags;
+		flags_and_scope.ArgFlags = &static_cast<PFunctionPointer*>(fn)->ArgFlags;
 		TypeTable.AddType(fn, NAME_Function, (intptr_t)proto, (intptr_t)&flags_and_scope, bucket);
 	}
-	return (PFunctionPointer *)fn;
+	return (PFunctionPointer*)fn;
 }
 
 /* PStruct ****************************************************************/
@@ -3155,10 +3229,10 @@ PFunctionPointer * NewFunctionPointer(PPrototype * proto, TArray<uint32_t> && ar
 //
 //==========================================================================
 
-PStruct::PStruct(FName name, PTypeBase *outer, bool isnative, int fileno)
-: PContainerType(name, outer)
+PStruct::PStruct(FName name, PTypeBase* outer, bool isnative, int fileno)
+	: PContainerType(name, outer)
 {
-	mDescriptiveName.Format("%sStruct<%s>", isnative? "Native" : "", name.GetChars());
+	mDescriptiveName.Format("%sStruct<%s>", isnative ? "Native" : "", name.GetChars());
 	Size = 0;
 	isNative = isnative;
 	mDefFileNo = fileno;
@@ -3170,10 +3244,10 @@ PStruct::PStruct(FName name, PTypeBase *outer, bool isnative, int fileno)
 //
 //==========================================================================
 
-void PStruct::SetDefaultValue(void *base, unsigned offset, TArray<FTypeAndOffset> *special)
+void PStruct::SetDefaultValue(void* base, unsigned offset, TArray<FTypeAndOffset>* special)
 {
 	auto it = Symbols.GetIterator();
-	PSymbolTable::MapType::Pair *pair;
+	PSymbolTable::MapType::Pair* pair;
 	while (it.NextPair(pair))
 	{
 		auto field = dyn_cast<PField>(pair->Value);
@@ -3190,10 +3264,10 @@ void PStruct::SetDefaultValue(void *base, unsigned offset, TArray<FTypeAndOffset
 //
 //==========================================================================
 
-void PStruct::SetPointer(void *base, unsigned offset, TArray<size_t> *special)
+void PStruct::SetPointer(void* base, unsigned offset, TArray<size_t>* special)
 {
 	auto it = Symbols.GetIterator();
-	PSymbolTable::MapType::Pair *pair;
+	PSymbolTable::MapType::Pair* pair;
 	while (it.NextPair(pair))
 	{
 		auto field = dyn_cast<PField>(pair->Value);
@@ -3210,10 +3284,10 @@ void PStruct::SetPointer(void *base, unsigned offset, TArray<size_t> *special)
 //
 //==========================================================================
 
-void PStruct::SetPointerArray(void *base, unsigned offset, TArray<size_t> *special)
+void PStruct::SetPointerArray(void* base, unsigned offset, TArray<size_t>* special)
 {
 	auto it = Symbols.GetIterator();
-	PSymbolTable::MapType::Pair *pair;
+	PSymbolTable::MapType::Pair* pair;
 	while (it.NextPair(pair))
 	{
 		auto field = dyn_cast<PField>(pair->Value);
@@ -3230,10 +3304,10 @@ void PStruct::SetPointerArray(void *base, unsigned offset, TArray<size_t> *speci
 //
 //==========================================================================
 
-void PStruct::SetPointerMap(void *base, unsigned offset, TArray<std::pair<size_t,PType *>> *special)
+void PStruct::SetPointerMap(void* base, unsigned offset, TArray<std::pair<size_t, PType*>>* special)
 {
 	auto it = Symbols.GetIterator();
-	PSymbolTable::MapType::Pair *pair;
+	PSymbolTable::MapType::Pair* pair;
 	while (it.NextPair(pair))
 	{
 		auto field = dyn_cast<PField>(pair->Value);
@@ -3250,7 +3324,7 @@ void PStruct::SetPointerMap(void *base, unsigned offset, TArray<std::pair<size_t
 //
 //==========================================================================
 
-void PStruct::WriteValue(FSerializer &ar, const char *key,const void *addr) const
+void PStruct::WriteValue(FSerializer& ar, const char* key, const void* addr) const
 {
 	if (ar.BeginObject(key))
 	{
@@ -3265,7 +3339,7 @@ void PStruct::WriteValue(FSerializer &ar, const char *key,const void *addr) cons
 //
 //==========================================================================
 
-bool PStruct::ReadValue(FSerializer &ar, const char *key, void *addr) const
+bool PStruct::ReadValue(FSerializer& ar, const char* key, void* addr) const
 {
 	if (ar.BeginObject(key))
 	{
@@ -3285,7 +3359,7 @@ bool PStruct::ReadValue(FSerializer &ar, const char *key, void *addr) const
 //
 //==========================================================================
 
-PField *PStruct::AddField(FName name, PType *type, uint32_t flags)
+PField* PStruct::AddField(FName name, PType* type, uint32_t flags)
 {
 	assert(type->Size > 0);
 	return Symbols.AddField(name, type, flags, Size, &Align, mDefFileNo);
@@ -3300,7 +3374,7 @@ PField *PStruct::AddField(FName name, PType *type, uint32_t flags)
 //
 //==========================================================================
 
-PField *PStruct::AddNativeField(FName name, PType *type, size_t address, uint32_t flags, int bitvalue)
+PField* PStruct::AddNativeField(FName name, PType* type, size_t address, uint32_t flags, int bitvalue)
 {
 	return Symbols.AddNativeField(name, type, address, flags, bitvalue, mDefFileNo);
 }
@@ -3313,17 +3387,17 @@ PField *PStruct::AddNativeField(FName name, PType *type, size_t address, uint32_
 //
 //==========================================================================
 
-PStruct *NewStruct(FName name, PTypeBase *outer, bool native, int fileno)
+PStruct* NewStruct(FName name, PTypeBase* outer, bool native, int fileno)
 {
 	size_t bucket;
 	if (outer == nullptr) outer = Namespaces.GlobalNamespace;
-	PType *stype = TypeTable.FindType(NAME_Struct, (intptr_t)outer, name.GetIndex(), &bucket);
+	PType* stype = TypeTable.FindType(NAME_Struct, (intptr_t)outer, name.GetIndex(), &bucket);
 	if (stype == nullptr)
 	{
 		stype = new PStruct(name, outer, native, fileno);
 		TypeTable.AddType(stype, NAME_Struct, (intptr_t)outer, name.GetIndex(), bucket);
 	}
-	return static_cast<PStruct *>(stype);
+	return static_cast<PStruct*>(stype);
 }
 
 
@@ -3335,10 +3409,10 @@ PStruct *NewStruct(FName name, PTypeBase *outer, bool native, int fileno)
 //
 //==========================================================================
 
-PPrototype::PPrototype(const TArray<PType *> &rettypes, const TArray<PType *> &argtypes)
-: ArgumentTypes(argtypes), ReturnTypes(rettypes)
+PPrototype::PPrototype(const TArray<PType*>& rettypes, const TArray<PType*>& argtypes)
+	: ArgumentTypes(argtypes), ReturnTypes(rettypes)
 {
-	for (auto& type: ArgumentTypes)
+	for (auto& type : ArgumentTypes)
 	{
 		if (type == TypeFVector2)
 		{
@@ -3371,8 +3445,8 @@ PPrototype::PPrototype(const TArray<PType *> &rettypes, const TArray<PType *> &a
 
 bool PPrototype::IsMatch(intptr_t id1, intptr_t id2) const
 {
-	const TArray<PType *> *args = (const TArray<PType *> *)id1;
-	const TArray<PType *> *rets = (const TArray<PType *> *)id2;
+	const TArray<PType*>* args = (const TArray<PType*> *)id1;
+	const TArray<PType*>* rets = (const TArray<PType*> *)id2;
 
 	return *args == ArgumentTypes && *rets == ReturnTypes;
 }
@@ -3383,7 +3457,7 @@ bool PPrototype::IsMatch(intptr_t id1, intptr_t id2) const
 //
 //==========================================================================
 
-void PPrototype::GetTypeIDs(intptr_t &id1, intptr_t &id2) const
+void PPrototype::GetTypeIDs(intptr_t& id1, intptr_t& id2) const
 {
 	id1 = (intptr_t)&ArgumentTypes;
 	id2 = (intptr_t)&ReturnTypes;
@@ -3398,16 +3472,16 @@ void PPrototype::GetTypeIDs(intptr_t &id1, intptr_t &id2) const
 //
 //==========================================================================
 
-PPrototype *NewPrototype(const TArray<PType *> &rettypes, const TArray<PType *> &argtypes)
+PPrototype* NewPrototype(const TArray<PType*>& rettypes, const TArray<PType*>& argtypes)
 {
 	size_t bucket;
-	PType *proto = TypeTable.FindType(NAME_Prototype, (intptr_t)&argtypes, (intptr_t)&rettypes, &bucket);
+	PType* proto = TypeTable.FindType(NAME_Prototype, (intptr_t)&argtypes, (intptr_t)&rettypes, &bucket);
 	if (proto == nullptr)
 	{
 		proto = new PPrototype(rettypes, argtypes);
 		TypeTable.AddType(proto, NAME_Prototype, (intptr_t)&argtypes, (intptr_t)&rettypes, bucket);
 	}
-	return static_cast<PPrototype *>(proto);
+	return static_cast<PPrototype*>(proto);
 }
 
 /* PClass *****************************************************************/
@@ -3418,7 +3492,7 @@ PPrototype *NewPrototype(const TArray<PType *> &rettypes, const TArray<PType *> 
 //
 //==========================================================================
 
-PClassType::PClassType(PClass *cls, int fileno)
+PClassType::PClassType(PClass* cls, int fileno)
 {
 	assert(cls->VMType == nullptr);
 	Descriptor = cls;
@@ -3441,7 +3515,7 @@ PClassType::PClassType(PClass *cls, int fileno)
 //
 //==========================================================================
 
-PField *PClassType::AddField(FName name, PType *type, uint32_t flags)
+PField* PClassType::AddField(FName name, PType* type, uint32_t flags)
 {
 	return Descriptor->AddField(name, type, flags, mDefFileNo);
 }
@@ -3452,7 +3526,7 @@ PField *PClassType::AddField(FName name, PType *type, uint32_t flags)
 //
 //==========================================================================
 
-PField *PClassType::AddNativeField(FName name, PType *type, size_t address, uint32_t flags, int bitvalue)
+PField* PClassType::AddNativeField(FName name, PType* type, size_t address, uint32_t flags, int bitvalue)
 {
 	auto field = Symbols.AddNativeField(name, type, address, flags, bitvalue, mDefFileNo);
 	if (field != nullptr) Descriptor->Fields.Push(field);
@@ -3465,16 +3539,16 @@ PField *PClassType::AddNativeField(FName name, PType *type, size_t address, uint
 //
 //==========================================================================
 
-PClassType *NewClassType(PClass *cls, int fileno)
+PClassType* NewClassType(PClass* cls, int fileno)
 {
 	size_t bucket;
-	PType *ptype = TypeTable.FindType(NAME_Object, 0, cls->TypeName.GetIndex(), &bucket);
+	PType* ptype = TypeTable.FindType(NAME_Object, 0, cls->TypeName.GetIndex(), &bucket);
 	if (ptype == nullptr)
 	{
 		ptype = new PClassType(cls, fileno);
 		TypeTable.AddType(ptype, NAME_Object, 0, cls->TypeName.GetIndex(), bucket);
 	}
-	return static_cast<PClassType *>(ptype);
+	return static_cast<PClassType*>(ptype);
 }
 
 
@@ -3486,14 +3560,14 @@ PClassType *NewClassType(PClass *cls, int fileno)
 //
 //==========================================================================
 
-PType *FTypeTable::FindType(FName type_name, intptr_t parm1, intptr_t parm2, size_t *bucketnum)
+PType* FTypeTable::FindType(FName type_name, intptr_t parm1, intptr_t parm2, size_t* bucketnum)
 {
 	size_t bucket = Hash(type_name, parm1, parm2) % HASH_SIZE;
 	if (bucketnum != nullptr)
 	{
 		*bucketnum = bucket;
 	}
-	for (PType *type = TypeHash[bucket]; type != nullptr; type = type->HashNext)
+	for (PType* type = TypeHash[bucket]; type != nullptr; type = type->HashNext)
 	{
 		if (type->TypeTableType == type_name && type->IsMatch(parm1, parm2))
 		{
@@ -3509,7 +3583,7 @@ PType *FTypeTable::FindType(FName type_name, intptr_t parm1, intptr_t parm2, siz
 //
 //==========================================================================
 
-void FTypeTable::AddType(PType *type, FName type_name, intptr_t parm1, intptr_t parm2, size_t bucket)
+void FTypeTable::AddType(PType* type, FName type_name, intptr_t parm1, intptr_t parm2, size_t bucket)
 {
 #ifdef _DEBUG
 	size_t bucketcheck;
@@ -3527,7 +3601,7 @@ void FTypeTable::AddType(PType *type, FName type_name, intptr_t parm1, intptr_t 
 //
 //==========================================================================
 
-void FTypeTable::AddType(PType *type, FName type_name)
+void FTypeTable::AddType(PType* type, FName type_name)
 {
 	intptr_t parm1, parm2;
 	size_t bucket;
@@ -3554,7 +3628,7 @@ size_t FTypeTable::Hash(FName p1, intptr_t p2, intptr_t p3)
 
 	// Swap the high and low halves of i1. The compiler should be smart enough
 	// to transform this into a ROR or ROL.
-	i1 = (i1 >> (sizeof(size_t)*4)) | (i1 << (sizeof(size_t)*4));
+	i1 = (i1 >> (sizeof(size_t) * 4)) | (i1 << (sizeof(size_t) * 4));
 
 	if (p1 != NAME_Prototype && p1 != NAME_Function)
 	{
@@ -3562,10 +3636,10 @@ size_t FTypeTable::Hash(FName p1, intptr_t p2, intptr_t p3)
 		size_t i3 = (size_t)p3;
 		return (~i1 ^ i2) + i3 * 961748927;	// i3 is multiplied by a prime
 	}
-	else if(p1 == NAME_Prototype)
+	else if (p1 == NAME_Prototype)
 	{ // Prototypes need to hash the TArrays at p2 and p3
-		const TArray<PType *> *a2 = (const TArray<PType *> *)p2;
-		const TArray<PType *> *a3 = (const TArray<PType *> *)p3;
+		const TArray<PType*>* a2 = (const TArray<PType*> *)p2;
+		const TArray<PType*>* a3 = (const TArray<PType*> *)p3;
 		for (unsigned i = 0; i < a2->Size(); ++i)
 		{
 			i1 = (i1 * 961748927) + (size_t)((*a2)[i]);
@@ -3579,8 +3653,8 @@ size_t FTypeTable::Hash(FName p1, intptr_t p2, intptr_t p3)
 	else // if(p1 == NAME_Function)
 	{ // functions need custom hashing as well
 		size_t i2 = (size_t)p2;
-		const PFunctionPointer::FlagsAndScope * flags_and_scope = (const PFunctionPointer::FlagsAndScope *) p3;
-		const TArray<uint32_t> * a3 = flags_and_scope->ArgFlags;
+		const PFunctionPointer::FlagsAndScope* flags_and_scope = (const PFunctionPointer::FlagsAndScope*)p3;
+		const TArray<uint32_t>* a3 = flags_and_scope->ArgFlags;
 		i1 = (~i1 ^ i2);
 		for (unsigned i = 0; i < a3->Size(); ++i)
 		{
@@ -3600,7 +3674,7 @@ void FTypeTable::Clear()
 {
 	for (size_t i = 0; i < countof(TypeTable.TypeHash); ++i)
 	{
-		for (PType *ty = TypeTable.TypeHash[i]; ty != nullptr;)
+		for (PType* ty = TypeTable.TypeHash[i]; ty != nullptr;)
 		{
 			auto next = ty->HashNext;
 			delete ty;
@@ -3615,4 +3689,3 @@ CCMD(typetable)
 {
 	DumpTypeTable();
 }
-
