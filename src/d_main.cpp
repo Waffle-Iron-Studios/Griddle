@@ -2970,7 +2970,7 @@ static int D_InitGame(const FIWADInfo* iwad_info, std::vector<std::string>& allw
 		V_InitScreen();
 		V_Init2();
 	}
-	SavegameFolder = iwad_info->Autoname;
+	SavegameFolder = iwad_info->Name;
 	gameinfo.gametype = iwad_info->gametype;
 	gameinfo.flags = iwad_info->flags;
 	gameinfo.nokeyboardcheats = iwad_info->nokeyboardcheats;
