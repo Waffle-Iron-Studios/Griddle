@@ -41,6 +41,7 @@ version "4.12"
 #include "zscript/events.zs"
 #include "zscript/destructible.zs"
 #include "zscript/level_postprocessor.zs"
+#include "zscript/visualthinker.zs"
 
 #include "zscript/actors/actor.zs"
 #include "zscript/actors/checks.zs"

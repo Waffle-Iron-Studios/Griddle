@@ -365,6 +365,7 @@ public:
 	PalEntry ThingColor;	// thing's own color
 	FColormap Colormap;
 	FSpriteModelFrame * modelframe;
+	int modelframeflags;
 	FRenderStyle RenderStyle;
 	int OverrideShader;
 
@@ -382,6 +383,7 @@ public:
 	float vt,vb;
 	float x1,y1,z1;
 	float x2,y2,z2;
+	float offx, offy;
 	float trans;
 	int dynlightindex;
 
@@ -401,7 +403,8 @@ public:
 	void CreateVertices(HWDrawInfo *di);
 	void PutSprite(HWDrawInfo *di, bool translucent);
 	void Process(HWDrawInfo *di, AActor* thing,sector_t * sector, area_t in_area, int thruportal = false, bool isSpriteShadow = false);
-	void ProcessParticle (HWDrawInfo *di, particle_t *particle, sector_t *sector);//, int shade, int fakeside)
+	void ProcessParticle(HWDrawInfo *di, particle_t *particle, sector_t *sector, class DVisualThinker *spr);//, int shade, int fakeside)
+	void AdjustVisualThinker(HWDrawInfo *di, DVisualThinker *spr, sector_t *sector);
 
 	void DrawSprite(HWDrawInfo *di, FRenderState &state, bool translucent);
 };

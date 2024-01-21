@@ -355,6 +355,7 @@ struct level_info_t
 	uint32_t	flags9;	// backport from vkdoom
 	uint32_t	wisflags;
 
+	FString		LightningSound = "world/thunder";
 	FString		Music;
 	FString		LevelName;
 	FString		AuthorName;
