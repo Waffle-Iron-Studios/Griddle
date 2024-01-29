@@ -1801,6 +1801,8 @@ void FLevelLocals::Init()
 	wisflags = 0;
 	ImpactDecalCount = 0;
 	frozenstate = 0;
+	isocam_pitch = 30.f;
+	iso_dist = 300.f;
 
 	info = FindLevelInfo (MapName.GetChars());
 
@@ -1831,6 +1833,12 @@ void FLevelLocals::Init()
 		if (info->gravity == DBL_MAX) gravity = 0;
 		else gravity = info->gravity * 35/TICRATE;
 	}
+	if (info->isocam_pitch < 0.f) isocam_pitch = 0.f;
+	else if (info->isocam_pitch > 89.f) isocam_pitch = 89.f;
+	else isocam_pitch = info->isocam_pitch;
+	if (info->iso_dist < 1.f) iso_dist = 1.f;
+	if (info->iso_dist > 1000.f) iso_dist = 1000.f;
+	else iso_dist = info->iso_dist;
 	if (info->aircontrol != 0.f)
 	{
 		aircontrol = info->aircontrol;

@@ -271,6 +271,10 @@ enum ELevelFlags : unsigned int
 	LEVEL3_NOJUMPDOWN			= 0x00040000,	// only for MBF21. Inverse of MBF's dog_jumping flag.
 	LEVEL3_LIGHTCREATED			= 0x00080000,	// a light had been created in the last frame
 
+	LEVEL3_ISOMETRICMODE			= 0x00100000,	// render map in isometric camera mode
+	LEVEL3_ORTHOGRAPHIC			= 0x00200000,	// render with orthographic projection (only in isometric camera mode)
+	LEVEL3_ISOMETRICSPRITES			= 0x00400000,	// displace isometrically drawn sprites towards isometric camera
+
 	// backport from vkDoom
 	// Deliberately skip ahead...
 	LEVEL9_NOUSERSAVE			= 0x00000001,
@@ -386,6 +390,9 @@ struct level_info_t
 	int			outsidefogdensity;
 	int			skyfog;
 	float		pixelstretch;
+
+	float		isocam_pitch;
+	float		iso_dist;
 
 	// Redirection: If any player is carrying the specified item, then
 	// you go to the RedirectMap instead of this one.
