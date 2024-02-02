@@ -295,8 +295,6 @@ void level_info_t::Reset()
 	outsidefogdensity = 0;
 	skyfog = 0;
 	pixelstretch = 1.2f;
-	isocam_pitch = 30.f;
-	iso_dist = 300.f;
 
 	specialactions.Clear();
 	DefaultEnvironment = 0;
@@ -1216,20 +1214,6 @@ DEFINE_MAP_OPTION(gravity, true)
 	parse.ParseAssign();
 	parse.sc.MustGetFloat();
 	info->gravity = parse.sc.Float;
-}
-
-DEFINE_MAP_OPTION(isocam_pitch, true)
-{
-	parse.ParseAssign();
-	parse.sc.MustGetFloat();
-	info->isocam_pitch = parse.sc.Float;
-}
-
-DEFINE_MAP_OPTION(iso_dist, true)
-{
-	parse.ParseAssign();
-	parse.sc.MustGetFloat();
-	info->iso_dist = parse.sc.Float;
 }
 
 DEFINE_MAP_OPTION(nogravity, true)

@@ -692,6 +692,9 @@ enum EViewPosFlags // [MC] Flags for SetViewPos.
 {
 	VPSF_ABSOLUTEOFFSET =	1 << 1,			// Don't include angles.
 	VPSF_ABSOLUTEPOS =		1 << 2,			// Use absolute position.
+	VPSF_ALLOWOUTOFBOUNDS =		1 << 3,			// Allow viewpoint to go out of bounds (hardware renderer only).
+	VPSF_ORTHOGRAPHIC =		1 << 4,			// Use orthographic projection.
+	VPSF_ISOMETRICSPRITES =		1 << 5,			// Displace sprites towards camera and don't billboard (drawn from isometric perspective).
 };
 
 enum EAnimOverrideFlags
@@ -901,6 +904,9 @@ public:
 
 	// Returns true if this view is considered "local" for the player.
 	bool CheckLocalView() const;
+	// Allows for enabling/disabling client-side rendering in a way the playsim can't access.
+	void DisableLocalRendering(const unsigned int pNum, const bool disable);
+	bool ShouldRenderLocally() const;
 
 	// Finds the first item of a particular type.
 	AActor *FindInventory (PClassActor *type, bool subclass=false);
@@ -1122,6 +1128,7 @@ public:
 	uint32_t			RenderRequired;		// current renderer must have this feature set
 	uint32_t			RenderHidden;		// current renderer must *not* have any of these features
 
+	bool				NoLocalRender;		// DO NOT EXPORT THIS! This is a way to disable rendering such that the playsim cannot access it.
 	ActorRenderFlags	renderflags;		// Different rendering flags
 	ActorRenderFlags2	renderflags2;		// More rendering flags...
 	ActorFlags		flags;
