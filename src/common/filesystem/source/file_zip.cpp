@@ -35,6 +35,7 @@
 
 #include <time.h>
 #include <stdexcept>
+#include <cstdint>
 #include "file_zip.h"
 #include "w_zip.h"
 #include "ancientzip.h"
