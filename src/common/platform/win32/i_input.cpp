@@ -110,6 +110,8 @@ EXTERN_CVAR (Bool, use_mouse)
 static int WheelDelta;
 extern bool CursorState;
 
+void SetCursorState(bool visible);
+
 extern BOOL paused;
 static bool noidle = false;
 
