@@ -90,7 +90,7 @@ EXTERN_CVAR(Bool, ui_screenborder_classic_scaling)
 
 CVAR(Int, hud_scale, 0, CVAR_ARCHIVE);
 CVAR(Bool, log_vgafont, false, CVAR_ARCHIVE)
-CVAR(Bool, hud_oldscale, true, CVAR_ARCHIVE)
+CVAR(Bool, hud_oldscale, false, CVAR_ARCHIVE)
 
 DBaseStatusBar *StatusBar;
 
