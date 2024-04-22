@@ -367,7 +367,7 @@ FStartScreen* GetGameStartScreen(int max_progress)
 			Printf("Error creating start screen: %s\n", err.what());
 			// fall through to the generic startup screen
 		}
-		//return CreateGenericStartScreen(max_progress);
+		return CreateGenericStartScreen(max_progress);
 	}
 	return nullptr;
 }
@@ -691,7 +691,6 @@ void FStartScreen::Render(bool force)
 		screen->Update();
 		twod->OnFrameDone();
 	}
-
 	auto newtime = I_msTime();
 	if ((newtime - nowtime) * 2.0 > minwaittime) // slow down drawing the start screen if we're on a slow GPU!
 		minwaittime = (newtime - nowtime) * 2.0;
@@ -701,7 +700,6 @@ FImageSource* CreateStartScreenTexture(FBitmap& srcdata);
 
 void FStartScreen::ValidateTexture()
 {
-
 	if (StartupTexture == nullptr)
 	{
 		auto imgsource = CreateStartScreenTexture(StartupBitmap);

@@ -341,7 +341,7 @@ class Menu : Object native ui version("2.4")
 
 	static Font OptionFont()
 	{
-		return SmallFont;
+		return NewSmallFont;
 	}
 
 	static int OptionHeight() 

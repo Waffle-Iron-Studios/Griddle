@@ -191,4 +191,6 @@ extend class Actor
 		A_SetTranslation('Ice');
 		A_FreezeDeath();
 	}
+	
+
 }

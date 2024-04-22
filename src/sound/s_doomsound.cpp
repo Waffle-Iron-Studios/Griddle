@@ -81,7 +81,7 @@ class DoomSoundEngine : public SoundEngine
 
 	void CalcPosVel(int type, const void* source, const float pt[3], int channum, int chanflags, FSoundID soundid, FVector3* pos, FVector3* vel, FSoundChan *) override;
 	bool ValidatePosVel(int sourcetype, const void* source, const FVector3& pos, const FVector3& vel);
-	std::vector<uint8_t> ReadSound(int lumpnum);
+	TArray<uint8_t> ReadSound(int lumpnum);
 	FSoundID PickReplacement(FSoundID refid);
 	FSoundID ResolveSound(const void *ent, int type, FSoundID soundid, float &attenuation) override;
 	void CacheSound(sfxinfo_t* sfx) override;
@@ -177,36 +177,17 @@ static FString LookupMusic(const char* musicname, int& order)
 
 //==========================================================================
 //
-// OpenMusic
+// FindMusic
 //
-// opens a FileReader for the music - used as a callback to keep
-// implementation details out of the core player.
+// loops up a music resource according to the engine's rules
 //
 //==========================================================================
 
-static FileReader OpenMusic(const char* musicname)
+static int FindMusic(const char* musicname)
 {
-	FileReader reader;
-	if (!FileExists(musicname))
-	{
-		int lumpnum;
-		lumpnum = fileSystem.CheckNumForFullName(musicname);
-		if (lumpnum == -1) lumpnum = fileSystem.CheckNumForName(musicname, FileSys::ns_music);
-		if (lumpnum == -1)
-		{
-			Printf("Music \"%s\" not found\n", musicname);
-		}
-		else if (fileSystem.FileLength(lumpnum) != 0)
-		{
-			reader = fileSystem.ReopenFileReader(lumpnum);
-		}
-	}
-	else
-	{
-		// Load an external file.
-		reader.OpenFile(musicname);
-	}
-	return reader;
+	int lumpnum = fileSystem.CheckNumForFullName(musicname);
+	if (lumpnum == -1) lumpnum = fileSystem.CheckNumForName(musicname, FileSys::ns_music);
+	return lumpnum;
 }
 
 //==========================================================================
@@ -220,7 +201,7 @@ static FileReader OpenMusic(const char* musicname)
 void S_Init()
 {
 	// Hook up the music player with the engine specific customizations.
-	static MusicCallbacks cb = { LookupMusic, OpenMusic };
+	static MusicCallbacks cb = { LookupMusic, FindMusic };
 	S_SetMusicCallbacks(&cb);
 
 	// Must be up before I_InitSound.
@@ -476,6 +457,18 @@ static bool VerifyActorSound(AActor* ent, FSoundID& sound_id, int& channel, ECha
 		ent->Level != primaryLevel)
 		return false;
 
+	if ((flags & CHANF_MAYBE_LOCAL) && (compatflags & COMPATF_SILENTPICKUP))
+	{
+		if (!soundEngine->isListener(ent))
+		{
+			return false;
+		}
+	}
+
+	if (compatflags & COMPATF_MAGICSILENCE)
+	{ // For people who just can't play without a silent BFG.
+		channel = CHAN_WEAPON;
+	}
 	return true;
 }
 
@@ -631,7 +624,7 @@ void A_PlaySound(AActor* self, int soundid, int channel, double volume, int loop
 
 void S_StopSound (AActor *actor, int channel)
 {
-	soundEngine->StopSound(SOURCE_Actor, actor, channel);
+	soundEngine->StopSound(SOURCE_Actor, actor, (compatflags & COMPATF_MAGICSILENCE) ? -1 : channel);
 }
 
 //==========================================================================
@@ -657,7 +650,7 @@ void S_StopActorSounds(AActor *actor, int chanmin, int chanmax)
 
 void S_StopSound (const sector_t *sec, int channel)
 {
-	soundEngine->StopSound(SOURCE_Sector, sec, channel);
+	soundEngine->StopSound(SOURCE_Sector, sec, (compatflags & COMPATF_MAGICSILENCE) ? -1 : channel);
 }
 
 //==========================================================================
@@ -670,7 +663,7 @@ void S_StopSound (const sector_t *sec, int channel)
 
 void S_StopSound (const FPolyObj *poly, int channel)
 {
-	soundEngine->StopSound(SOURCE_Polyobj, poly, channel);
+	soundEngine->StopSound(SOURCE_Polyobj, poly, (compatflags & COMPATF_MAGICSILENCE) ? -1 : channel);
 }
 
 //==========================================================================
@@ -685,7 +678,7 @@ void S_RelinkSound (AActor *from, AActor *to)
 {
 
 	FVector3 p = from->SoundPos();
-	soundEngine->RelinkSound(SOURCE_Actor, from, to,  &p);
+	soundEngine->RelinkSound(SOURCE_Actor, from, to, !(compatflags2 & COMPATF2_SOUNDCUTOFF)? &p : nullptr);
 }
 
 //==========================================================================
@@ -696,7 +689,7 @@ void S_RelinkSound (AActor *from, AActor *to)
 
 void S_ChangeActorSoundVolume(AActor *actor, int channel, double dvolume)
 {
-	soundEngine->ChangeSoundVolume(SOURCE_Actor, actor, channel, dvolume);
+	soundEngine->ChangeSoundVolume(SOURCE_Actor, actor, (compatflags & COMPATF_MAGICSILENCE)? -1 : channel, dvolume);
 }
 
 //==========================================================================
@@ -740,6 +733,10 @@ bool S_GetSoundPlayingInfo (const FPolyObj *poly, FSoundID sound_id)
 
 bool S_IsActorPlayingSomething (AActor *actor, int channel, FSoundID sound_id)
 {
+	if (compatflags & COMPATF_MAGICSILENCE)
+	{
+		channel = CHAN_AUTO; // checks all channels
+	}
 	return soundEngine->IsSourcePlayingSomething(SOURCE_Actor, actor, channel, sound_id);
 }
 
@@ -917,20 +914,28 @@ void S_SerializeSounds(FSerializer &arc)
 
 static void CalcSectorSoundOrg(const DVector3& listenpos, const sector_t* sec, int channum, FVector3& pos)
 {
-	// Are we inside the sector? If yes, the closest point is the one we're on.
-	if (primaryLevel->PointInSector(listenpos.X, listenpos.Y) == sec)
+	if (!(sec->Level->i_compatflags & COMPATF_SECTORSOUNDS))
 	{
-		pos.X = (float)listenpos.X;
-		pos.Z = (float)listenpos.Y;
+		// Are we inside the sector? If yes, the closest point is the one we're on.
+		if (primaryLevel->PointInSector(listenpos.X, listenpos.Y) == sec)
+		{
+			pos.X = (float)listenpos.X;
+			pos.Z = (float)listenpos.Y;
+		}
+		else
+		{
+			// Find the closest point on the sector's boundary lines and use
+			// that as the perceived origin of the sound.
+			DVector2 xy;
+			sec->ClosestPoint(listenpos.XY(), xy);
+			pos.X = (float)xy.X;
+			pos.Z = (float)xy.Y;
+		}
 	}
 	else
 	{
-		// Find the closest point on the sector's boundary lines and use
-		// that as the perceived origin of the sound.
-		DVector2 xy;
-		sec->ClosestPoint(listenpos.XY(), xy);
-		pos.X = (float)xy.X;
-		pos.Z = (float)xy.Y;
+		pos.X = float(sec->centerspot.X);
+		pos.Z = float(sec->centerspot.Y);
 	}
 
 	// Set sound vertical position based on channel.
@@ -1142,10 +1147,13 @@ bool DoomSoundEngine::ValidatePosVel(int sourcetype, const void* source, const F
 // 
 //==========================================================================
 
-std::vector<uint8_t> DoomSoundEngine::ReadSound(int lumpnum)
+TArray<uint8_t> DoomSoundEngine::ReadSound(int lumpnum)
 {
 	auto wlump = fileSystem.OpenFileReader(lumpnum);
-	return wlump.Read();
+	TArray<uint8_t> buffer(wlump.GetLength(), true);
+	auto len = wlump.Read(buffer.data(), buffer.size());
+	buffer.Resize(len);
+	return buffer;
 }
 
 //==========================================================================

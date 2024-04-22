@@ -180,7 +180,85 @@ enum : unsigned
 enum : unsigned
 {
 	DF3_NO_PLAYER_CLIP		= 1 << 0,	// Players can walk through and shoot through each other
-	DF3_COOP_SHARE_KEYS		= 1 << 1,	// Keys will be given to all players in coop
+	DF3_COOP_SHARE_KEYS		= 1 << 1,	// Keys and other core items will be given to all players in coop
+	DF3_LOCAL_ITEMS			= 1 << 2,	// Items are picked up client-side rather than fully taken by the client who picked it up
+	DF3_NO_LOCAL_DROPS		= 1 << 3,	// Drops from Actors aren't picked up locally
+	DF3_NO_COOP_ONLY_ITEMS	= 1 << 4,	// Items that only appear in co-op are disabled
+	DF3_NO_COOP_ONLY_THINGS	= 1 << 5,	// Any Actor that only appears in co-op is disabled
+	DF3_REMEMBER_LAST_WEAP	= 1 << 6,	// When respawning in co-op, keep the last used weapon out instead of switching to the best new one.
+	DF3_PISTOL_START		= 1 << 7,	// Take player inventory when exiting to the next level.
+};
+
+// [RH] Compatibility flags.
+enum : unsigned int
+{
+	COMPATF_SHORTTEX		= 1 << 0,	// Use Doom's shortest texture around behavior?
+	COMPATF_STAIRINDEX		= 1 << 1,	// Don't fix loop index for stair building?
+	COMPATF_LIMITPAIN		= 1 << 2,	// Pain elemental is limited to 20 lost souls?
+	COMPATF_SILENTPICKUP	= 1 << 3,	// Pickups are only heard locally?
+	COMPATF_NO_PASSMOBJ		= 1 << 4,	// Pretend every actor is infinitely tall?
+	COMPATF_MAGICSILENCE	= 1 << 5,	// Limit actors to one sound at a time?
+	COMPATF_WALLRUN			= 1 << 6,	// Enable buggier wall clipping so players can wallrun?
+	COMPATF_NOTOSSDROPS		= 1 << 7,	// Spawn dropped items directly on the floor?
+	COMPATF_USEBLOCKING		= 1 << 8,	// Any special line can block a use line
+	COMPATF_NODOORLIGHT		= 1 << 9,	// Don't do the BOOM local door light effect
+	COMPATF_RAVENSCROLL		= 1 << 10,	// Raven's scrollers use their original carrying speed
+	COMPATF_SOUNDTARGET		= 1 << 11,	// Use sector based sound target code.
+	COMPATF_DEHHEALTH		= 1 << 12,	// Limit deh.MaxHealth to the health bonus (as in Doom2.exe)
+	COMPATF_TRACE			= 1 << 13,	// Trace ignores lines with the same sector on both sides
+	COMPATF_DROPOFF			= 1 << 14,	// Monsters cannot move when hanging over a dropoff
+	COMPATF_BOOMSCROLL		= 1 << 15,	// Scrolling sectors are additive like in Boom
+	COMPATF_INVISIBILITY	= 1 << 16,	// Monsters can see semi-invisible players
+	COMPATF_SILENT_INSTANT_FLOORS = 1<<17,	// Instantly moving floors are not silent
+	COMPATF_SECTORSOUNDS	= 1 << 18,	// Sector sounds use original method for sound origin.
+	COMPATF_MISSILECLIP		= 1 << 19,	// Use original Doom heights for clipping against projectiles
+	COMPATF_CROSSDROPOFF	= 1 << 20,	// monsters can't be pushed over dropoffs
+	COMPATF_ANYBOSSDEATH	= 1 << 21,	// [GZ] Any monster which calls BOSSDEATH counts for level specials
+	COMPATF_MINOTAUR		= 1 << 22,	// Minotaur's floor flame is exploded immediately when feet are clipped
+	COMPATF_MUSHROOM		= 1 << 23,	// Force original velocity calculations for A_Mushroom in Dehacked mods.
+	COMPATF_MBFMONSTERMOVE	= 1 << 24,	// Monsters are affected by friction and pushers/pullers.
+	COMPATF_VILEGHOSTS		= 1 << 25,	// Crushed monsters are resurrected as ghosts.
+	COMPATF_NOBLOCKFRIENDS	= 1 << 26,	// Friendly monsters aren't blocked by monster-blocking lines.
+	COMPATF_SPRITESORT		= 1 << 27,	// Invert sprite sorting order for sprites of equal distance
+	COMPATF_HITSCAN			= 1 << 28,	// Hitscans use original blockmap and hit check code.
+	COMPATF_LIGHT			= 1 << 29,	// Find neighboring light level like Doom
+	COMPATF_POLYOBJ			= 1 << 30,	// Draw polyobjects the old fashioned way
+	COMPATF_MASKEDMIDTEX	= 1u << 31,	// Ignore compositing when drawing masked midtextures
+
+	COMPATF2_BADANGLES		= 1 << 0,	// It is impossible to face directly NSEW.
+	COMPATF2_FLOORMOVE		= 1 << 1,	// Use the same floor motion behavior as Doom.
+	COMPATF2_SOUNDCUTOFF	= 1 << 2,	// Cut off sounds when an actor vanishes instead of making it owner-less
+	COMPATF2_POINTONLINE	= 1 << 3,	// Use original but buggy P_PointOnLineSide() and P_PointOnDivlineSideCompat()
+	COMPATF2_MULTIEXIT		= 1 << 4,	// Level exit can be triggered multiple times (required by Daedalus's travel tubes, thanks to a faulty script)
+	COMPATF2_TELEPORT		= 1 << 5,	// Don't let indirect teleports trigger sector actions
+	COMPATF2_PUSHWINDOW		= 1 << 6,	// Disable the window check in CheckForPushSpecial()
+	COMPATF2_CHECKSWITCHRANGE = 1 << 7,	// Enable buggy CheckSwitchRange behavior
+	COMPATF2_EXPLODE1		= 1 << 8,	// No vertical explosion thrust
+	COMPATF2_EXPLODE2		= 1 << 9,	// Use original explosion code throughout.
+	COMPATF2_RAILING		= 1 << 10,	// Bugged Strife railings.
+	COMPATF2_SCRIPTWAIT		= 1 << 11,	// Use old scriptwait implementation where it doesn't wait on a non-running script.
+	COMPATF2_AVOID_HAZARDS	= 1 << 12,	// another MBF thing.
+	COMPATF2_STAYONLIFT		= 1 << 13,	// yet another MBF thing.
+	COMPATF2_NOMBF21		= 1 << 14,	// disable MBF21 features that may clash with certain maps
+	COMPATF2_VOODOO_ZOMBIES = 1 << 15,	// [RL0] allow playerinfo, playerpawn, and voodoo health to all be different, and skip killing the player's mobj if a voodoo doll dies to allow voodoo zombies
+
+};
+
+// Emulate old bugs for select maps. These are not exposed by a cvar
+// or mapinfo because we do not want new maps to use these bugs.
+enum
+{
+	BCOMPATF_SETSLOPEOVERFLOW	= 1 << 0,	// SetSlope things can overflow
+	BCOMPATF_RESETPLAYERSPEED	= 1 << 1,	// Set player speed to 1.0 when changing maps
+	BCOMPATF_BADTELEPORTERS		= 1 << 3,	// Ignore tags on Teleport specials
+	BCOMPATF_BADPORTALS			= 1 << 4,	// Restores the old unstable portal behavior
+	BCOMPATF_REBUILDNODES		= 1 << 5,	// Force node rebuild
+	BCOMPATF_LINKFROZENPROPS	= 1 << 6,	// Clearing PROP_TOTALLYFROZEN or PROP_FROZEN also clears the other
+	BCOMPATF_FLOATBOB			= 1 << 8,	// Use Hexen's original method of preventing floatbobbing items from falling down
+	BCOMPATF_NOSLOPEID			= 1 << 9,	// disable line IDs on slopes.
+	BCOMPATF_CLIPMIDTEX			= 1 << 10,	// Always Clip midtex's in the software renderer (required to run certain GZDoom maps, has no effect in the hardware renderer)
+	BCOMPATF_NOSECTIONMERGE		= 1 << 11,	// (for IWAD maps) keep separate sections for sectors with intra-sector linedefs. 
+	BCOMPATF_NOMIRRORS			= 1 << 12,	// disable mirrors, for maps that have broken setups.
 };
 
 // phares 3/20/98:

@@ -252,6 +252,7 @@ void level_info_t::Reset()
 	flags3 = 0;
 	flags9 = 0;
 	wisflags = 0;
+	LightningSound = "world/thunder";
 	Music = "";
 	LevelName = "";
 	AuthorName = "";
@@ -272,6 +273,8 @@ void level_info_t::Reset()
 	aircontrol = 0.f;
 	WarpTrans = 0;
 	airsupply = 20;
+	compatflags = compatflags2 = 0;
+	compatmask = compatmask2 = 0;
 	Translator = "";
 	RedirectType = NAME_None;
 	RedirectMapName = "";
@@ -995,6 +998,13 @@ DEFINE_MAP_OPTION(next, true)
 {
 	parse.ParseAssign();
 	parse.ParseNextMap(info->NextMap);
+}
+
+DEFINE_MAP_OPTION(lightningsound, true)
+{
+	parse.ParseAssign();
+	parse.sc.MustGetString();
+	info->LightningSound = parse.sc.String;
 }
 
 DEFINE_MAP_OPTION(author, true)
@@ -1773,6 +1783,7 @@ MapFlagHandlers[] =
 	{ "deathslideshow",					MITYPE_IGNORE,		0, 0 },
 	{ "strictmonsteractivation",		MITYPE_CLRFLAG2,	LEVEL2_LAXMONSTERACTIVATION, LEVEL2_LAXACTIVATIONMAPINFO },
 	{ "laxmonsteractivation",			MITYPE_SETFLAG2,	LEVEL2_LAXMONSTERACTIVATION, LEVEL2_LAXACTIVATIONMAPINFO },
+	{ "additive_scrollers",				MITYPE_COMPATFLAG, COMPATF_BOOMSCROLL, 0 },
 	{ "keepfullinventory",				MITYPE_SETFLAG2,	LEVEL2_KEEPFULLINVENTORY, 0 },
 	{ "resetitems",						MITYPE_SETFLAG3,	LEVEL3_REMOVEITEMS, 0 },
 	{ "monsterfallingdamage",			MITYPE_SETFLAG2,	LEVEL2_MONSTERFALLINGDAMAGE, 0 },
@@ -1822,6 +1833,53 @@ MapFlagHandlers[] =
 	{ "noautosaves",					MITYPE_SETFLAGWIS,	LEVELWIS_NOAUTOSAVES, 0 },
 	{ "cutscenelevel",					MITYPE_SETFLAGWIS,	LEVELWIS_CUTSCENELEVEL, 0 },
 	{ "nobotnodes",						MITYPE_IGNORE,	0, 0 },		// Skulltag option: nobotnodes
+	{ "nopassover",						MITYPE_COMPATFLAG, COMPATF_NO_PASSMOBJ, 0 },
+	{ "passover",						MITYPE_CLRCOMPATFLAG, COMPATF_NO_PASSMOBJ, 0 },
+	{ "compat_shorttex",				MITYPE_COMPATFLAG, COMPATF_SHORTTEX, 0 },
+	{ "compat_stairs",					MITYPE_COMPATFLAG, COMPATF_STAIRINDEX, 0 },
+	{ "compat_limitpain",				MITYPE_COMPATFLAG, COMPATF_LIMITPAIN, 0 },
+	{ "compat_nopassover",				MITYPE_COMPATFLAG, COMPATF_NO_PASSMOBJ, 0 },
+	{ "compat_notossdrops",				MITYPE_COMPATFLAG, COMPATF_NOTOSSDROPS, 0 },
+	{ "compat_useblocking", 			MITYPE_COMPATFLAG, COMPATF_USEBLOCKING, 0 },
+	{ "compat_nodoorlight",				MITYPE_COMPATFLAG, COMPATF_NODOORLIGHT, 0 },
+	{ "compat_ravenscroll",				MITYPE_COMPATFLAG, COMPATF_RAVENSCROLL, 0 },
+	{ "compat_soundtarget",				MITYPE_COMPATFLAG, COMPATF_SOUNDTARGET, 0 },
+	{ "compat_dehhealth",				MITYPE_COMPATFLAG, COMPATF_DEHHEALTH, 0 },
+	{ "compat_trace",					MITYPE_COMPATFLAG, COMPATF_TRACE, 0 },
+	{ "compat_dropoff",					MITYPE_COMPATFLAG, COMPATF_DROPOFF, 0 },
+	{ "compat_boomscroll",				MITYPE_COMPATFLAG, COMPATF_BOOMSCROLL, 0 },
+	{ "compat_invisibility",			MITYPE_COMPATFLAG, COMPATF_INVISIBILITY, 0 },
+	{ "compat_silent_instant_floors",	MITYPE_COMPATFLAG, COMPATF_SILENT_INSTANT_FLOORS, 0 },
+	{ "compat_sectorsounds",			MITYPE_COMPATFLAG, COMPATF_SECTORSOUNDS, 0 },
+	{ "compat_missileclip",				MITYPE_COMPATFLAG, COMPATF_MISSILECLIP, 0 },
+	{ "compat_crossdropoff",			MITYPE_COMPATFLAG, COMPATF_CROSSDROPOFF, 0 },
+	{ "compat_anybossdeath",			MITYPE_COMPATFLAG, COMPATF_ANYBOSSDEATH, 0 },
+	{ "compat_minotaur",				MITYPE_COMPATFLAG, COMPATF_MINOTAUR, 0 },
+	{ "compat_mushroom",				MITYPE_COMPATFLAG, COMPATF_MUSHROOM, 0 },
+	{ "compat_mbfmonstermove",			MITYPE_COMPATFLAG, COMPATF_MBFMONSTERMOVE, 0 },
+	{ "compat_corpsegibs",				MITYPE_COMPATFLAG, 0, 0 },	// this flag no longer exists, but we need it here for old mapinfos.
+	{ "compat_vileghosts",				MITYPE_COMPATFLAG, COMPATF_VILEGHOSTS, 0 },
+	{ "compat_noblockfriends",			MITYPE_COMPATFLAG, COMPATF_NOBLOCKFRIENDS, 0 },
+	{ "compat_spritesort",				MITYPE_COMPATFLAG, COMPATF_SPRITESORT, 0 },
+	{ "compat_light",					MITYPE_COMPATFLAG, COMPATF_LIGHT, 0 },
+	{ "compat_polyobj",					MITYPE_COMPATFLAG, COMPATF_POLYOBJ, 0 },
+	{ "compat_maskedmidtex",			MITYPE_COMPATFLAG, COMPATF_MASKEDMIDTEX, 0 },
+	{ "compat_badangles",				MITYPE_COMPATFLAG, 0, COMPATF2_BADANGLES },
+	{ "compat_floormove",				MITYPE_COMPATFLAG, 0, COMPATF2_FLOORMOVE },
+	{ "compat_soundcutoff",				MITYPE_COMPATFLAG, 0, COMPATF2_SOUNDCUTOFF },
+	{ "compat_pointonline",				MITYPE_COMPATFLAG, 0, COMPATF2_POINTONLINE },
+	{ "compat_multiexit",				MITYPE_COMPATFLAG, 0, COMPATF2_MULTIEXIT },
+	{ "compat_teleport",				MITYPE_COMPATFLAG, 0, COMPATF2_TELEPORT },
+	{ "compat_pushwindow",				MITYPE_COMPATFLAG, 0, COMPATF2_PUSHWINDOW },
+	{ "compat_checkswitchrange",		MITYPE_COMPATFLAG, 0, COMPATF2_CHECKSWITCHRANGE },
+	{ "compat_explode1",				MITYPE_COMPATFLAG, 0, COMPATF2_EXPLODE1 },
+	{ "compat_explode2",				MITYPE_COMPATFLAG, 0, COMPATF2_EXPLODE2 },
+	{ "compat_railing",					MITYPE_COMPATFLAG, 0, COMPATF2_RAILING },
+	{ "compat_scriptwait",				MITYPE_COMPATFLAG, 0, COMPATF2_SCRIPTWAIT },
+	{ "compat_avoidhazards",			MITYPE_COMPATFLAG, 0, COMPATF2_AVOID_HAZARDS },
+	{ "compat_stayonlift",				MITYPE_COMPATFLAG, 0, COMPATF2_STAYONLIFT },
+	{ "compat_nombf21",					MITYPE_COMPATFLAG, 0, COMPATF2_NOMBF21 },
+	{ "compat_voodoozombies",			MITYPE_COMPATFLAG, 0, COMPATF2_VOODOO_ZOMBIES },
 	{ "cd_start_track",					MITYPE_EATNEXT,	0, 0 },
 	{ "cd_end1_track",					MITYPE_EATNEXT,	0, 0 },
 	{ "cd_end2_track",					MITYPE_EATNEXT,	0, 0 },
@@ -1928,14 +1986,28 @@ void FMapInfoParser::ParseMapDefinition(level_info_t &info)
 				info.flags3 = (info.flags3 & handler->data2) | handler->data1;
 				break;
 
+			case MITYPE_SETFLAG9:
+				if (!CheckAssign())
+				{
+					info.flags9 |= handler->data1;
+				}
+				else
+				{
+					sc.MustGetNumber();
+					if (sc.Number) info.flags9 |= handler->data1;
+					else info.flags9 &= ~handler->data1;
+				}
+				info.flags9 |= handler->data2;
+				break;
+
 			case MITYPE_CLRFLAG9:
 				info.flags9 &= ~handler->data1;
 				info.flags9 |= handler->data2;
 				break;
+
 			case MITYPE_SCFLAGS9:
 				info.flags9 = (info.flags9 & handler->data2) | handler->data1;
 				break;
-
 
 			case MITYPE_SETFLAGWIS:
 				if (!CheckAssign())
@@ -1959,6 +2031,44 @@ void FMapInfoParser::ParseMapDefinition(level_info_t &info)
 			case MITYPE_SCFLAGSWIS:
 				info.wisflags = (info.wisflags & handler->data2) | handler->data1;
 				break;
+
+			case MITYPE_CLRCOMPATFLAG:
+				info.compatflags &= ~handler->data1;
+				info.compatflags2 &= ~handler->data2;
+				info.compatmask |= handler->data1;
+				info.compatmask2 |= handler->data2;
+				break;
+
+			case MITYPE_COMPATFLAG:
+			{
+				int set = 1;
+				if (format_type == FMT_New)
+				{
+					if (CheckAssign())
+					{
+						sc.MustGetNumber();
+						set = sc.Number;
+					}
+				}
+				else
+				{
+					if (sc.CheckNumber()) set = sc.Number;
+				}
+
+				if (set)
+				{
+					info.compatflags |= handler->data1;
+					info.compatflags2 |= handler->data2;
+				}
+				else
+				{
+					info.compatflags &= ~handler->data1;
+					info.compatflags2 &= ~handler->data2;
+				}
+				info.compatmask |= handler->data1;
+				info.compatmask2 |= handler->data2;
+			}
+			break;
 
 			default:
 				// should never happen
@@ -2550,6 +2660,54 @@ void G_ParseMapInfo (FString basemapinfo)
 	level_info_t gamedefaults;
 
 	int flags1 = 0, flags2 = 0;
+	if (gameinfo.gametype == GAME_Doom)
+	{
+		int comp = fileSystem.CheckNumForName("COMPLVL");
+		if (comp >= 0)
+		{
+			auto complvl = fileSystem.ReadFile(comp);
+			auto data = complvl.string();
+			int length = fileSystem.FileLength(comp);
+			if (length == 7 && !strnicmp("vanilla", data, 7))
+			{
+				flags1 = 
+					COMPATF_SHORTTEX | COMPATF_STAIRINDEX | COMPATF_USEBLOCKING | COMPATF_NODOORLIGHT | COMPATF_SPRITESORT |
+					COMPATF_TRACE | COMPATF_MISSILECLIP | COMPATF_SOUNDTARGET | COMPATF_DEHHEALTH | COMPATF_CROSSDROPOFF |
+					COMPATF_LIGHT | COMPATF_MASKEDMIDTEX |
+					COMPATF_LIMITPAIN | COMPATF_INVISIBILITY | COMPATF_VILEGHOSTS;
+
+				flags2 =
+					COMPATF2_FLOORMOVE | COMPATF2_EXPLODE1 | COMPATF2_NOMBF21 | COMPATF2_POINTONLINE;
+			}
+			else if (length == 4 && !strnicmp("boom", data, 4))
+			{
+				flags1 =
+					COMPATF_TRACE | COMPATF_SOUNDTARGET | COMPATF_BOOMSCROLL | COMPATF_MISSILECLIP | COMPATF_MASKEDMIDTEX |
+					COMPATF_INVISIBILITY;
+
+				flags2 =
+					COMPATF2_EXPLODE1 | COMPATF2_NOMBF21 | COMPATF2_POINTONLINE;
+			}
+			else if (length == 3 && !strnicmp("mbf", data, 3))
+			{
+				flags1 =
+					COMPATF_TRACE | COMPATF_SOUNDTARGET | COMPATF_BOOMSCROLL | COMPATF_MISSILECLIP | COMPATF_MUSHROOM |
+					COMPATF_MBFMONSTERMOVE | COMPATF_NOBLOCKFRIENDS | COMPATF_MASKEDMIDTEX | COMPATF_INVISIBILITY;
+
+				flags2 =
+					COMPATF2_EXPLODE1 | COMPATF2_AVOID_HAZARDS | COMPATF2_STAYONLIFT | COMPATF2_NOMBF21 | COMPATF2_POINTONLINE;
+			}
+			else if (length == 5 && !strnicmp("mbf21", data, 5))
+			{
+				flags1 =
+					COMPATF_TRACE | COMPATF_SOUNDTARGET | COMPATF_BOOMSCROLL | COMPATF_MISSILECLIP | COMPATF_MUSHROOM |
+					COMPATF_MASKEDMIDTEX | COMPATF_INVISIBILITY;
+
+				flags2 =
+					COMPATF2_EXPLODE1 | COMPATF2_AVOID_HAZARDS | COMPATF2_STAYONLIFT | COMPATF2_POINTONLINE;
+			}
+		}
+	}
 
 	// Parse the default MAPINFO for the current game. This lump *MUST* come from zdoom.pk3.
 	if (basemapinfo.IsNotEmpty())

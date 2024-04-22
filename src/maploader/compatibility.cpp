@@ -115,6 +115,67 @@ static TMap<FMD5Holder, FCompatValues, FMD5HashTraits> BCompatMap;
 
 // PRIVATE DATA DEFINITIONS ------------------------------------------------
 
+static FCompatOption Options[] =
+{
+	{ "setslopeoverflow",		BCOMPATF_SETSLOPEOVERFLOW, SLOT_BCOMPAT },
+	{ "resetplayerspeed",		BCOMPATF_RESETPLAYERSPEED, SLOT_BCOMPAT },
+	{ "vileghosts",				COMPATF_VILEGHOSTS, SLOT_COMPAT },
+	{ "ignoreteleporttags",		BCOMPATF_BADTELEPORTERS, SLOT_BCOMPAT },
+	{ "rebuildnodes",			BCOMPATF_REBUILDNODES, SLOT_BCOMPAT },
+	{ "linkfrozenprops",		BCOMPATF_LINKFROZENPROPS, SLOT_BCOMPAT },
+	{ "floatbob",				BCOMPATF_FLOATBOB, SLOT_BCOMPAT },
+	{ "noslopeid",				BCOMPATF_NOSLOPEID, SLOT_BCOMPAT },
+	{ "clipmidtex",				BCOMPATF_CLIPMIDTEX, SLOT_BCOMPAT },
+	{ "nosectionmerge",			BCOMPATF_NOSECTIONMERGE, SLOT_BCOMPAT },
+	{ "nomirrors",				BCOMPATF_NOMIRRORS, SLOT_BCOMPAT },
+
+
+	// list copied from g_mapinfo.cpp
+	{ "shorttex",				COMPATF_SHORTTEX, SLOT_COMPAT },
+	{ "stairs",					COMPATF_STAIRINDEX, SLOT_COMPAT },
+	{ "limitpain",				COMPATF_LIMITPAIN, SLOT_COMPAT },
+	{ "nopassover",				COMPATF_NO_PASSMOBJ, SLOT_COMPAT },
+	{ "notossdrops",			COMPATF_NOTOSSDROPS, SLOT_COMPAT },
+	{ "useblocking", 			COMPATF_USEBLOCKING, SLOT_COMPAT },
+	{ "nodoorlight",			COMPATF_NODOORLIGHT, SLOT_COMPAT },
+	{ "ravenscroll",			COMPATF_RAVENSCROLL, SLOT_COMPAT },
+	{ "soundtarget",			COMPATF_SOUNDTARGET, SLOT_COMPAT },
+	{ "dehhealth",				COMPATF_DEHHEALTH, SLOT_COMPAT },
+	{ "trace",					COMPATF_TRACE, SLOT_COMPAT },
+	{ "dropoff",				COMPATF_DROPOFF, SLOT_COMPAT },
+	{ "boomscroll",				COMPATF_BOOMSCROLL, SLOT_COMPAT },
+	{ "invisibility",			COMPATF_INVISIBILITY, SLOT_COMPAT },
+	{ "silentinstantfloors",	COMPATF_SILENT_INSTANT_FLOORS, SLOT_COMPAT },
+	{ "sectorsounds",			COMPATF_SECTORSOUNDS, SLOT_COMPAT },
+	{ "missileclip",			COMPATF_MISSILECLIP, SLOT_COMPAT },
+	{ "crossdropoff",			COMPATF_CROSSDROPOFF, SLOT_COMPAT },
+	{ "wallrun",				COMPATF_WALLRUN, SLOT_COMPAT },		// [GZ] Added for CC MAP29
+	{ "anybossdeath",			COMPATF_ANYBOSSDEATH, SLOT_COMPAT },// [GZ] Added for UAC_DEAD
+	{ "mushroom",				COMPATF_MUSHROOM, SLOT_COMPAT },
+	{ "mbfmonstermove",			COMPATF_MBFMONSTERMOVE, SLOT_COMPAT },
+	{ "noblockfriends",			COMPATF_NOBLOCKFRIENDS, SLOT_COMPAT },
+	{ "spritesort",				COMPATF_SPRITESORT, SLOT_COMPAT },
+	{ "hitscan",				COMPATF_HITSCAN, SLOT_COMPAT },
+	{ "lightlevel",				COMPATF_LIGHT, SLOT_COMPAT },
+	{ "polyobj",				COMPATF_POLYOBJ, SLOT_COMPAT },
+	{ "maskedmidtex",			COMPATF_MASKEDMIDTEX, SLOT_COMPAT },
+	{ "badangles",				COMPATF2_BADANGLES, SLOT_COMPAT2 },
+	{ "floormove",				COMPATF2_FLOORMOVE, SLOT_COMPAT2 },
+	{ "soundcutoff",			COMPATF2_SOUNDCUTOFF, SLOT_COMPAT2 },
+	{ "pointonline",			COMPATF2_POINTONLINE, SLOT_COMPAT2 },
+	{ "multiexit",				COMPATF2_MULTIEXIT, SLOT_COMPAT2 },
+	{ "teleport",				COMPATF2_TELEPORT, SLOT_COMPAT2 },
+	{ "disablepushwindowcheck",	COMPATF2_PUSHWINDOW, SLOT_COMPAT2 },
+	{ "checkswitchrange",		COMPATF2_CHECKSWITCHRANGE, SLOT_COMPAT2 },
+	{ "explode1",				COMPATF2_EXPLODE1, SLOT_COMPAT2 },
+	{ "explode2",				COMPATF2_EXPLODE2, SLOT_COMPAT2 },
+	{ "railing",				COMPATF2_RAILING, SLOT_COMPAT2 },
+	{ "scriptwait",				COMPATF2_SCRIPTWAIT, SLOT_COMPAT2 },
+	{ "nombf21",				COMPATF2_NOMBF21, SLOT_COMPAT2 },
+	{ "voodoozombies",			COMPATF2_VOODOO_ZOMBIES, SLOT_COMPAT2 },
+	{ NULL, 0, 0 }
+};
+
 static const char *const LineSides[] =
 {
 	"Front", "Back", NULL
@@ -195,8 +256,15 @@ void ParseCompatibility()
 		flags.ExtCommandIndex = ~0u;
 		while (sc.GetString())
 		{
-			sc.UnGet();
-			break;
+			if ((i = sc.MatchString(&Options[0].Name, sizeof(*Options))) >= 0)
+			{
+				flags.CompatFlags[Options[i].WhichSlot] |= Options[i].CompatFlags;
+			}
+			else
+			{
+				sc.UnGet();
+				break;
+			}
 		}
 		sc.MustGetStringName("}");
 		for (j = 0; j < md5array.Size(); ++j)
@@ -217,7 +285,29 @@ FName MapLoader::CheckCompatibility(MapData *map)
 {
 	FMD5Holder md5;
 	FCompatValues *flags;
-	
+
+	if (BCompatMap.CountUsed() == 0) ParseCompatibility();
+
+	Level->ii_compatflags = 0;
+	Level->ii_compatflags2 = 0;
+	Level->ib_compatflags = 0;
+
+	// When playing Doom IWAD levels force BCOMPATF_NOSECTIONMERGE, COMPAT_SHORTTEX and COMPATF_LIGHT.
+	// I'm not sure if the IWAD maps actually need COMPATF_LIGHT but it certainly does not hurt.
+	// TNT's MAP31 also needs COMPATF_STAIRINDEX but that only gets activated for TNT.WAD.
+	if (fileSystem.GetFileContainer(map->lumpnum) == fileSystem.GetIwadNum())
+	{
+		if ((gameinfo.flags & GI_COMPATSHORTTEX) && Level->maptype == MAPTYPE_DOOM)
+		{
+			Level->ii_compatflags = COMPATF_SHORTTEX | COMPATF_LIGHT;
+			if (gameinfo.flags & GI_COMPATSTAIRS) Level->ii_compatflags |= COMPATF_STAIRINDEX;
+		}
+		if (gameinfo.flags & GI_NOSECTIONMERGE)
+		{
+			//Level->ib_compatflags |= BCOMPATF_NOSECTIONMERGE;
+		}
+	}
+
 	map->GetChecksum(md5.Bytes);
 
 	flags = BCompatMap.CheckKey(md5);
@@ -243,5 +333,20 @@ FName MapLoader::CheckCompatibility(MapData *map)
 		}
 	}
 
+	if (flags != NULL)
+	{
+		Level->ii_compatflags |= flags->CompatFlags[SLOT_COMPAT];
+		Level->ii_compatflags2 |= flags->CompatFlags[SLOT_COMPAT2];
+		Level->ib_compatflags |= flags->CompatFlags[SLOT_BCOMPAT];
+	}
+
+	// Reset i_compatflags
+	Level->ApplyCompatibility();
+	Level->ApplyCompatibility2();
+	// Set floatbob compatibility for all maps with an original Hexen MAPINFO.
+	if (Level->flags2 & LEVEL2_HEXENHACK)
+	{
+		Level->ib_compatflags |= BCOMPATF_FLOATBOB;
+	}
 	return FName(hash, true);	// if this returns NAME_None it means there is no scripted compatibility handler.
 }

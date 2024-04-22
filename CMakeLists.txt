@@ -215,7 +215,6 @@ option( NO_OPENAL "Disable OpenAL sound support" OFF )
 
 find_package( BZip2 )
 find_package( VPX )
-find_package( WebP )
 
 include( TargetArch )
 
@@ -226,6 +225,7 @@ if( ${TARGET_ARCHITECTURE} MATCHES "x86_64" )
 endif()
 
 option (HAVE_VULKAN "Enable Vulkan support" ON)
+option (HAVE_GLES2 "Enable GLES2 support" ON)
 
 # no, we're not using external asmjit for now, we made too many modifications to our's.
 # if the asmjit author uses our changes then we'll update this.
@@ -242,10 +242,14 @@ if( MSVC )
 	# String pooling
 	# Function-level linking
 	# Disable run-time type information
-	set( ALL_C_FLAGS "/GF /Gy /permissive-" )
+	set( ALL_C_FLAGS "/GF /Gy /permissive- /utf-8" )
 
 	if ( HAVE_VULKAN )
 		set( ALL_C_FLAGS "${ALL_C_FLAGS} /DHAVE_VULKAN" )
+	endif()
+
+	if ( HAVE_GLES2 )
+		set( ALL_C_FLAGS "${ALL_C_FLAGS} /DHAVE_GLES2" )
 	endif()
 
 	# Use SSE 2 as minimum always as the true color drawers needs it for __vectorcall
@@ -277,9 +281,13 @@ else()
 		set( ALL_C_FLAGS "${ALL_C_FLAGS} -DHAVE_VULKAN" )
 	endif()
 
+	if ( HAVE_GLES2 )
+		set( ALL_C_FLAGS "${ALL_C_FLAGS} -DHAVE_GLES2" )
+	endif()
+
 	if ( UNIX )
 		include(CheckSymbolExists)
-		check_symbol_exists( "fts_set" "fts.h" HAVE_FTS )
+		check_symbol_exists( "fts_set" "sys/types.h;sys/stat.h;fts.h" HAVE_FTS )
 		if ( NOT HAVE_FTS )
 			include ( FindPkgConfig )
 			pkg_check_modules( MUSL_FTS musl-fts )
@@ -332,6 +340,7 @@ if (HAVE_VULKAN)
 	add_subdirectory( libraries/ZVulkan )
 endif()
 
+add_subdirectory( libraries/ZWidget )
 add_subdirectory( libraries/webp )
 
 add_subdirectory( libraries/discordrpc EXCLUDE_FROM_ALL )

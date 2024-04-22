@@ -68,7 +68,7 @@
 #include "shiftstate.h"
 #include "s_music.h"
 #include "hwrenderer/scene/hw_drawinfo.h"
-#include "g_levellocals.h"
+#include <g_levellocals.h>
 
 EXTERN_CVAR(Int, cl_gfxlocalization)
 EXTERN_CVAR(Bool, m_quickexit)
@@ -76,6 +76,8 @@ EXTERN_CVAR(Bool, saveloadconfirmation) // [mxd]
 EXTERN_CVAR(Bool, quicksaverotation)
 EXTERN_CVAR(Bool, show_messages)
 EXTERN_CVAR(Float, hud_scalefactor)
+
+CVAR(Bool, m_simpleoptions, true, CVAR_ARCHIVE|CVAR_GLOBALCONFIG)
 
 typedef void(*hfunc)();
 DMenu* CreateMessageBoxMenu(DMenu* parent, const char* message, int messagemode, bool playsound, FName action = NAME_None, hfunc handler = nullptr);
@@ -256,7 +258,7 @@ bool M_SetSpecialMenu(FName& menu, int param)
 			M_StartMessage(GStrings("SAVEDEAD"), 1);
 			return false;
 		}
-
+		
 		break;
 
 	case NAME_Quitmenu:
@@ -272,6 +274,14 @@ bool M_SetSpecialMenu(FName& menu, int param)
 
 	case NAME_Playermenu:
 		menu = NAME_NewPlayerMenu;	// redirect the old player menu to the new one.
+		break;
+
+	case NAME_Optionsmenu:
+		if (m_simpleoptions) menu = NAME_OptionsmenuSimple;
+		break;
+
+	case NAME_OptionsmenuFull:
+		menu = NAME_Optionsmenu;
 		break;
 
 	case NAME_Readthismenu:

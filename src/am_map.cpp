@@ -130,10 +130,10 @@ struct islope_t
 //
 //=============================================================================
 
-CVAR(Bool, am_textured, true, CVAR_ARCHIVE)
+CVAR(Bool, am_textured, false, CVAR_ARCHIVE)
 CVAR(Float, am_linealpha, 1.0f, CVAR_ARCHIVE)
-CVAR(Int, am_linethickness, 2, CVAR_ARCHIVE)
-CVAR(Int, am_lineantialiasing, 1, CVAR_ARCHIVE)
+CVAR(Int, am_linethickness, 1, CVAR_ARCHIVE)
+CVAR(Int, am_lineantialiasing, 0, CVAR_ARCHIVE)
 CVAR(Bool, am_thingrenderstyles, true, CVAR_ARCHIVE)
 CVAR(Int, am_showsubsector, -1, 0);
 
@@ -156,7 +156,15 @@ CUSTOM_CVAR(Int, am_cheat, 0, 0)
 
 
 CVAR(Int, am_rotate, 0, CVAR_ARCHIVE);
-CVAR(Int, am_overlay, 1, CVAR_ARCHIVE);
+CUSTOM_CVAR(Int, am_overlay, 0, CVAR_ARCHIVE)
+{
+	// stop overlay if we're told not to use it anymore.
+	if (automapactive && viewactive && (self == 0))
+	{
+		automapactive = false;
+		viewactive = true;
+	}
+}
 CVAR(Bool, am_showsecrets, true, CVAR_ARCHIVE);
 CVAR(Bool, am_showmonsters, true, CVAR_ARCHIVE);
 CVAR(Bool, am_showitems, false, CVAR_ARCHIVE);
@@ -1546,7 +1554,7 @@ void DAutomap::Ticker ()
 {
 	if (!automapactive)
 		return;
-
+	
 	// Backport this from vkDoom
 	if ((primaryLevel->flags9 & LEVEL9_NOAUTOMAP) || (primaryLevel->wisflags & LEVELWIS_CUTSCENELEVEL))
 	{
@@ -2959,7 +2967,8 @@ void DAutomap::drawThings ()
 			if (am_cheat > 0 || !(t->flags6 & MF6_NOTONAUTOMAP)
 				|| (am_thingrenderstyles && !(t->renderflags & RF_INVISIBLE) && !(t->flags6 & MF6_NOTONAUTOMAP)))
 			{
-				DVector3 pos = t->InterpolatedPosition(r_viewpoint.TicFrac) + t->Level->Displacements.getOffset(sec.PortalGroup, MapPortalGroup);
+				DVector3 fracPos = t->InterpolatedPosition(r_viewpoint.TicFrac);
+				FVector2 pos = FVector2(float(fracPos.X),float(fracPos.Y)) + FVector2(t->Level->Displacements.getOffset(sec.PortalGroup, MapPortalGroup)) + FVector2(t->AutomapOffsets);
 				p.x = pos.X;
 				p.y = pos.Y;
 
@@ -2969,14 +2978,14 @@ void DAutomap::drawThings ()
 					spriteframe_t *frame;
 					int rotation = 0;
 
-					// try all modes backwards until a valid texture has been found.	
+					// try all modes backwards until a valid texture has been found.
 					for(int show = am_showthingsprites; show > 0 && texture == nullptr; show--)
 					{
 						const spritedef_t& sprite = sprites[t->sprite];
 						const size_t spriteIndex = sprite.spriteframes + (show > 1 ? t->frame : 0);
 
 						frame = &SpriteFrames[spriteIndex];
-						DAngle angle = DAngle::fromDeg(270. + 22.5) - t->InterpolatedAngles(r_viewpoint.TicFrac).Yaw;
+						DAngle angle = DAngle::fromDeg(270.) - t->InterpolatedAngles(r_viewpoint.TicFrac).Yaw - t->SpriteRotation; 
 						if (frame->Texture[0] != frame->Texture[1]) angle += DAngle::fromDeg(180. / 16);
 						if (am_rotate == 1 || (am_rotate == 2 && viewactive))
 						{

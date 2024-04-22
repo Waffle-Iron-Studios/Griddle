@@ -69,12 +69,19 @@ namespace swrenderer
 		if (count == 0)
 			return;
 
-		
-		// If the compatibility option is on sprites of equal distance need to
-		// be sorted in inverse order. This is most easily achieved by
-		// filling the sort array backwards before the sort.
-		for (unsigned int i = 0; i < count; i++)
-			SortedSprites[i] = Sprites[first + count - i - 1];
+		if (!(thread->Viewport->Level()->i_compatflags & COMPATF_SPRITESORT))
+		{
+			for (unsigned int i = 0; i < count; i++)
+				SortedSprites[i] = Sprites[first + i];
+		}
+		else
+		{
+			// If the compatibility option is on sprites of equal distance need to
+			// be sorted in inverse order. This is most easily achieved by
+			// filling the sort array backwards before the sort.
+			for (unsigned int i = 0; i < count; i++)
+				SortedSprites[i] = Sprites[first + count - i - 1];
+		}
 
 		{
 			std::stable_sort(&SortedSprites[0], &SortedSprites[count], [](VisibleSprite *a, VisibleSprite *b) -> bool

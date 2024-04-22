@@ -132,6 +132,7 @@ EXTERN_CVAR(Bool, dlg_vgafont)
 CVAR(Int, vid_renderer, 1, 0)	// for some stupid mods which threw caution out of the window...
 
 void DrawHUD();
+void D_DoAnonStats();
 void I_DetectOS();
 void UpdateGenericUI(bool cvar);
 void Local_Job_Init();
@@ -158,6 +159,7 @@ void I_UpdateDiscordPresence(bool SendPresence, const char* curstatus, const cha
 bool M_SetSpecialMenu(FName& menu, int param);	// game specific checks
 
 const FIWADInfo *D_FindIWAD(TArray<FString> &wadfiles, const char *iwad, const char *basewad);
+void InitWidgetResources(const char* basewad);
 
 // PUBLIC FUNCTION PROTOTYPES ----------------------------------------------
 
@@ -267,7 +269,7 @@ CUSTOM_CVAR (Int, fraglimit, 0, CVAR_SERVERINFO)
 }
 
 CVAR (Float, timelimit, 0.f, CVAR_SERVERINFO);
-CVAR (Int, wipetype, 3, CVAR_ARCHIVE);
+CVAR (Int, wipetype, 1, CVAR_ARCHIVE);
 CVAR (Int, snd_drawoutput, 0, 0);
 CUSTOM_CVAR (String, vid_cursor, "None", CVAR_ARCHIVE | CVAR_NOINITCALL)
 {
@@ -295,7 +297,8 @@ CVAR(Bool, autoloadlights, false, CVAR_ARCHIVE | CVAR_NOINITCALL | CVAR_GLOBALCO
 CVAR(Bool, autoloadwidescreen, true, CVAR_ARCHIVE | CVAR_NOINITCALL | CVAR_GLOBALCONFIG)
 CVAR(Bool, r_debug_disable_vis_filter, false, 0)
 CVAR(Int, vid_showpalette, 0, 0)
-CUSTOM_CVAR (Bool, i_discordrpc, true, CVAR_ARCHIVE | CVAR_GLOBALCONFIG)
+
+CUSTOM_CVAR (Bool, i_discordrpc, false, CVAR_ARCHIVE | CVAR_GLOBALCONFIG)
 {
 	I_UpdateWindowTitle();
 }
@@ -425,14 +428,14 @@ CUSTOM_CVAR (Int, dmflags, 0, CVAR_SERVERINFO | CVAR_NOINITCALL)
 
 	if (self & DF_NO_FREELOOK)
 	{
-		Net_WriteByte (DEM_CENTERVIEW);
+		Net_WriteInt8 (DEM_CENTERVIEW);
 	}
 	// If nofov is set, force everybody to the arbitrator's FOV.
 	if ((self & DF_NO_FOV) && consoleplayer == Net_Arbitrator)
 	{
 		float fov;
 
-		Net_WriteByte (DEM_FOV);
+		Net_WriteInt8 (DEM_FOV);
 
 		// If the game is started with DF_NO_FOV set, the arbitrator's
 		// DesiredFOV will not be set when this callback is run, so
@@ -572,6 +575,143 @@ CUSTOM_CVAR(Int, dmflags3, 0, CVAR_SERVERINFO | CVAR_NOINITCALL)
 
 CVAR(Flag, sv_noplayerclip, dmflags3, DF3_NO_PLAYER_CLIP);
 CVAR(Flag, sv_coopsharekeys, dmflags3, DF3_COOP_SHARE_KEYS);
+CVAR(Flag, sv_localitems, dmflags3, DF3_LOCAL_ITEMS);
+CVAR(Flag, sv_nolocaldrops, dmflags3, DF3_NO_LOCAL_DROPS);
+CVAR(Flag, sv_nocoopitems, dmflags3, DF3_NO_COOP_ONLY_ITEMS);
+CVAR(Flag, sv_nocoopthings, dmflags3, DF3_NO_COOP_ONLY_THINGS);
+CVAR(Flag, sv_rememberlastweapon, dmflags3, DF3_REMEMBER_LAST_WEAP);
+CVAR(Flag, sv_pistolstart, dmflags3, DF3_PISTOL_START);
+
+//==========================================================================
+//
+// CVAR compatflags
+//
+//==========================================================================
+
+EXTERN_CVAR(Int, compatmode)
+
+CUSTOM_CVAR (Int, compatflags, 0, CVAR_ARCHIVE|CVAR_SERVERINFO | CVAR_NOINITCALL)
+{
+	for (auto Level : AllLevels())
+	{
+		Level->ApplyCompatibility();
+	}
+}
+
+CUSTOM_CVAR (Int, compatflags2, 0, CVAR_ARCHIVE|CVAR_SERVERINFO | CVAR_NOINITCALL)
+{
+	for (auto Level : AllLevels())
+	{
+		Level->ApplyCompatibility2();
+		Level->SetCompatLineOnSide(true);
+	}
+}
+
+CUSTOM_CVAR(Int, compatmode, 0, CVAR_ARCHIVE|CVAR_NOINITCALL)
+{
+	int v, w = 0;
+
+	switch (self)
+	{
+	default:
+	case 0:
+		v = 0;
+		break;
+
+	case 1:	// Doom2.exe compatible with a few relaxed settings
+		v = COMPATF_SHORTTEX | COMPATF_STAIRINDEX | COMPATF_USEBLOCKING | COMPATF_NODOORLIGHT | COMPATF_SPRITESORT |
+			COMPATF_TRACE | COMPATF_MISSILECLIP | COMPATF_SOUNDTARGET | COMPATF_DEHHEALTH | COMPATF_CROSSDROPOFF |
+			COMPATF_LIGHT | COMPATF_MASKEDMIDTEX;
+		w = COMPATF2_FLOORMOVE | COMPATF2_EXPLODE1 | COMPATF2_NOMBF21;
+		break;
+
+	case 2:	// same as 1 but stricter (NO_PASSMOBJ and INVISIBILITY are also set)
+		v = COMPATF_SHORTTEX | COMPATF_STAIRINDEX | COMPATF_USEBLOCKING | COMPATF_NODOORLIGHT | COMPATF_SPRITESORT |
+			COMPATF_TRACE | COMPATF_MISSILECLIP | COMPATF_SOUNDTARGET | COMPATF_NO_PASSMOBJ | COMPATF_LIMITPAIN |
+			COMPATF_DEHHEALTH | COMPATF_INVISIBILITY | COMPATF_CROSSDROPOFF | COMPATF_VILEGHOSTS | COMPATF_HITSCAN |
+			COMPATF_WALLRUN | COMPATF_NOTOSSDROPS | COMPATF_LIGHT | COMPATF_MASKEDMIDTEX;
+		w = COMPATF2_BADANGLES | COMPATF2_FLOORMOVE | COMPATF2_POINTONLINE | COMPATF2_EXPLODE2 | COMPATF2_NOMBF21 | COMPATF2_VOODOO_ZOMBIES;
+		break;
+
+	case 3: // Boom compat mode
+		v = COMPATF_TRACE|COMPATF_SOUNDTARGET|COMPATF_BOOMSCROLL|COMPATF_MISSILECLIP|COMPATF_MASKEDMIDTEX;
+		w = COMPATF2_EXPLODE1 | COMPATF2_NOMBF21;
+		break;
+
+	case 4: // Old ZDoom compat mode
+		v = COMPATF_SOUNDTARGET | COMPATF_LIGHT;
+		w = COMPATF2_MULTIEXIT | COMPATF2_TELEPORT | COMPATF2_PUSHWINDOW | COMPATF2_CHECKSWITCHRANGE | COMPATF2_NOMBF21;
+		break;
+
+	case 5: // MBF compat mode
+		v = COMPATF_TRACE | COMPATF_SOUNDTARGET | COMPATF_BOOMSCROLL | COMPATF_MISSILECLIP | COMPATF_MUSHROOM |
+			COMPATF_MBFMONSTERMOVE | COMPATF_NOBLOCKFRIENDS | COMPATF_MASKEDMIDTEX;
+		w = COMPATF2_EXPLODE1 | COMPATF2_AVOID_HAZARDS | COMPATF2_STAYONLIFT | COMPATF2_NOMBF21;
+		break;
+
+	case 6:	// Boom with some added settings to reenable some 'broken' behavior
+		v = COMPATF_TRACE | COMPATF_SOUNDTARGET | COMPATF_BOOMSCROLL | COMPATF_MISSILECLIP | COMPATF_NO_PASSMOBJ |
+			COMPATF_INVISIBILITY | COMPATF_HITSCAN | COMPATF_WALLRUN | COMPATF_NOTOSSDROPS | COMPATF_MASKEDMIDTEX;
+		w = COMPATF2_POINTONLINE | COMPATF2_EXPLODE2 | COMPATF2_NOMBF21;
+		break;
+
+	case 7: // Stricter MBF compatibility
+		v = COMPATF_NOBLOCKFRIENDS | COMPATF_MBFMONSTERMOVE | COMPATF_INVISIBILITY |
+			COMPATF_NOTOSSDROPS | COMPATF_MUSHROOM | COMPATF_NO_PASSMOBJ | COMPATF_BOOMSCROLL | COMPATF_WALLRUN |
+			COMPATF_TRACE | COMPATF_HITSCAN | COMPATF_MISSILECLIP | COMPATF_MASKEDMIDTEX | COMPATF_SOUNDTARGET;
+		w = COMPATF2_POINTONLINE | COMPATF2_EXPLODE1 | COMPATF2_EXPLODE2 | COMPATF2_AVOID_HAZARDS | COMPATF2_STAYONLIFT | COMPATF2_NOMBF21;
+		break;
+	}
+	compatflags = v;
+	compatflags2 = w;
+}
+
+CVAR (Flag, compat_shortTex,			compatflags,  COMPATF_SHORTTEX);
+CVAR (Flag, compat_stairs,				compatflags,  COMPATF_STAIRINDEX);
+CVAR (Flag, compat_limitpain,			compatflags,  COMPATF_LIMITPAIN);
+CVAR (Flag, compat_silentpickup,		compatflags,  COMPATF_SILENTPICKUP);
+CVAR (Flag, compat_nopassover,			compatflags,  COMPATF_NO_PASSMOBJ);
+CVAR (Flag, compat_soundslots,			compatflags,  COMPATF_MAGICSILENCE);
+CVAR (Flag, compat_wallrun,				compatflags,  COMPATF_WALLRUN);
+CVAR (Flag, compat_notossdrops,			compatflags,  COMPATF_NOTOSSDROPS);
+CVAR (Flag, compat_useblocking,			compatflags,  COMPATF_USEBLOCKING);
+CVAR (Flag, compat_nodoorlight,			compatflags,  COMPATF_NODOORLIGHT);
+CVAR (Flag, compat_ravenscroll,			compatflags,  COMPATF_RAVENSCROLL);
+CVAR (Flag, compat_soundtarget,			compatflags,  COMPATF_SOUNDTARGET);
+CVAR (Flag, compat_dehhealth,			compatflags,  COMPATF_DEHHEALTH);
+CVAR (Flag, compat_trace,				compatflags,  COMPATF_TRACE);
+CVAR (Flag, compat_dropoff,				compatflags,  COMPATF_DROPOFF);
+CVAR (Flag, compat_boomscroll,			compatflags,  COMPATF_BOOMSCROLL);
+CVAR (Flag, compat_invisibility,		compatflags,  COMPATF_INVISIBILITY);
+CVAR (Flag, compat_silentinstantfloors,	compatflags,  COMPATF_SILENT_INSTANT_FLOORS);
+CVAR (Flag, compat_sectorsounds,		compatflags,  COMPATF_SECTORSOUNDS);
+CVAR (Flag, compat_missileclip,			compatflags,  COMPATF_MISSILECLIP);
+CVAR (Flag, compat_crossdropoff,		compatflags,  COMPATF_CROSSDROPOFF);
+CVAR (Flag, compat_anybossdeath,		compatflags,  COMPATF_ANYBOSSDEATH);
+CVAR (Flag, compat_minotaur,			compatflags,  COMPATF_MINOTAUR);
+CVAR (Flag, compat_mushroom,			compatflags,  COMPATF_MUSHROOM);
+CVAR (Flag, compat_mbfmonstermove,		compatflags,  COMPATF_MBFMONSTERMOVE);
+CVAR (Flag, compat_vileghosts,			compatflags,  COMPATF_VILEGHOSTS);
+CVAR (Flag, compat_noblockfriends,		compatflags,  COMPATF_NOBLOCKFRIENDS);
+CVAR (Flag, compat_spritesort,			compatflags,  COMPATF_SPRITESORT);
+CVAR (Flag, compat_hitscan,				compatflags,  COMPATF_HITSCAN);
+CVAR (Flag, compat_light,				compatflags,  COMPATF_LIGHT);
+CVAR (Flag, compat_polyobj,				compatflags,  COMPATF_POLYOBJ);
+CVAR (Flag, compat_maskedmidtex,		compatflags,  COMPATF_MASKEDMIDTEX);
+CVAR (Flag, compat_badangles,			compatflags2, COMPATF2_BADANGLES);
+CVAR (Flag, compat_floormove,			compatflags2, COMPATF2_FLOORMOVE);
+CVAR (Flag, compat_soundcutoff,			compatflags2, COMPATF2_SOUNDCUTOFF);
+CVAR (Flag, compat_pointonline,			compatflags2, COMPATF2_POINTONLINE);
+CVAR (Flag, compat_multiexit,			compatflags2, COMPATF2_MULTIEXIT);
+CVAR (Flag, compat_teleport,			compatflags2, COMPATF2_TELEPORT);
+CVAR (Flag, compat_pushwindow,			compatflags2, COMPATF2_PUSHWINDOW);
+CVAR (Flag, compat_checkswitchrange,	compatflags2, COMPATF2_CHECKSWITCHRANGE);
+CVAR (Flag, compat_explode1,			compatflags2, COMPATF2_EXPLODE1);
+CVAR (Flag, compat_explode2,			compatflags2, COMPATF2_EXPLODE2);
+CVAR (Flag, compat_railing,				compatflags2, COMPATF2_RAILING);
+CVAR (Flag, compat_avoidhazard,			compatflags2, COMPATF2_AVOID_HAZARDS);
+CVAR (Flag, compat_stayonlift,			compatflags2, COMPATF2_STAYONLIFT);
+CVAR (Flag, compat_nombf21,				compatflags2, COMPATF2_NOMBF21);
 
 CVAR(Bool, vid_activeinbackground, false, CVAR_ARCHIVE | CVAR_GLOBALCONFIG)
 
@@ -1789,6 +1929,7 @@ void GetReserved(LumpFilterInfo& lfi)
 	lfi.reservedFolders = { "flats/", "textures/", "hires/", "sprites/", "voxels/", "colormaps/", "acs/", "maps/", "voices/", "patches/", "graphics/", "sounds/", "music/",
 	"materials/", "models/", "fonts/", "brightmaps/" };
 	lfi.requiredPrefixes = { "mapinfo", "zmapinfo", "umapinfo", "gameinfo", "sndinfo", "sndseq", "sbarinfo", "menudef", "gldefs", "animdefs", "decorate", "zscript", "iwadinfo", "complvl", "terrain", "maps/" };
+	lfi.blockednames = { "*.bat", "*.exe", "__macosx/*", "*/__macosx/*" };
 }
 
 static FString CheckGameInfo(std::vector<std::string> & pwads)
@@ -1807,7 +1948,7 @@ static FString CheckGameInfo(std::vector<std::string> & pwads)
 			// Found one!
 			auto data = check.ReadFile(num);
 			auto wadname = check.GetResourceFileName(check.GetFileContainer(num));
-			return ParseGameInfo(pwads, wadname, data.GetString(), (int)data.GetSize());
+			return ParseGameInfo(pwads, wadname, data.string(), (int)data.size());
 		}
 	}
 	return "";
@@ -2494,7 +2635,7 @@ void Mlook_ReleaseHandler()
 {
 	if (lookspring)
 	{
-		Net_WriteByte(DEM_CENTERVIEW);
+		Net_WriteInt8(DEM_CENTERVIEW);
 	}
 }
 
@@ -2506,7 +2647,7 @@ int StrTable_GetGender()
 bool StrTable_ValidFilter(const char* str)
 {
 	if (gameinfo.gametype == GAME_Strife && (gameinfo.flags & GI_SHAREWARE) && !stricmp(str, "strifeteaser")) return true;
-	return stricmp(str, GameNames[gameinfo.gametype]) == 0;
+	return gameinfo.gametype == 0 || stricmp(str, GameNames[gameinfo.gametype]) == 0;
 }
 
 bool System_WantGuiCapture()
@@ -2961,6 +3102,14 @@ static int FileSystemPrintf(FSMessageLevel level, const char* fmt, ...)
 
 static int D_InitGame(const FIWADInfo* iwad_info, std::vector<std::string>& allwads, std::vector<std::string>& pwads)
 {
+	NetworkEntityManager::InitializeNetworkEntities();
+
+	if (!restart)
+	{
+		V_InitScreenSize();
+		// This allocates a dummy framebuffer as a stand-in until V_Init2 is called.
+		V_InitScreen();
+	}
 	SavegameFolder = iwad_info->Name;
 	gameinfo.gametype = iwad_info->gametype;
 	gameinfo.flags = iwad_info->flags;
@@ -3012,7 +3161,6 @@ static int D_InitGame(const FIWADInfo* iwad_info, std::vector<std::string>& allw
 	if (!batchrun) Printf ("W_Init: Init WADfiles.\n");
 
 	LumpFilterInfo lfi;
-	lfi.dotFilter = LumpFilterIWAD.GetChars();
 
 	static const struct { int match; const char* name; } blanket[] =
 	{
@@ -3027,6 +3175,15 @@ static int D_InitGame(const FIWADInfo* iwad_info, std::vector<std::string>& allw
 		if (gameinfo.gametype & inf.match) lfi.gameTypeFilter.push_back(inf.name);
 	}
 	lfi.gameTypeFilter.push_back(FStringf("game-%s", GameTypeName()).GetChars());
+
+	lfi.gameTypeFilter.push_back(LumpFilterIWAD.GetChars());
+	// Workaround for old Doom filter names.
+	if (LumpFilterIWAD.Compare("doom.id.doom") == 0)
+	{
+		lfi.gameTypeFilter.push_back("doom.doom");
+	}
+
+
 
 	GetReserved(lfi);
 
@@ -3088,8 +3245,11 @@ static int D_InitGame(const FIWADInfo* iwad_info, std::vector<std::string>& allw
 		exec = NULL;
 	}
 
-	// [RH] Initialize localizable strings.
-	GStrings.LoadStrings (language);
+	if (!restart)
+		V_Init2();
+
+	// [RH] Initialize localizable strings. 
+	GStrings.LoadStrings(fileSystem, language);
 
 	V_InitFontColors ();
 
@@ -3112,16 +3272,8 @@ static int D_InitGame(const FIWADInfo* iwad_info, std::vector<std::string>& allw
 	if (!batchrun) Printf ("V_Init: allocate screen.\n");
 	if (!restart)
 	{
-		V_InitScreenSize();
-		// This allocates a dummy framebuffer as a stand-in until V_Init2 is called.
-		V_InitScreen ();
-
-		if (StartScreen != nullptr)
-		{
-			V_Init2();
-			StartScreen->Render();
-		}
-
+		screen->CompileNextShader();
+		if (StartScreen != nullptr) StartScreen->Render();
 	}
 	else
 	{
@@ -3131,11 +3283,18 @@ static int D_InitGame(const FIWADInfo* iwad_info, std::vector<std::string>& allw
 
 	// Base systems have been inited; enable cvar callbacks
 	FBaseCVar::EnableCallbacks ();
+	
+	// +compatmode cannot be used on the command line, so use this as a substitute
+	auto compatmodeval = Args->CheckValue("-compatmode");
+	if (compatmodeval)
+	{
+		compatmode = (int)strtoll(compatmodeval, nullptr, 10);
+	}
 
 	if (!batchrun) Printf ("ST_Init: Init startup screen.\n");
 	if (!restart)
 	{
-		StartWindow = FStartupScreen::CreateInstance (TexMan.GuesstimateNumTextures() + 5, StartScreen == nullptr);
+		StartWindow = FStartupScreen::CreateInstance (TexMan.GuesstimateNumTextures() + 5);
 	}
 	else
 	{
@@ -3350,7 +3509,6 @@ static int D_InitGame(const FIWADInfo* iwad_info, std::vector<std::string>& allw
 			return 1337; // special exit
 		}
 
-		if (StartScreen == nullptr) V_Init2();
 		if (StartScreen)
 		{
 			StartScreen->Progress(max_progress);	// advance progress bar to the end.
@@ -3504,8 +3662,9 @@ static int D_DoomMain_Internal (void)
 		OnMenuOpen,
 		System_LanguageChanged,
 		OkForLocalization,
-		[]() ->FConfigFile* { return GameConfig; }
-
+		[]() ->FConfigFile* { return GameConfig; },
+		nullptr, 
+		RemapUserTranslation
 	};
 
 	
@@ -3522,6 +3681,7 @@ static int D_DoomMain_Internal (void)
 		I_FatalError("Cannot find " BASEWAD);
 	}
 	LoadHexFont(wad);	// load hex font early so we have it during startup.
+	InitWidgetResources(wad);
 
 	C_InitConsole(80*8, 25*8, false);
 	I_DetectOS();
@@ -3546,6 +3706,9 @@ static int D_DoomMain_Internal (void)
 	}
 
 	Printf("%s version %s\n", GAMENAME, GetVersionString());
+
+	extern void D_ConfirmSendStats();
+	D_ConfirmSendStats();
 
 	FString basewad = wad;
 
@@ -3591,7 +3754,7 @@ static int D_DoomMain_Internal (void)
 		if (!iwad_info) return 0;	// user exited the selection popup via cancel button.
 		if ((iwad_info->flags & GI_SHAREWARE) && pwads.size() > 0)
 		{
-			I_FatalError ("You cannot -file with the shareware or demo version! Please buy the game for mod support, as per tradition.");
+			I_FatalError ("You cannot -file with the shareware version. Register!");
 		}
 		lastIWAD = iwad;
 
@@ -3604,6 +3767,7 @@ static int D_DoomMain_Internal (void)
 		iwad_man = NULL;
 		if (ret != 0) return ret;
 
+		D_DoAnonStats();
 		I_UpdateWindowTitle();
 		D_DoomLoop ();		// this only returns if a 'restart' CCMD is given.
 		// 
@@ -3854,5 +4018,16 @@ CCMD(fs_dir)
 		auto length = fileSystem.FileLength(i);
 		bool hidden = fileSystem.FindFile(fn1) != i;
 		Printf(PRINT_HIGH | PRINT_NONOTIFY, "%s%-64s %-15s (%5d) %10d %s %s\n", hidden ? TEXTCOLOR_RED : TEXTCOLOR_UNTRANSLATED, fn1, fns, fnid, length, container, hidden ? "(h)" : "");
+	}
+}
+
+CCMD(type)
+{
+	if (argv.argc() < 2) return;
+	int lump = fileSystem.CheckNumForFullName(argv[1]);
+	if (lump >= 0)
+	{
+		auto data = fileSystem.ReadFile(lump);
+		Printf("%.*s\n", data.size(), data.string());
 	}
 }

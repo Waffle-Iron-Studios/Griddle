@@ -155,7 +155,7 @@ void DFloor::Tick ()
 				case genFloorChgT:
 				case genFloorChg0:
 					m_Sector->SetSpecial(&m_NewSpecial);
-					//fall thru
+					[[fallthrough]];
 				case genFloorChg:
 					m_Sector->SetTexture(sector_t::floor, m_Texture);
 					break;
@@ -171,7 +171,7 @@ void DFloor::Tick ()
 				case genFloorChgT:
 				case genFloorChg0:
 					m_Sector->SetSpecial(&m_NewSpecial);
-					//fall thru
+					[[fallthrough]];
 				case genFloorChg:
 					m_Sector->SetTexture(sector_t::floor, m_Texture);
 					break;
@@ -464,8 +464,14 @@ bool FLevelLocals::CreateFloor(sector_t *sec, DFloor::EFloor floortype, line_t *
 		floor->StopInterpolation(true);
 		floor->m_Instant = true;
 
-		if (!line || !(line->activation & (SPAC_Use | SPAC_Push)) || line->backsector != sec)
-			silent = true;
+		// [Graf Zahl]
+		// Don't make sounds for instant movement hacks but make an exception for
+		// switches that activate their own back side. 
+		if (!(sec->Level->i_compatflags & COMPATF_SILENT_INSTANT_FLOORS))
+		{
+			if (!line || !(line->activation & (SPAC_Use | SPAC_Push)) || line->backsector != sec)
+				silent = true;
+		}
 	}
 	if (!silent) floor->StartFloorSound();
 
@@ -616,7 +622,7 @@ bool FLevelLocals::EV_BuildStairs (int tag, DFloor::EStair type, line_t *line, d
 	auto itr = GetSectorTagIterator(tag, line);
 	// The compatibility mode doesn't work with a hashing algorithm.
 	// It needs the original linear search method. This was broken in Boom.
-	bool compatible = tag != 0;
+	bool compatible = tag != 0 && (i_compatflags & COMPATF_STAIRINDEX);
 	while ((secnum = itr.NextCompat(compatible, secnum)) >= 0)
 	{
 		sec = &sectors[secnum];
@@ -706,10 +712,16 @@ bool FLevelLocals::EV_BuildStairs (int tag, DFloor::EStair type, line_t *line, d
 					if (!igntxt && tsec->GetTexture(sector_t::floor) != texture)
 						continue;
 
+					// Doom bug: Height was changed before discarding the sector as part of the stairs.
+					// Needs to be compatibility optioned because some maps (Eternall MAP25) depend on it.
+					if (i_compatflags & COMPATF_STAIRINDEX) height += stairstep;
+
 					// if sector's floor already moving, look for another
 					//jff 2/26/98 special lockout condition for retriggering
 					if (tsec->PlaneMoving(sector_t::floor) || tsec->stairlock)
 						continue;
+
+					if (!(i_compatflags & COMPATF_STAIRINDEX)) height += stairstep;
 
 					ok = true;
 					break;
@@ -798,7 +810,10 @@ bool FLevelLocals::EV_DoDonut (int tag, line_t *line, double pillarspeed, double
 		s2 = getNextSector (s1->Lines[0], s1);	// s2 is pool's sector
 		if (!s2)								// note lowest numbered line around
 			continue;							// pillar must be two-sided
-		
+
+		if (!(i_compatflags2 & COMPATF2_FLOORMOVE) && s2->PlaneMoving(sector_t::floor))
+			continue;
+
 		for (auto ln : s2->Lines)
 		{
 			if (ln->backsector == nullptr || ln->backsector == s1)

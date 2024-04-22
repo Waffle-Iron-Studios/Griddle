@@ -291,6 +291,8 @@ extend class Actor
 	{
 		Inventory drop = item.CreateTossable(amt);
 		if (drop == null) return NULL;
+		drop.ClearLocalPickUps();
+		drop.bNeverLocal = true;
 		drop.SetOrigin(Pos + (0, 0, 10.), false);
 		drop.Angle = Angle;
 		drop.VelFromAngle(5.);
@@ -634,27 +636,31 @@ extend class Actor
 			Actor mo;
 			double spawnz = 0;
 
-			int style = sv_dropstyle;
-			if (style == 0)
+			if (!(Level.compatflags & COMPATF_NOTOSSDROPS))
 			{
-				style = gameinfo.defaultdropstyle;
-			}
-			if (style == 2)
-			{
-				spawnz = 24;
-			}
-			else
-			{
-				spawnz = Height / 2;
+				int style = sv_dropstyle;
+				if (style == 0)
+				{
+					style = gameinfo.defaultdropstyle;
+				}
+				if (style == 2)
+				{
+					spawnz = 24;
+				}
+				else
+				{
+					spawnz = Height / 2;
+				}
 			}
 			mo = Spawn(item, pos + (0, 0, spawnz), ALLOW_REPLACE);
 			if (mo != NULL)
 			{
 				mo.bDropped = true;
 				mo.bNoGravity = false;	// [RH] Make sure it is affected by gravity
-
-				mo.TossItem ();
-
+				if (!(Level.compatflags & COMPATF_NOTOSSDROPS))
+				{
+					mo.TossItem ();
+				}
 				let inv = Inventory(mo);
 				if (inv)
 				{

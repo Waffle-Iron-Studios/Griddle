@@ -152,9 +152,6 @@ static PClassActor* FindInfoName(int index, bool mustexist = false)
 static FSoundID DehFindSound(int index,bool mustexist = false)
 {
 	if (index < 0) return NO_SOUND;
-	if (index < (int) SoundMap.Size()) return SoundMap[index];
-	FStringf name("~dsdhacked/#%d", index);
-	if (dsdhacked && !mustexist) return soundEngine->FindSoundTentative(name.GetChars());
 	if (index < (int) SoundMap.Size() && SoundMap[index].isvalid()) return SoundMap[index];
 	if (dsdhacked && !mustexist)
 	{
@@ -2548,7 +2545,7 @@ static int PatchMisc (int dummy)
 	auto health = GetDefaultByName ("HealthBonus");
 	if (health!=NULL) 
 	{
-		health->IntVar(NAME_MaxAmount) = 2 * deh.MaxHealth;
+		health->IntVar(NAME_MaxAmount) = -1;	// needs to be evaluated at run time due to the compat flag.
 	}
 
 	health = GetDefaultByName ("Soulsphere");
@@ -3297,6 +3294,7 @@ static inline bool CompareLabel (const char *want, const uint8_t *have)
 static void UnloadDehSupp ()
 {
 	VMDisassemblyDumper disasmdump(VMDisassemblyDumper::Append);
+
 	// Handle MBF params here, before the required arrays are cleared
 	for (unsigned int i=0; i < MBFParamStates.Size(); i++)
 	{
@@ -3726,9 +3724,6 @@ void FinishDehPatch ()
 			}
 		}
 	}
-	// Now that all Dehacked patches have been processed, it's okay to free StateMap.
-	StateMap.Reset();
-	OrgSprNames.Reset();
 	UnloadDehSupp();
 	TouchedActors.Reset();
 	EnglishStrings.Clear();

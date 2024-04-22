@@ -264,6 +264,9 @@ AActor *FLevelLocals::SelectTeleDest (int tid, int tag, bool norandom)
 	// behavior is used instead (return the first teleport dest found in a tagged
 	// sector).
 
+	// Compatibility hack for some maps that fell victim to a bug in the teleport code in 2.0.9x
+	if (ib_compatflags & BCOMPATF_BADTELEPORTERS) tag = 0;
+
 	if (tid != 0)
 	{
 		auto iterator = GetActorIterator(NAME_TeleportDest, tid);
@@ -406,6 +409,10 @@ bool FLevelLocals::EV_Teleport (int tid, int tag, line_t *line, int side, AActor
 	else
 	{
 		z = ONFLOORZ;
+	}
+	if ((i_compatflags2 & COMPATF2_BADANGLES) && (thing->player != NULL))
+	{
+		badangle = DAngle::fromDeg(0.01);
 	}
 	if (P_Teleport (thing, DVector3(searcher->Pos().XY(), z), searcher->Angles.Yaw + badangle, flags))
 	{

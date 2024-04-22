@@ -57,13 +57,13 @@ bool P_CheckTickerPaused ()
 {
 	// pause if in menu or console and at least one tic has been run
 	if ( !netgame
-		&& gamestate != GS_TITLELEVEL
-		&& ((menuactive != MENU_Off && menuactive != MENU_OnNoPause) ||
-			ConsoleState == c_down || ConsoleState == c_falling)
-		&& !demoplayback
-		&& !demorecording
-		&& players[consoleplayer].viewz != NO_VALUE
-		&& wipegamestate == gamestate)
+		 && gamestate != GS_TITLELEVEL
+		 && ((menuactive != MENU_Off && menuactive != MENU_OnNoPause) ||
+			 ConsoleState == c_down || ConsoleState == c_falling)
+		 && !demoplayback
+		 && !demorecording
+		 && players[consoleplayer].viewz != NO_VALUE
+		 && wipegamestate == gamestate)
 	{
 		// Only the current UI level's settings are relevant for sound.
 		bool dontpausemusic = !(primaryLevel->flags2 & LEVEL2_PAUSE_MUSIC_IN_MENUS) && !(primaryLevel->wisflags & LEVELWIS_CUTSCENELEVEL);

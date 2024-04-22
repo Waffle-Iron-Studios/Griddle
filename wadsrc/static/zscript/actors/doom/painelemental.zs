@@ -85,6 +85,10 @@ extend class Actor
 			return;
 		}
 
+		// [RH] make this optional
+		if (limit < 0 && (Level.compatflags & COMPATF_LIMITPAIN))
+			limit = 21;
+
 		if (limit > 0)
 		{
 			// count total number of skulls currently on the level

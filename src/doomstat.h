@@ -235,6 +235,9 @@ EXTERN_CVAR (Int, dmflags);
 EXTERN_CVAR (Int, dmflags2);	// [BC]
 EXTERN_CVAR (Int, dmflags3);	// [Nash]
 
+EXTERN_CVAR (Int, compatflags);
+EXTERN_CVAR (Int, compatflags2);
+
 // Filters from AddAutoloadFiles(). Used to filter files from archives.
 extern FString LumpFilterIWAD;
 

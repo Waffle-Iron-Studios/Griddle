@@ -119,7 +119,7 @@ ColorSetList ColorSets;
 PainFlashList PainFlashes;
 
 // [Nash] FOV cvar setting
-CUSTOM_CVAR(Float, fov, 100.f, CVAR_ARCHIVE | CVAR_USERINFO | CVAR_NOINITCALL)
+CUSTOM_CVAR(Float, fov, 90.f, CVAR_ARCHIVE | CVAR_USERINFO | CVAR_NOINITCALL)
 {
 	player_t *p = &players[consoleplayer];
 	p->SetFOV(fov);
@@ -403,7 +403,7 @@ void player_t::SetLogNumber (int num)
 		}
 
 		auto lump = fileSystem.ReadFile(lumpnum);
-		SetLogText (lump.GetString());
+		SetLogText (lump.string());
 	}
 }
 
@@ -478,7 +478,7 @@ void player_t::SetFOV(float fov)
 		{
 			if (consoleplayer == Net_Arbitrator)
 			{
-				Net_WriteByte(DEM_MYFOV);
+				Net_WriteInt8(DEM_MYFOV);
 			}
 			else
 			{
@@ -488,7 +488,7 @@ void player_t::SetFOV(float fov)
 		}
 		else
 		{
-			Net_WriteByte(DEM_MYFOV);
+			Net_WriteInt8(DEM_MYFOV);
 		}
 		Net_WriteFloat(clamp<float>(fov, 5.f, 179.f));
 	}
@@ -637,9 +637,9 @@ void player_t::SendPitchLimits() const
 			uppitch = downpitch = (int)maxviewpitch;
 		}
 
-		Net_WriteByte(DEM_SETPITCHLIMIT);
-		Net_WriteByte(uppitch);
-		Net_WriteByte(downpitch);
+		Net_WriteInt8(DEM_SETPITCHLIMIT);
+		Net_WriteInt8(uppitch);
+		Net_WriteInt8(downpitch);
 	}
 }
 
@@ -693,7 +693,7 @@ bool player_t::Resurrect()
 		P_BringUpWeapon(this);
 	}
 
-	if (morphTics)
+	if (mo->alternative != nullptr)
 	{
 		P_UnmorphActor(mo, mo);
 	}
@@ -1011,7 +1011,7 @@ void P_CheckPlayerSprite(AActor *actor, int &spritenum, DVector2 &scale)
 	}
 }
 
-CUSTOM_CVAR (Float, sv_aircontrol, 0.8f, CVAR_SERVERINFO|CVAR_NOSAVE|CVAR_NOINITCALL)
+CUSTOM_CVAR (Float, sv_aircontrol, 0.00390625f, CVAR_SERVERINFO|CVAR_NOSAVE|CVAR_NOINITCALL)
 {
 	primaryLevel->aircontrol = self;
 	primaryLevel->AirControlChanged ();
@@ -1172,7 +1172,7 @@ void P_CheckEnvironment(player_t *player)
 		P_PlayerOnSpecialFlat(player, P_GetThingFloorType(player->mo));
 	}
 	if (player->mo->Vel.Z <= -player->mo->FloatVar(NAME_FallingScreamMinSpeed) &&
-		player->mo->Vel.Z >= -player->mo->FloatVar(NAME_FallingScreamMaxSpeed) && !player->morphTics &&
+		player->mo->Vel.Z >= -player->mo->FloatVar(NAME_FallingScreamMaxSpeed) && player->mo->alternative == nullptr &&
 		player->mo->waterlevel == 0)
 	{
 		auto id = S_FindSkinnedSound(player->mo, S_FindSound("*falling"));
@@ -1239,6 +1239,17 @@ void P_PlayerThink (player_t *player)
 		I_Error ("No player %td start\n", player - players + 1);
 	}
 
+	for (unsigned int i = 0u; i < 3u; ++i)
+	{
+		if (fabs(player->angleOffsetTargets[i].Degrees()) >= EQUAL_EPSILON)
+		{
+			player->mo->Angles[i] += player->angleOffsetTargets[i];
+			player->mo->PrevAngles[i] = player->mo->Angles[i];
+		}
+
+		player->angleOffsetTargets[i] = nullAngle;
+	}
+
 	if (player->SubtitleCounter > 0)
 	{
 		player->SubtitleCounter--;
@@ -1267,6 +1278,7 @@ void P_PlayerThink (player_t *player)
 	player->cheats &= ~CF_INTERPVIEWANGLES;
 	player->cheats &= ~CF_SCALEDNOLERP;
 	player->cheats &= ~CF_NOFOVINTERP;
+	player->cheats &= ~CF_NOVIEWPOSINTERP;
 	player->mo->FloatVar("prevBob") = player->bob;
 
 	IFVIRTUALPTRNAME(player->mo, NAME_PlayerPawn, PlayerThink)

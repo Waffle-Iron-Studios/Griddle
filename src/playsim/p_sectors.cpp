@@ -504,7 +504,7 @@ double FindHighestCeilingSurrounding (const sector_t *sector, vertex_t **v)
 
 static inline void CheckShortestTex (FLevelLocals *Level, FTextureID texnum, double &minsize)
 {
-	if (texnum.isValid() || (texnum.isNull()))
+	if (texnum.isValid() || (texnum.isNull() && (Level->i_compatflags & COMPATF_SHORTTEX)))
 	{
 		auto tex = TexMan.GetGameTexture(texnum);
 		if (tex != NULL)

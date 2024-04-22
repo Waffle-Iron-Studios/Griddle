@@ -3115,6 +3115,11 @@ FUNC(LS_SetPlayerProperty)
 	{
 		int i;
 
+		if ((Level->ib_compatflags & BCOMPATF_LINKFROZENPROPS) && (mask & (CF_FROZEN | CF_TOTALLYFROZEN)))
+		{ // Clearing one of these properties clears both of them (if the compat flag is set.)
+			mask = CF_FROZEN | CF_TOTALLYFROZEN;
+		}
+
 		for (i = 0; i < MAXPLAYERS; i++)
 		{
 			if (!Level->PlayerInGame(i))
@@ -3175,7 +3180,7 @@ FUNC(LS_Autosave)
 	if (gameaction != ga_savegame)
 	{
 		Level->flags2 &= ~LEVEL2_NOAUTOSAVEHINT;
-		Net_WriteByte (DEM_CHECKAUTOSAVE);
+		Net_WriteInt8 (DEM_CHECKAUTOSAVE);
 	}
 	return true;
 }

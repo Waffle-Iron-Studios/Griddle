@@ -273,12 +273,12 @@ enum ELevelFlags : unsigned int
 
 	// backport from vkDoom
 	// Deliberately skip ahead...
-	LEVEL9_NOUSERSAVE			= 0x00000001,
-	LEVEL9_NOAUTOMAP			= 0x00000002,
+	LEVEL9_NOUSERSAVE = 0x00000001,
+	LEVEL9_NOAUTOMAP = 0x00000002,
 
-	LEVELWIS_NOTOTALTIME				= 0x00000001,	// Sanya - no time++
-	LEVELWIS_NOAUTOSAVES				= 0x00000002,	// Sanya - no autosaves on this level at all
-	LEVELWIS_CUTSCENELEVEL			= 0x00000004,	// Sanya - Cutscene Level
+	LEVELWIS_NOTOTALTIME = 0x00000001,	// Sanya - no time++
+	LEVELWIS_NOAUTOSAVES = 0x00000002,	// Sanya - no autosaves on this level at all
+	LEVELWIS_CUTSCENELEVEL = 0x00000004,	// Sanya - Cutscene Level
 };
 
 
@@ -352,9 +352,10 @@ struct level_info_t
 	int32_t		flags;
 	uint32_t	flags2;
 	uint32_t	flags3;
-	uint32_t	flags9;	// backport from vkdoom
+	uint32_t	flags9;
 	uint32_t	wisflags;
 
+	FString		LightningSound = "world/thunder";
 	FString		Music;
 	FString		LevelName;
 	FString		AuthorName;

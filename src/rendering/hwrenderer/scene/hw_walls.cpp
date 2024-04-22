@@ -1302,7 +1302,7 @@ void HWWall::DoTexture(HWWallDispatcher *di, int _type,seg_t * seg, int peg,
 	if (!SetWallCoordinates(seg, &tci, floatceilingref, topleft, topright, bottomleft, bottomright, 
 							seg->sidedef->GetTextureXOffset(texpos), skew)) return;
 
-	if (seg->linedef->special == Line_Mirror && _type == RENDERWALL_M1S && gl_mirrors)
+	if (seg->linedef->special == Line_Mirror && _type == RENDERWALL_M1S && gl_mirrors && !(di->Level->ib_compatflags & BCOMPATF_NOMIRRORS))
 	{
 		PutPortal(di, PORTALTYPE_MIRROR, -1);
 	}
@@ -2339,6 +2339,12 @@ void HWWall::Process(HWWallDispatcher *di, seg_t *seg, sector_t * frontsector, s
 		auto tex = TexMan.GetGameTexture(seg->sidedef->GetTexture(side_t::mid), true);
 		if (tex != NULL && tex->isValid())
 		{
+			if (di->Level->i_compatflags & COMPATF_MASKEDMIDTEX)
+			{
+				auto rawtexid = TexMan.GetRawTexture(tex->GetID());
+				auto rawtex = TexMan.GetGameTexture(rawtexid);
+				if (rawtex) tex = rawtex;
+			}
 			texture = tex;
 		}
 		else texture = nullptr;
@@ -2495,6 +2501,7 @@ void HWWall::ProcessLowerMiniseg(HWWallDispatcher *di, seg_t *seg, sector_t * fr
 		this->frontsector = frontsector;
 		this->backsector = backsector;
 		this->sub = NULL;
+		this->lightmap = nullptr;
 
 		vertex_t * v1 = seg->v1;
 		vertex_t * v2 = seg->v2;

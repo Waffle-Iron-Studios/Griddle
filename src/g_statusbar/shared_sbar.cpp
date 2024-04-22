@@ -122,7 +122,7 @@ EXTERN_CVAR(Float, hud_scalefactor)
 EXTERN_CVAR(Bool, hud_aspectscale)
 
 CVAR (Bool, crosshairon, true, CVAR_ARCHIVE);
-CVAR (Int, crosshair, 1, CVAR_ARCHIVE)
+CVAR (Int, crosshair, 0, CVAR_ARCHIVE)
 CVAR (Bool, crosshairforce, false, CVAR_ARCHIVE)
 CUSTOM_CVAR(Int, am_showmaplabel, 2, CVAR_ARCHIVE)
 {
@@ -232,6 +232,10 @@ void ST_LoadCrosshair(bool alwaysload)
 	if (num == 0)
 	{
 		num = crosshair;
+	}
+	if (num < 0)
+	{
+		num = 0;
 	}
 	ST_LoadCrosshair(num, alwaysload);
 }

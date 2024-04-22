@@ -146,7 +146,7 @@ CUSTOM_CVAR(Bool, gl_notexturefill, false, CVAR_NOINITCALL)
 	}
 }
 
-CUSTOM_CVAR(Int, gl_maplightmode, -1, CVAR_NOINITCALL) // this is just for testing. -1 means 'inactive'
+CUSTOM_CVAR(Int, gl_maplightmode, -1, CVAR_NOINITCALL | CVAR_CHEAT) // this is just for testing. -1 means 'inactive'
 {
 	if (self > 5 || self < -1) self = -1;
 }
@@ -716,7 +716,7 @@ void FLevelLocals::ChangeLevel(const char *levelname, int position, int inflags,
 		Printf (TEXTCOLOR_RED "Unloading scripts cannot exit the level again.\n");
 		return;
 	}
-	if (gameaction == ga_completed)	// do not exit multiple times.
+	if (gameaction == ga_completed && !(i_compatflags2 & COMPATF2_MULTIEXIT))	// do not exit multiple times.
 	{
 		return;
 	}
@@ -776,11 +776,12 @@ void FLevelLocals::ChangeLevel(const char *levelname, int position, int inflags,
 	{
 		if (thiscluster != nextcluster || (thiscluster && !(thiscluster->flags & CLUSTER_HUB)))
 		{
-			if (nextinfo->flags2 & LEVEL2_RESETINVENTORY)
+			const bool doReset = dmflags3 & DF3_PISTOL_START;
+			if (doReset || (nextinfo->flags2 & LEVEL2_RESETINVENTORY))
 			{
 				inflags |= CHANGELEVEL_RESETINVENTORY;
 			}
-			if (nextinfo->flags2 & LEVEL2_RESETHEALTH)
+			if (doReset || (nextinfo->flags2 & LEVEL2_RESETHEALTH))
 			{
 				inflags |= CHANGELEVEL_RESETHEALTH;
 			}
@@ -1320,7 +1321,7 @@ IMPLEMENT_CLASS(DAutosaver, false, false)
 
 void DAutosaver::Tick ()
 {
-	Net_WriteByte (DEM_CHECKAUTOSAVE);
+	Net_WriteInt8 (DEM_CHECKAUTOSAVE);
 	Destroy ();
 }
 
@@ -1711,7 +1712,7 @@ int FLevelLocals::FinishTravel ()
 		pawn->flags2 &= ~MF2_BLASTED;
 		if (oldpawn != nullptr)
 		{
-			StaticPointerSubstitution (oldpawn, pawn);
+			PlayerPointerSubstitution (oldpawn, pawn, true);
 			oldpawn->Destroy();
 		}
 		if (pawndup != NULL)
@@ -1738,6 +1739,10 @@ int FLevelLocals::FinishTravel ()
 				VMValue params[1] = { inv };
 				VMCall(func, params, 1, nullptr, 0);
 			}
+		}
+		if (ib_compatflags & BCOMPATF_RESETPLAYERSPEED)
+		{
+			pawn->Speed = pawn->GetDefault()->Speed;
 		}
 
 		IFVIRTUALPTRNAME(pawn, NAME_PlayerPawn, Travelled)
@@ -1797,6 +1802,7 @@ void FLevelLocals::Init()
 	flags = 0;
 	flags2 = 0;
 	flags3 = 0;
+	flags3 = 0;
 	flags9 = 0;
 	wisflags = 0;
 	ImpactDecalCount = 0;
@@ -1854,6 +1860,7 @@ void FLevelLocals::Init()
 	flags9 |= info->flags9;
 	wisflags |= info->wisflags;
 	levelnum = info->levelnum;
+	LightningSound = info->LightningSound;
 	Music = info->Music;
 	musicorder = info->musicorder;
 	MusicVolume = 1.f;
@@ -1874,6 +1881,9 @@ void FLevelLocals::Init()
 	deathsequence = info->deathsequence;
 
 	pixelstretch = info->pixelstretch;
+
+	compatflags->Callback();
+	compatflags2->Callback();
 
 	DefaultEnvironment = info->DefaultEnvironment;
 
@@ -2001,32 +2011,28 @@ void G_ReadSnapshots(FResourceFile *resf)
 
 	G_ClearSnapshots();
 
-	for (unsigned j = 0; j < resf->LumpCount(); j++)
+	for (unsigned j = 0; j < resf->EntryCount(); j++)
 	{
-		auto resl = resf->GetLump(j);
-		if (resl != nullptr)
+		auto name = resf->getName(j);
+		auto ptr = strstr(name, ".map.json");
+		if (ptr != nullptr)
 		{
-			auto name = resl->getName();
-			auto ptr = strstr(name, ".map.json");
+			ptrdiff_t maplen = ptr - name;
+			FString mapname(name, (size_t)maplen);
+			i = FindLevelInfo(mapname.GetChars());
+			if (i != nullptr)
+			{
+				i->Snapshot = resf->GetRawData(j);
+			}
+		}
+		else
+		{
+			auto ptr = strstr(name, ".mapd.json");
 			if (ptr != nullptr)
 			{
 				ptrdiff_t maplen = ptr - name;
 				FString mapname(name, (size_t)maplen);
-				i = FindLevelInfo(mapname.GetChars());
-				if (i != nullptr)
-				{
-					i->Snapshot = resl->GetRawData();
-				}
-			}
-			else
-			{
-				auto ptr = strstr(name, ".mapd.json");
-				if (ptr != nullptr)
-				{
-					ptrdiff_t maplen = ptr - name;
-					FString mapname(name, (size_t)maplen);
-					TheDefaultLevelInfo.Snapshot = resl->GetRawData();
-				}
+				TheDefaultLevelInfo.Snapshot = resf->GetRawData(j);
 			}
 		}
 	}
@@ -2367,9 +2373,36 @@ int FLevelLocals::GetInfighting()
 
 void FLevelLocals::SetCompatLineOnSide(bool state)
 {
-	int on = state;
+	int on = (state && (i_compatflags2 & COMPATF2_POINTONLINE));
 	if (on) for (auto &l : lines) l.flags |= ML_COMPATSIDE;
 	else for (auto &l : lines) l.flags &= ~ML_COMPATSIDE;
+}
+
+int FLevelLocals::GetCompatibility(int mask)
+{
+	if (info == nullptr) return mask;
+	else return (mask & ~info->compatmask) | (info->compatflags & info->compatmask);
+}
+
+int FLevelLocals::GetCompatibility2(int mask)
+{
+	return (info == nullptr) ? mask
+		: (mask & ~info->compatmask2) | (info->compatflags2 & info->compatmask2);
+}
+
+void FLevelLocals::ApplyCompatibility()
+{
+	int old = i_compatflags;
+	i_compatflags = GetCompatibility(compatflags) | ii_compatflags;
+	if ((old ^ i_compatflags) & COMPATF_POLYOBJ)
+	{
+		ClearAllSubsectorLinks();
+	}
+}
+
+void FLevelLocals::ApplyCompatibility2()
+{
+	i_compatflags2 = GetCompatibility2(compatflags2) | ii_compatflags2;
 }
 
 //==========================================================================

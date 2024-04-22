@@ -43,6 +43,11 @@
 FSharedStringArena VMStringConstants;
 
 
+static bool ShouldWrapPointer(PType * type)
+{
+	return ((type->isStruct() && type != TypeVector2 && type != TypeVector3 && type != TypeVector4 && type != TypeQuaternion && type != TypeFVector2 && type != TypeFVector3 && type != TypeFVector4 && type != TypeFQuaternion) || type->isDynArray() || type->isMap() || type->isMapIterator());
+}
+
 int GetIntConst(FxExpression *ex, FCompileContext &ctx)
 {
 	ex = new FxIntCast(ex, false);
@@ -2049,8 +2054,17 @@ PType *ZCCCompiler::DetermineType(PType *outertype, ZCC_TreeNode *field, FName n
 			} while( (t = (ZCC_Type *)t->SiblingNext) != fn->RetType);
 			
 			if(auto *t = fn->Params; t != nullptr) do {
-				args.Push(DetermineType(outertype, field, name, t->Type, false, false));
-				argflags.Push(t->Flags == ZCC_Out ? VARF_Out : 0);
+				PType * tt = DetermineType(outertype, field, name, t->Type, false, false);
+				int flags = 0;
+
+				if (ShouldWrapPointer(tt))
+				{
+					tt = NewPointer(tt);
+					flags = VARF_Ref;
+				}
+
+				args.Push(tt);
+				argflags.Push(t->Flags == ZCC_Out ? VARF_Out|flags : flags);
 			} while( (t = (ZCC_FuncPtrParamDecl *) t->SiblingNext) != fn->Params);
 			
 			auto proto = NewPrototype(returns,args);
@@ -2550,7 +2564,7 @@ void ZCCCompiler::CompileFunction(ZCC_StructWork *c, ZCC_FuncDeclarator *f, bool
 				{
 					auto type = DetermineType(c->Type(), p, f->Name, p->Type, false, false);
 					int flags = 0;
-					if ((type->isStruct() && type != TypeVector2 && type != TypeVector3 && type != TypeVector4 && type != TypeQuaternion && type != TypeFVector2 && type != TypeFVector3 && type != TypeFVector4 && type != TypeFQuaternion) || type->isDynArray() || type->isMap() || type->isMapIterator())
+					if (ShouldWrapPointer(type))
 					{
 						// Structs are being passed by pointer, but unless marked 'out' that pointer must be readonly.
 						type = NewPointer(type /*, !(p->Flags & ZCC_Out)*/);
@@ -2764,7 +2778,7 @@ void ZCCCompiler::CompileFunction(ZCC_StructWork *c, ZCC_FuncDeclarator *f, bool
 			// [ZZ] unspecified virtual function inherits old scope. virtual function scope can't be changed.
 			sym->Variants[0].Implementation->VarFlags = sym->Variants[0].Flags;
 		}
-
+		
 		bool exactReturnType = mVersion < MakeVersion(4, 4);
 		PClass *clstype = forclass? static_cast<PClassType *>(c->Type())->Descriptor : nullptr;
 		if (varflags & VARF_Virtual)
@@ -2785,7 +2799,7 @@ void ZCCCompiler::CompileFunction(ZCC_StructWork *c, ZCC_FuncDeclarator *f, bool
 
 				auto parentfunc = clstype->ParentClass? dyn_cast<PFunction>(clstype->ParentClass->VMType->Symbols.FindSymbol(sym->SymbolName, true)) : nullptr;
 
-				int virtindex = clstype->FindVirtualIndex(sym->SymbolName, &sym->Variants[0], parentfunc, exactReturnType);
+				int virtindex = clstype->FindVirtualIndex(sym->SymbolName, &sym->Variants[0], parentfunc, exactReturnType, sym->SymbolName == FName("SpecialBounceHit") && mVersion < MakeVersion(4, 12));
 				// specifying 'override' is necessary to prevent one of the biggest problem spots with virtual inheritance: Mismatching argument types.
 				if (varflags & VARF_Override)
 				{
@@ -2867,7 +2881,7 @@ void ZCCCompiler::CompileFunction(ZCC_StructWork *c, ZCC_FuncDeclarator *f, bool
 		}
 		else if (forclass)
 		{
-			int virtindex = clstype->FindVirtualIndex(sym->SymbolName, &sym->Variants[0], nullptr, exactReturnType);
+			int virtindex = clstype->FindVirtualIndex(sym->SymbolName, &sym->Variants[0], nullptr, exactReturnType, sym->SymbolName == FName("SpecialBounceHit") && mVersion < MakeVersion(4, 12));
 			if (virtindex != -1)
 			{
 				Error(f, "Function %s attempts to override parent function without 'override' qualifier", FName(f->Name).GetChars());
@@ -2999,12 +3013,12 @@ FxExpression *ZCCCompiler::ConvertNode(ZCC_TreeNode *ast, bool substitute)
 		{
 		case AST_ExprID:
 			// The function name is a simple identifier.
-			return new FxFunctionCall(static_cast<ZCC_ExprID *>(fcall->Function)->Identifier, NAME_None, ConvertNodeList(args, fcall->Parameters), *ast);
+			return new FxFunctionCall(static_cast<ZCC_ExprID *>(fcall->Function)->Identifier, NAME_None, std::move(ConvertNodeList(args, fcall->Parameters)), *ast);
 
 		case AST_ExprMemberAccess:
 		{
 			auto ema = static_cast<ZCC_ExprMemberAccess *>(fcall->Function);
-			return new FxMemberFunctionCall(ConvertNode(ema->Left, true), ema->Right, ConvertNodeList(args, fcall->Parameters), *ast);
+			return new FxMemberFunctionCall(ConvertNode(ema->Left, true), ema->Right, std::move(ConvertNodeList(args, fcall->Parameters)), *ast);
 		}
 
 		case AST_ExprBinary:
@@ -3014,7 +3028,7 @@ FxExpression *ZCCCompiler::ConvertNode(ZCC_TreeNode *ast, bool substitute)
 				auto binary = static_cast<ZCC_ExprBinary *>(fcall->Function);
 				if (binary->Left->NodeType == AST_ExprID && binary->Right->NodeType == AST_ExprID)
 				{
-					return new FxFunctionCall(static_cast<ZCC_ExprID *>(binary->Left)->Identifier, static_cast<ZCC_ExprID *>(binary->Right)->Identifier, ConvertNodeList(args, fcall->Parameters), *ast);
+					return new FxFunctionCall(static_cast<ZCC_ExprID *>(binary->Left)->Identifier, static_cast<ZCC_ExprID *>(binary->Right)->Identifier, std::move(ConvertNodeList(args, fcall->Parameters)), *ast);
 				}
 			}
 			// fall through if this isn't an array access node.
@@ -3388,10 +3402,45 @@ FxExpression *ZCCCompiler::ConvertNode(ZCC_TreeNode *ast, bool substitute)
 		auto iter = static_cast<ZCC_ArrayIterationStmt*>(ast);
 		auto var = iter->ItName->Name;
 		FxExpression* const itArray = ConvertNode(iter->ItArray);
-		FxExpression* const itArray2 = ConvertNode(iter->ItArray);	// the handler needs two copies of this - here's the easiest place to create them.
+		FxExpression* const itArray2 = ConvertNode(iter->ItArray);
+		FxExpression* const itArray3 = ConvertNode(iter->ItArray);
+		FxExpression* const itArray4 = ConvertNode(iter->ItArray);	// the handler needs copies of this - here's the easiest place to create them.
 		FxExpression* const body = ConvertImplicitScopeNode(ast, iter->LoopStatement);
-		return new FxForEachLoop(iter->ItName->Name, itArray, itArray2, body, *ast);
+		return new FxForEachLoop(iter->ItName->Name, itArray, itArray2, itArray3, itArray4, body, *ast);
+	}
 
+	case AST_TwoArgIterationStmt:
+	{
+		auto iter = static_cast<ZCC_TwoArgIterationStmt*>(ast);
+		auto key = iter->ItKey->Name;
+		auto var = iter->ItValue->Name;
+		FxExpression* const itMap = ConvertNode(iter->ItMap);
+		FxExpression* const itMap2 = ConvertNode(iter->ItMap);
+		FxExpression* const itMap3 = ConvertNode(iter->ItMap);
+		FxExpression* const itMap4 = ConvertNode(iter->ItMap);
+		FxExpression* const body = ConvertImplicitScopeNode(ast, iter->LoopStatement);
+		return new FxTwoArgForEachLoop(key, var, itMap, itMap2, itMap3, itMap4, body, *ast);
+	}
+
+	case AST_ThreeArgIterationStmt:
+	{
+		auto iter = static_cast<ZCC_ThreeArgIterationStmt*>(ast);
+		auto var = iter->ItVar->Name;
+		auto pos = iter->ItPos->Name;
+		auto flags = iter->ItFlags->Name;
+		FxExpression* const itBlock = ConvertNode(iter->ItBlock);
+		FxExpression* const body = ConvertImplicitScopeNode(ast, iter->LoopStatement);
+		return new FxThreeArgForEachLoop(var, pos, flags, itBlock, body, *ast);
+	}
+
+	case AST_TypedIterationStmt:
+	{
+		auto iter = static_cast<ZCC_TypedIterationStmt*>(ast);
+		auto cls = iter->ItType->Name;
+		auto var = iter->ItVar->Name;
+		FxExpression* const itExpr = ConvertNode(iter->ItExpr);
+		FxExpression* const body = ConvertImplicitScopeNode(ast, iter->LoopStatement);
+		return new FxTypedForEachLoop(cls, var, itExpr, body, *ast);
 	}
 
 	case AST_IterationStmt:

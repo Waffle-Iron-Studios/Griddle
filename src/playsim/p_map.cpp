@@ -170,6 +170,25 @@ bool P_CanCollideWith(AActor *tmthing, AActor *thing)
 	return true;
 }
 
+void P_CollidedWith(AActor* const collider, AActor* const collidee)
+{
+	{
+		IFVIRTUALPTR(collider, AActor, CollidedWith)
+		{
+			VMValue params[] = { collider, collidee, false };
+			VMCall(func, params, 3, nullptr, 0);
+		}
+	}
+
+	{
+		IFVIRTUALPTR(collidee, AActor, CollidedWith)
+		{
+			VMValue params[] = { collidee, collider, true };
+			VMCall(func, params, 3, nullptr, 0);
+		}
+	}
+}
+
 //==========================================================================
 // 
 // CanCrossLine
@@ -510,7 +529,7 @@ bool	P_TeleportMove(AActor* thing, const DVector3 &pos, bool telefrag, bool modi
 		// [RH] Z-Check
 		// But not if not MF2_PASSMOBJ or MF3_DONTOVERLAP are set!
 		// Otherwise those things would get stuck inside each other.
-		if ((thing->flags2 & MF2_PASSMOBJ || th->flags4 & MF4_ACTLIKEBRIDGE))
+		if ((thing->flags2 & MF2_PASSMOBJ || th->flags4 & MF4_ACTLIKEBRIDGE) && !(thing->Level->i_compatflags & COMPATF_NO_PASSMOBJ))
 		{
 			if (!(th->flags3 & thing->flags3 & MF3_DONTOVERLAP))
 			{
@@ -568,7 +587,7 @@ bool	P_TeleportMove(AActor* thing, const DVector3 &pos, bool telefrag, bool modi
 		// If this teleport was caused by a move, P_TryMove() will handle the
 		// sector transition messages better than we can here.
 		// This needs to be compatibility optioned because some older maps exploited this missing feature.
-		if (!(thing->flags6 & MF6_INTRYMOVE))
+		if (!(thing->flags6 & MF6_INTRYMOVE) && !(thing->Level->i_compatflags2 & COMPATF2_TELEPORT))
 		{
 			thing->CheckSectorTransition(oldsec);
 		}
@@ -1028,7 +1047,8 @@ bool PIT_CheckLine(FMultiBlockLinesIterator &mit, FMultiBlockLinesIterator::Chec
 		// better than Strife's handling of rails, which lets you jump into rails
 		// from either side. How long until somebody reports this as a bug and I'm
 		// forced to say, "It's not a bug. It's a feature?" Ugh.
-		(open.bottom == tm.thing->Sector->floorplane.ZatPoint(ref)))
+		(!(tm.thing->Level->i_compatflags2 & COMPATF2_RAILING) ||
+		open.bottom == tm.thing->Sector->floorplane.ZatPoint(ref)))
 	{
 		open.bottom += 32;
 	}
@@ -1401,7 +1421,7 @@ bool PIT_CheckThing(FMultiBlockThingsIterator &it, FMultiBlockThingsIterator::Ch
 	// walking on other actors and unblocking is too messy through restricted portal types so disable it.
 	if (!(cres.portalflags & FFCF_RESTRICTEDPORTAL))
 	{
-		if (!(tm.thing->flags & (MF_FLOAT | MF_MISSILE | MF_SKULLFLY | MF_NOGRAVITY)) &&
+		if (!(thing->Level->i_compatflags & COMPATF_NO_PASSMOBJ) && !(tm.thing->flags & (MF_FLOAT | MF_MISSILE | MF_SKULLFLY | MF_NOGRAVITY)) &&
 			(thing->flags & MF_SOLID) && (thing->flags4 & MF4_ACTLIKEBRIDGE))
 		{
 			// [RH] Let monsters walk on actors as well as floors
@@ -1449,7 +1469,7 @@ bool PIT_CheckThing(FMultiBlockThingsIterator &it, FMultiBlockThingsIterator::Ch
 
 	// [RH] If the other thing is a bridge, then treat the moving thing as if it had MF2_PASSMOBJ, so
 	// you can use a scrolling floor to move scenery items underneath a bridge.
-	if ((tm.thing->flags2 & MF2_PASSMOBJ || thing->flags4 & MF4_ACTLIKEBRIDGE))
+	if ((tm.thing->flags2 & MF2_PASSMOBJ || thing->flags4 & MF4_ACTLIKEBRIDGE) && !(tm.thing->Level->i_compatflags & COMPATF_NO_PASSMOBJ))
 	{ // check if a mobj passed over/under another object
 		if (!(tm.thing->flags & MF_MISSILE) ||
 			!(tm.thing->flags2 & MF2_RIP) ||
@@ -1591,7 +1611,7 @@ bool PIT_CheckThing(FMultiBlockThingsIterator &it, FMultiBlockThingsIterator::Ch
 		{
 			clipheight = thing->projectilepassheight;
 		}
-		else if (thing->projectilepassheight < 0)
+		else if (thing->projectilepassheight < 0 && (thing->Level->i_compatflags & COMPATF_MISSILECLIP))
 		{
 			clipheight = -thing->projectilepassheight;
 		}
@@ -1887,7 +1907,7 @@ bool P_CheckPosition(AActor *thing, const DVector2 &pos, FCheckPosition &tm, boo
 			AActor *BlockingMobj = thing->BlockingMobj;
 
 			// If this blocks through a restricted line portal, it will always completely block.
-			if (BlockingMobj == NULL || (tcres.portalflags & FFCF_RESTRICTEDPORTAL))
+			if (BlockingMobj == NULL || (thing->Level->i_compatflags & COMPATF_NO_PASSMOBJ) || (tcres.portalflags & FFCF_RESTRICTEDPORTAL))
 			{ // Thing slammed into something; don't let it move now.
 				thing->Height = realHeight;
 				return false;
@@ -2045,8 +2065,15 @@ AActor *P_CheckOnmobj(AActor *thing)
 	oldz = thing->Z();
 	P_FakeZMovement(thing);
 	good = P_TestMobjZ(thing, false, &onmobj);
-	thing->SetZ(oldz);
 
+	// Make sure we don't double call a collision with it.
+	if (!good && onmobj != nullptr && onmobj != thing->BlockingMobj
+		&& (thing->player == nullptr || !(thing->player->cheats & CF_PREDICTING)))
+	{
+		P_CollidedWith(thing, onmobj);
+	}
+
+	thing->SetZ(oldz);
 	return good ? NULL : onmobj;
 }
 
@@ -2199,7 +2226,7 @@ static void CheckForPushSpecial(line_t *line, int side, AActor *mobj, DVector2 *
 {
 	if (line->special && !(mobj->flags6 & MF6_NOTRIGGER))
 	{
-		if (posforwindowcheck)
+		if (posforwindowcheck && !(mobj->Level->i_compatflags2 & COMPATF2_PUSHWINDOW) && line->backsector != NULL)
 		{ // Make sure this line actually blocks us and is not a window
 			// or similar construct we are standing inside of.
 			DVector3 pos = mobj->PosRelative(line);
@@ -2288,6 +2315,11 @@ bool P_TryMove(AActor *thing, const DVector2 &pos,
 	if (!P_CheckPosition(thing, pos, tm))
 	{
 		AActor *BlockingMobj = thing->BlockingMobj;
+		// This gets called regardless of whether or not the following checks allow the thing to pass. This is because a player
+		// could step on top of an enemy but we still want it to register as a collision.
+		if (BlockingMobj != nullptr && (thing->player == nullptr || !(thing->player->cheats & CF_PREDICTING)))
+			P_CollidedWith(thing, BlockingMobj);
+
 		// Solid wall or thing
 		if (!BlockingMobj || BlockingMobj->player || !thing->player)
 		{
@@ -2306,7 +2338,7 @@ bool P_TryMove(AActor *thing, const DVector2 &pos,
 				goto pushline;
 			}
 		}
-		if (!(tm.thing->flags2 & MF2_PASSMOBJ))
+		if (!(tm.thing->flags2 & MF2_PASSMOBJ) || (tm.thing->Level->i_compatflags & COMPATF_NO_PASSMOBJ))
 		{
 			thing->SetZ(oldz);
 			thing->flags6 &= ~MF6_INTRYMOVE;
@@ -2401,6 +2433,13 @@ bool P_TryMove(AActor *thing, const DVector2 &pos,
 					}
 				}
 			}
+		}
+
+		// compatibility check: Doom originally did not allow monsters to cross dropoffs at all.
+		// If the compatibility flag is on, only allow this when the velocity comes from a scroller
+		if ((thing->Level->i_compatflags & COMPATF_CROSSDROPOFF) && !(thing->flags4 & MF4_SCROLLMOVE))
+		{
+			dropoff = false;
 		}
 
 		if (dropoff == 2 &&  // large jump down (e.g. dogs)
@@ -2559,6 +2598,9 @@ bool P_TryMove(AActor *thing, const DVector2 &pos,
 				thing->SetXYZ(thingpos.X, thingpos.Y, pos.Z);
 				if (!P_CheckPosition(thing, pos.XY(), true))	// check if some actor blocks us on the other side. (No line checks, because of the mess that'd create.)
 				{
+					if (thing->BlockingMobj != nullptr && (thing->player == nullptr || !(thing->player->cheats && CF_PREDICTING)))
+						P_CollidedWith(thing, thing->BlockingMobj);
+
 					thing->SetXYZ(oldthingpos);
 					thing->flags6 &= ~MF6_INTRYMOVE;
 					return false;
@@ -2594,13 +2636,15 @@ bool P_TryMove(AActor *thing, const DVector2 &pos,
 					auto p = thing->Level->GetConsolePlayer();
 					if (p) p->viewz += hit.pos.Z;	// needs to be done here because otherwise the renderer will not catch the change.
 					P_TranslatePortalAngle(ld, hit.angle);
+					if (thing->player && (port->mType == PORTT_INTERACTIVE || port->mType == PORTT_TELEPORT))
+						thing->player->crossingPortal = true;
 				}
 				R_AddInterpolationPoint(hit);
 			}
 			if (port->mType == PORTT_LINKED)
 			{
 				continue;
-		}
+			}
 		}
 		break;
 	}
@@ -2736,6 +2780,7 @@ bool P_TryMove(AActor *thing, const DVector2 &pos,
 
 pushline:
 	thing->flags6 &= ~MF6_INTRYMOVE;
+	thing->SetZ(oldz);
 
 	// [RH] Don't activate anything if just predicting
 	if (thing->player && (thing->player->cheats & CF_PREDICTING))
@@ -2743,7 +2788,6 @@ pushline:
 		return false;
 	}
 
-	thing->SetZ(oldz);
 	if (!(thing->flags&(MF_TELEPORT | MF_NOCLIP)))
 	{
 		int numSpecHitTemp;
@@ -4791,6 +4835,14 @@ AActor *P_LineAttack(AActor *t1, DAngle angle, double distance,
 		{
 			// Hit a thing, so it could be either a puff or blood
 			DVector3 bleedpos = trace.HitPos;
+			// position a bit closer for puffs/blood if using compatibility mode.
+			if (trace.Actor->Level->i_compatflags & COMPATF_HITSCAN)
+			{
+				DVector2 ofs = t1->Level->GetPortalOffsetPosition(bleedpos.X, bleedpos.Y, -10 * trace.HitVector.X, -10 * trace.HitVector.Y);
+				bleedpos.X = ofs.X;
+				bleedpos.Y = ofs.Y;
+				bleedpos.Z -= -10 * trace.HitVector.Z;
+			}
 
 			// Spawn bullet puffs or blood spots, depending on target type.
 			if (nointeract || (puffDefaults && puffDefaults->flags3 & MF3_PUFFONACTORS) ||
@@ -4974,7 +5026,7 @@ int P_LineTrace(AActor *t1, DAngle angle, double distance,
 	if ( flags & TRF_BLOCKSELF )
 	{
 		bool Projectile = ( (t1->flags&MF_MISSILE) || (t1->BounceFlags&BOUNCE_MBF) );
-		bool NotBlocked = ( (t1->flags3&MF3_NOBLOCKMONST) ||  (t1->flags&MF_FRIENDLY) );
+		bool NotBlocked = ( (t1->flags3&MF3_NOBLOCKMONST) || ( (t1->Level->i_compatflags&COMPATF_NOBLOCKFRIENDS) && (t1->flags&MF_FRIENDLY) ) );
 		if ( Projectile ) lflags |= ML_BLOCKPROJECTILE;
 		if ( !Projectile || (t1->flags8&MF8_BLOCKASPLAYER) ) lflags |= ML_BLOCKING;
 		if ( !NotBlocked ) lflags |= ML_BLOCKMONSTERS;
@@ -5301,6 +5353,13 @@ static ETraceStatus ProcessRailHit(FTraceResults &res, void *userdata)
 	newhit.HitActor = res.Actor;
 	newhit.HitPos = res.HitPos;
 	newhit.HitAngle = res.SrcAngleFromTarget;
+	if (res.Actor->Level->i_compatflags & COMPATF_HITSCAN)
+	{
+		DVector2 ofs = res.Actor->Level->GetPortalOffsetPosition(newhit.HitPos.X, newhit.HitPos.Y, -10 * res.HitVector.X, -10 * res.HitVector.Y);
+		newhit.HitPos.X = ofs.X;
+		newhit.HitPos.Y = ofs.Y;
+		newhit.HitPos.Z -= -10 * res.HitVector.Z;
+	}
 	data->RailHits.Push(newhit);
 
 	if (data->limit)
@@ -5514,55 +5573,39 @@ void P_RailAttack(FRailParams *p)
 CVAR(Float, chase_height, -8.f, CVAR_ARCHIVE | CVAR_GLOBALCONFIG)
 CVAR(Float, chase_dist, 90.f, CVAR_ARCHIVE | CVAR_GLOBALCONFIG)
 
-void P_AimCamera(AActor *t1, DVector3 &campos, DAngle &camangle, sector_t *&CameraSector, bool &unlinked)
+void R_OffsetView(FRenderViewpoint& viewPoint, const DVector3& dir, const double distance)
 {
-	double distance = clamp<double>(chase_dist, 0, 30000);
-	DAngle angle = t1->Angles.Yaw - DAngle::fromDeg(180);
-	DAngle pitch = t1->Angles.Pitch;
-	FTraceResults trace;
-	DVector3 vvec;
-	double sz;
-
-	double pc = pitch.Cos();
-
-	vvec = { pc * angle.Cos(), pc * angle.Sin(), pitch.Sin() };
-	sz = t1->Top() - t1->Floorclip + clamp<double>(chase_height, -1000, 1000);
-
-	if (Trace(t1->PosAtZ(sz), t1->Sector, vvec, distance, 0, 0, NULL, trace) &&
-		trace.Distance > 10)
+	const DAngle baseYaw = dir.Angle();
+	FTraceResults trace = {};
+	if (Trace(viewPoint.Pos, viewPoint.sector, dir, distance, 0u, 0u, nullptr, trace))
 	{
-		// Position camera slightly in front of hit thing
-		campos = t1->PosAtZ(sz) + vvec *(trace.Distance - 5);
+		viewPoint.Pos = trace.HitPos - trace.HitVector * min<double>(5.0, trace.Distance);
+		viewPoint.sector = viewPoint.ViewLevel->PointInRenderSubsector(viewPoint.Pos)->sector;
 	}
 	else
 	{
-		campos = trace.HitPos - trace.HitVector * 1/256.;
+		viewPoint.Pos = trace.HitPos;
+		viewPoint.sector = trace.Sector;
 	}
-	CameraSector = trace.Sector;
-	unlinked = trace.unlinked;
-	camangle = trace.SrcAngleFromTarget - DAngle::fromDeg(180.);
-}
 
-// [MC] Used for ViewPos. Uses code borrowed from P_AimCamera.
-void P_AdjustViewPos(AActor *t1, DVector3 orig, DVector3 &campos, sector_t *&CameraSector, bool &unlinked, DViewPosition *VP)
-{
-	FTraceResults trace;
-	const DVector3 vvec = campos - orig;
-	const double distance = vvec.Length();
-
-	// Trace handles all of the portal crossing, which is why there is no usage of Vec#Offset(Z).
-	if (Trace(orig, t1->Sector, vvec.Unit(), distance, 0, 0, t1, trace) &&
-		trace.Distance > 5)
+	viewPoint.Angles.Yaw += deltaangle(baseYaw, trace.SrcAngleFromTarget);
+	// TODO: Why does this even need to be done? Please fix tracers already.
+	if (dir.Z < 0.0)
 	{
-		// Position camera slightly in front of hit thing
-		campos = orig + vvec.Unit() * (trace.Distance - 5);
+		while (!viewPoint.sector->PortalBlocksMovement(sector_t::floor) && viewPoint.Pos.Z < viewPoint.sector->GetPortalPlaneZ(sector_t::floor))
+		{
+			viewPoint.Pos += viewPoint.sector->GetPortalDisplacement(sector_t::floor);
+			viewPoint.sector = viewPoint.sector->GetPortal(sector_t::floor)->mDestination;
+		}
 	}
-	else
+	else if (dir.Z > 0.0)
 	{
-		campos = trace.HitPos - trace.HitVector * 1 / 256.;
+		while (!viewPoint.sector->PortalBlocksMovement(sector_t::ceiling) && viewPoint.Pos.Z > viewPoint.sector->GetPortalPlaneZ(sector_t::ceiling))
+		{
+			viewPoint.Pos += viewPoint.sector->GetPortalDisplacement(sector_t::ceiling);
+			viewPoint.sector = viewPoint.sector->GetPortal(sector_t::ceiling)->mDestination;
+		}
 	}
-	CameraSector = trace.Sector;
-	unlinked = trace.unlinked;
 }
 
 //==========================================================================
@@ -5657,7 +5700,8 @@ bool P_UseTraverse(AActor *usething, const DVector2 &start, const DVector2 &end,
 			{
 				P_LineOpening(open, NULL, in->d.line, it.InterceptPoint(in));
 			}
-			if (open.range <= 0)
+			if (open.range <= 0 ||
+				(in->d.line->special != 0 && (usething->Level->i_compatflags & COMPATF_USEBLOCKING)))
 			{
 				// [RH] Give sector a chance to intercept the use
 
@@ -5716,9 +5760,17 @@ bool P_UseTraverse(AActor *usething, const DVector2 &start, const DVector2 &end,
 			//jff 3/21/98 NOW multiple use allowed with enabling line flag
 			//[RH] And now I've changed it again. If the line is of type
 			//	   SPAC_USE, then it eats the use. Everything else passes
-			//	   it through, including SPAC_USETHROUGH.e
-			if (!(in->d.line->activation & SPAC_Use)) continue;
-			else return true;
+			//	   it through, including SPAC_USETHROUGH.
+			if (usething->Level->i_compatflags & COMPATF_USEBLOCKING)
+			{
+				if (in->d.line->activation & SPAC_UseThrough) continue;
+				else return true;
+			}
+			else
+			{
+				if (!(in->d.line->activation & SPAC_Use)) continue;
+				else return true;
+			}
 
 		}
 
@@ -5897,7 +5949,7 @@ CUSTOM_CVAR(Float, splashfactor, 1.f, CVAR_SERVERINFO)
 // Used by anything without OLDRADIUSDMG flag
 //==========================================================================
 
-static double GetRadiusDamage(bool fromaction, AActor *bombspot, AActor *thing, int bombdamage, int bombdistance, int fulldamagedistance, bool thingbombsource, bool round)
+static double GetRadiusDamage(bool fromaction, AActor *bombspot, AActor *thing, int bombdamage, double bombdistance, double fulldamagedistance, bool thingbombsource, bool round)
 {
 	// [RH] New code. The bounding box only covers the
 	// height of the thing and not the height of the map.
@@ -5906,7 +5958,7 @@ static double GetRadiusDamage(bool fromaction, AActor *bombspot, AActor *thing, 
 	double dx, dy;
 	double boxradius;
 
-	double bombdistancefloat = 1. / (double)(bombdistance - fulldamagedistance);
+	double bombdistancefloat = 1.0 / (bombdistance - fulldamagedistance);
 	double bombdamagefloat = (double)bombdamage;
 
 	if (!round)
@@ -5953,8 +6005,8 @@ static double GetRadiusDamage(bool fromaction, AActor *bombspot, AActor *thing, 
 	{
 		len = bombspot->Distance3D (thing);
 	}
-	len = clamp<double>(len - (double)fulldamagedistance, 0, len);
-	points = bombdamagefloat * (1. - len * bombdistancefloat);
+	len = clamp<double>(len - fulldamagedistance, 0.0, len);
+	points = bombdamagefloat * (1.0 - len * bombdistancefloat);
 
 	// Calculate the splash and radius damage factor if called by P_RadiusAttack.
 	// Otherwise, just get the raw damage. This allows modders to manipulate it
@@ -5982,7 +6034,7 @@ static double GetRadiusDamage(bool fromaction, AActor *bombspot, AActor *thing, 
 // based on XY distance.
 //==========================================================================
 
-static int GetOldRadiusDamage(bool fromaction, AActor *bombspot, AActor *thing, int bombdamage, int bombdistance, int fulldamagedistance)
+static int GetOldRadiusDamage(bool fromaction, AActor *bombspot, AActor *thing, int bombdamage, double bombdistance, double fulldamagedistance)
 {
 	const int ret = fromaction ? 0 : -1; // -1 is specifically for P_RadiusAttack; continue onto another actor.
 	double dx, dy, dist;
@@ -6003,8 +6055,8 @@ static int GetOldRadiusDamage(bool fromaction, AActor *bombspot, AActor *thing, 
 	// When called from the action function, ignore the sight check.
 	if (fromaction || P_CheckSight(thing, bombspot, SF_IGNOREVISIBILITY | SF_IGNOREWATERBOUNDARY))
 	{
-		dist = clamp<double>(dist - fulldamagedistance, 0, dist);
-		int damage = Scale(bombdamage, bombdistance - int(dist), bombdistance);
+		dist = clamp<double>(dist - fulldamagedistance, 0.0, dist);
+		int damage = (int)Scale((double)bombdamage, bombdistance - dist, bombdistance);
 
 		if (!fromaction)
 		{
@@ -6026,7 +6078,7 @@ static int GetOldRadiusDamage(bool fromaction, AActor *bombspot, AActor *thing, 
 // damage and not taking into account any damage reduction.
 //==========================================================================
 
-int P_GetRadiusDamage(AActor *self, AActor *thing, int damage, int distance, int fulldmgdistance, bool oldradiusdmg, bool circular)
+int P_GetRadiusDamage(AActor *self, AActor *thing, int damage, double distance, double fulldmgdistance, bool oldradiusdmg, bool circular)
 {
 
 	if (!thing)
@@ -6038,10 +6090,10 @@ int P_GetRadiusDamage(AActor *self, AActor *thing, int damage, int distance, int
 		return damage;
 	}
 
-	fulldmgdistance = clamp<int>(fulldmgdistance, 0, distance - 1);
+	fulldmgdistance = clamp<double>(fulldmgdistance, 0.0, distance - 1.0);
 
 	// Mirroring A_Explode's behavior.
-	if (distance <= 0)
+	if (distance <= 0.0)
 		distance = damage;
 
 	const int newdam = oldradiusdmg
@@ -6058,15 +6110,15 @@ int P_GetRadiusDamage(AActor *self, AActor *thing, int damage, int distance, int
 //
 //==========================================================================
 
-int P_RadiusAttack(AActor *bombspot, AActor *bombsource, int bombdamage, int bombdistance, FName bombmod,
-	int flags, int fulldamagedistance, FName species)
+int P_RadiusAttack(AActor *bombspot, AActor *bombsource, int bombdamage, double bombdistance, FName bombmod,
+	int flags, double fulldamagedistance, FName species)
 {
-	if (bombdistance <= 0)
+	if (bombdistance <= 0.0)
 		return 0;
-	fulldamagedistance = clamp<int>(fulldamagedistance, 0, bombdistance - 1);
+	fulldamagedistance = clamp<double>(fulldamagedistance, 0.0, bombdistance - 1.0);
 
 	FPortalGroupArray grouplist(FPortalGroupArray::PGA_Full3d);
-	FMultiBlockThingsIterator it(grouplist, bombspot->Level, bombspot->X(), bombspot->Y(), bombspot->Z() - bombdistance, bombspot->Height + bombdistance*2, bombdistance, false, bombspot->Sector);
+	FMultiBlockThingsIterator it(grouplist, bombspot->Level, bombspot->X(), bombspot->Y(), bombspot->Z() - bombdistance, bombspot->Height + bombdistance*2.0, bombdistance, false, bombspot->Sector);
 	FMultiBlockThingsIterator::CheckResult cres;
 
 	if (flags & RADF_SOURCEISSPOT)
@@ -6133,7 +6185,7 @@ int P_RadiusAttack(AActor *bombspot, AActor *bombsource, int bombdamage, int bom
 		// because some user levels require they have a height of 16,
 		// which can make them near impossible to hit with the new code.
 		if ((flags & RADF_NODAMAGE) || (!((bombspot->flags5 | thing->flags5) & MF5_OLDRADIUSDMG) && 
-			!(flags & RADF_OLDRADIUSDAMAGE)))
+			!(flags & RADF_OLDRADIUSDAMAGE) && !(thing->Level->i_compatflags2 & COMPATF2_EXPLODE2)))
 		{
 			double points = GetRadiusDamage(false, bombspot, thing, bombdamage, bombdistance, fulldamagedistance, bombsource == thing,!!(flags & RADF_CIRCULAR));
 			double check = int(points) * bombdamage;
@@ -6190,7 +6242,7 @@ int P_RadiusAttack(AActor *bombspot, AActor *bombsource, int bombdamage, int bom
 								thing->Thrust(bombspot->AngleTo(thing), thrust);
 								if (!(flags & RADF_NODAMAGE) || (flags & RADF_THRUSTZ))
 								{
-									if ((flags & RADF_THRUSTZ))
+									if (!(thing->Level->i_compatflags2 & COMPATF2_EXPLODE1) || (flags & RADF_THRUSTZ))
 										thing->Vel.Z += vz;	// this really doesn't work well
 								}
 							}

@@ -57,6 +57,7 @@
 #include "a_dynlight.h"
 #include "types.h"
 #include "dictionary.h"
+#include "events.h"
 
 static TArray<FPropertyInfo*> properties;
 static TArray<AFuncDesc> AFTable;
@@ -351,6 +352,7 @@ static FFlagDef ActorFlagDefs[]=
 	DEFINE_FLAG(MF9, DOSHADOWBLOCK, AActor, flags9),
 	DEFINE_FLAG(MF9, SHADOWBLOCK, AActor, flags9),
 	DEFINE_FLAG(MF9, SHADOWAIMVERT, AActor, flags9),
+	DEFINE_FLAG(MF9, DECOUPLEDANIMATIONS, AActor, flags9),
 
 	// Effect flags
 	DEFINE_FLAG(FX, VISIBILITYPULSE, AActor, effects),
@@ -377,6 +379,11 @@ static FFlagDef ActorFlagDefs[]=
 	DEFINE_FLAG(RF, NOSPRITESHADOW, AActor, renderflags),
 	DEFINE_FLAG(RF2, INVISIBLEINMIRRORS, AActor, renderflags2),
 	DEFINE_FLAG(RF2, ONLYVISIBLEINMIRRORS, AActor, renderflags2),
+	DEFINE_FLAG(RF2, BILLBOARDFACECAMERA, AActor, renderflags2),
+	DEFINE_FLAG(RF2, BILLBOARDNOFACECAMERA, AActor, renderflags2),
+	DEFINE_FLAG(RF2, FLIPSPRITEOFFSETX, AActor, renderflags2),
+	DEFINE_FLAG(RF2, FLIPSPRITEOFFSETY, AActor, renderflags2),
+	DEFINE_FLAG(RF2, CAMFOLLOWSPLAYER, AActor, renderflags2),
 
 	// Bounce flags
 	DEFINE_FLAG2(BOUNCE_Walls, BOUNCEONWALLS, AActor, BounceFlags),
@@ -396,6 +403,7 @@ static FFlagDef ActorFlagDefs[]=
 	DEFINE_FLAG2(BOUNCE_NotOnShootables, DONTBOUNCEONSHOOTABLES, AActor, BounceFlags),
 	DEFINE_FLAG2(BOUNCE_BounceOnUnrips, BOUNCEONUNRIPPABLES, AActor, BounceFlags),
 	DEFINE_FLAG2(BOUNCE_NotOnSky, DONTBOUNCEONSKY, AActor, BounceFlags),
+	
 	DEFINE_FLAG2(OF_Transient, NOSAVEGAME, AActor, ObjectFlags),
 };
 
@@ -803,24 +811,30 @@ void InitThingdef()
 	frp->Size = sizeof(FRailParams);
 	frp->Align = alignof(FRailParams);
 
+	auto netcmdstruct = NewStruct("NetworkCommand", nullptr, true);
+	netcmdstruct->Size = sizeof(FNetworkCommand);
+	netcmdstruct->Align = alignof(FNetworkCommand);
+
 	auto fltd = NewStruct("FLineTraceData", nullptr);
 	fltd->Size = sizeof(FLineTraceData);
 	fltd->Align = alignof(FLineTraceData);
 
 	auto fspp = NewStruct("FSpawnParticleParams", nullptr);
 	fspp->Size = sizeof(FSpawnParticleParams);
-	fspp->Align = alignof(FSpawnParticleParams); auto cvst = NewStruct("CVar", nullptr, true);
-	NewPointer(cvst, false)->InstallHandlers(
-		[](FSerializer& arc, const char* key, const void* addr)
-		{
-			const FBaseCVar* self = *(const FBaseCVar**)addr;
+	fspp->Align = alignof(FSpawnParticleParams);
 
-			if (self)
+	auto cvst = NewStruct("CVar", nullptr, true);
+	NewPointer(cvst, false)->InstallHandlers(
+		[](FSerializer &arc, const char *key, const void *addr)
+		{
+			const FBaseCVar * self = *(const FBaseCVar**)addr;
+			
+			if(self)
 			{
 				arc.BeginObject(key);
 
 
-				if (self->pnum != -1)
+				if(self->pnum != -1)
 				{
 					int32_t pnum = self->pnum;
 					FName name = self->userinfoName;
@@ -836,31 +850,31 @@ void InitThingdef()
 				arc.EndObject();
 			}
 		},
-		[](FSerializer& arc, const char* key, void* addr)
+		[](FSerializer &arc, const char *key, void *addr)
 		{
-			FBaseCVar** self = (FBaseCVar**)addr;
+			FBaseCVar ** self = (FBaseCVar**)addr;
 
 			FString name;
 			arc.BeginObject(key);
 
 			arc("name", name);
 
-			FBaseCVar* backing = FindCVar(name.GetChars(), nullptr);
-			if (!backing)
+			FBaseCVar * backing = FindCVar(name.GetChars(), nullptr);
+			if(!backing)
 			{
 				I_Error("Attempt to load pointer to inexisted CVar '%s'", name.GetChars());
 			}
-			else if ((backing->GetFlags() & (CVAR_USERINFO | CVAR_IGNORE)) == CVAR_USERINFO)
+			else if((backing->GetFlags()  & (CVAR_USERINFO|CVAR_IGNORE)) == CVAR_USERINFO)
 			{
-				if (int pnum; arc.ReadOptionalInt("player", pnum))
+				if(int pnum; arc.ReadOptionalInt("player", pnum))
 				{
 					*self = nullptr;
-					LoadGameUserInfoCVars.Push({ self, name, pnum }); // this needs to be done later, since userinfo isn't loaded yet
+					LoadGameUserInfoCVars.Push({self, name, pnum}); // this needs to be done later, since userinfo isn't loaded yet
 					arc.EndObject();
 					return true;
 				}
 			}
-
+			
 			*self = backing;
 
 			arc.EndObject();
@@ -877,7 +891,7 @@ void SetupLoadingCVars()
 
 void FinishLoadingCVars()
 {
-	for (UserInfoCVarNamePlayer& cvar : LoadGameUserInfoCVars)
+	for(UserInfoCVarNamePlayer &cvar : LoadGameUserInfoCVars)
 	{
 		(*cvar.addr) = GetCVar(cvar.pnum, cvar.name.GetChars());
 	}

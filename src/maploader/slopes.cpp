@@ -179,9 +179,17 @@ void MapLoader::SetSlope (secplane_t *plane, bool setCeil, int xyangi, int zangi
 
 	DVector3 norm;
 
-	norm[0] = zang.Cos() * xyang.Cos();
-	norm[1] = zang.Cos() * xyang.Sin();
-
+	if (Level->ib_compatflags & BCOMPATF_SETSLOPEOVERFLOW)
+	{
+		// We have to consider an integer multiplication overflow here.
+		norm[0] = FixedToFloat(FloatToFixed(zang.Cos()) * FloatToFixed(xyang.Cos())) / 65536.;
+		norm[1] = FixedToFloat(FloatToFixed(zang.Cos()) * FloatToFixed(xyang.Sin())) / 65536.;
+	}
+	else
+	{
+		norm[0] = zang.Cos() * xyang.Cos();
+		norm[1] = zang.Cos() * xyang.Sin();
+	}
 	norm[2] = zang.Sin();
 	norm.MakeUnit();
 	double dist = -norm[0] * pos.X - norm[1] * pos.Y - norm[2] * pos.Z;

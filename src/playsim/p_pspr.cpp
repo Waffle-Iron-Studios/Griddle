@@ -993,9 +993,9 @@ DEFINE_ACTION_FUNCTION(AActor, A_OverlayPivotAlign)
 	if (pspr != nullptr)
 	{
 		if (halign >= PSPA_LEFT && halign <= PSPA_RIGHT)
-			pspr->HAlign |= halign;
+			pspr->HAlign = halign;
 		if (valign >= PSPA_TOP && valign <= PSPA_BOTTOM)
-			pspr->VAlign |= valign;
+			pspr->VAlign = valign;
 	}
 	return 0;
 }
@@ -1391,7 +1391,7 @@ void P_SetSafeFlash(AActor *weapon, player_t *player, FState *flashstate, int in
 		}
 		
 		// if we get here the target state doesn't belong to any class in the inheritance chain.
-		// This can happen with Dehacked if the flash states are remapped. 
+		// This can happen with Dehacked if the flash states are remapped.
 		// In this case we should check the Dehacked state map to get the proper state.
 		if (flashstate->DehIndex >= 0)
 		{

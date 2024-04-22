@@ -129,7 +129,7 @@ CCMD (spray)
 		return;
 	}
 	
-	Net_WriteByte (DEM_SPRAY);
+	Net_WriteInt8 (DEM_SPRAY);
 	Net_WriteString (argv[1]);
 }
 
@@ -166,6 +166,20 @@ CCMD (mapchecksum)
 			}
 			Printf(" // %s %s\n", wadname, argv[i]);
 		}
+	}
+}
+
+//==========================================================================
+//
+// CCMD hiddencompatflags
+//
+//==========================================================================
+
+CCMD (hiddencompatflags)
+{
+	for(auto Level : AllLevels())
+	{
+		Printf("%s: %08x %08x %08x\n", Level->MapName.GetChars(), Level->ii_compatflags, Level->ii_compatflags2, Level->ib_compatflags);
 	}
 }
 

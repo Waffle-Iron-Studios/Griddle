@@ -166,12 +166,12 @@ void D_LoadWadSettings ()
 	while ((lump = fileSystem.FindLump ("KEYCONF", &lastlump)) != -1)
 	{
 		auto data = fileSystem.ReadFile (lump);
-		const char* conf = data.GetString();
-		const char *eof = conf + data.GetSize();
+		const char* conf = data.string();
+		const char *eof = conf + data.size();
 
 		while (conf < eof)
 		{
-			size_t i;
+			size_t i = 0;
 
 			// Fetch a line to execute
 			command.Clear();
@@ -179,14 +179,14 @@ void D_LoadWadSettings ()
 			{
 				command.Push(conf[i]);
 			}
-			if (i == 0)
+			if (i == 0) // Blank line
 			{
 				conf++;
 				continue;
 			}
 			command.Push(0);
 			conf += i;
-			if (*conf == '\n')
+			if (conf >= eof || *conf == '\n')
 			{
 				conf++;
 			}

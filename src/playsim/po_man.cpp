@@ -1672,23 +1672,29 @@ void FPolyObj::CreateSubsectorLinks()
 		seg->v2 = side->V2();
 		seg->wall = side;
 	}
-
-	subsector_t *sub = CenterSubsector;
-
-	// Link node to subsector
-	node->pnext = sub->polys;
-	if (node->pnext != nullptr) 
+	if (!(Level->i_compatflags & COMPATF_POLYOBJ))
 	{
-		assert(node->pnext->state == 1337);
-		node->pnext->pprev = node;
+		SplitPoly(node, Level->HeadNode(), dummybbox);
 	}
-	node->pprev = nullptr;
-	sub->polys = node;
+	else
+	{
+		subsector_t *sub = CenterSubsector;
 
-	// link node to polyobject
-	node->snext = node->poly->subsectorlinks;
-	node->poly->subsectorlinks = node;
-	node->subsector = sub;
+		// Link node to subsector
+		node->pnext = sub->polys;
+		if (node->pnext != nullptr) 
+		{
+			assert(node->pnext->state == 1337);
+			node->pnext->pprev = node;
+		}
+		node->pprev = nullptr;
+		sub->polys = node;
+
+		// link node to polyobject
+		node->snext = node->poly->subsectorlinks;
+		node->poly->subsectorlinks = node;
+		node->subsector = sub;
+	}
 }
 
 //==========================================================================

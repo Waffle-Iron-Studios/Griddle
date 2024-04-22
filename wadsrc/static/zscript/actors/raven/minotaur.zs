@@ -347,10 +347,18 @@ class Minotaur : Actor
 		}
 		else
 		{
-			Actor mo = SpawnMissile (target, "MinotaurFX2");
-			if (mo != null)
+			if (Floorclip > 0 && (Level.compatflags & COMPATF_MINOTAUR))
 			{
-				mo.A_StartSound ("minotaur/attack1", CHAN_WEAPON);
+				// only play the sound. 
+				A_StartSound ("minotaur/fx2hit", CHAN_WEAPON);
+			}
+			else
+			{
+				Actor mo = SpawnMissile (target, "MinotaurFX2");
+				if (mo != null)
+				{
+					mo.A_StartSound ("minotaur/attack1", CHAN_WEAPON);
+				}
 			}
 		}
 		if (random[MinotaurAtk3]() < 192 && special2 == 0)
