@@ -3,11 +3,11 @@ version: 1
 AppDir:
   path: ./AppDir
   app_info:
-    id: com.Griddle.app
-    name: Griddle
+    id: com.Griddle-RF.app
+    name: Relentless Frontier
     icon: game_icon.png
     version: latest
-    exec: ./griddle
+    exec: ./rfgzdoom
     exec_args: $@
   apt:
     arch: amd64
