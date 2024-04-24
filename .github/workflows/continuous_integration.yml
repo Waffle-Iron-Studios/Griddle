@@ -106,11 +106,11 @@ jobs:
         cd build
         mkdir package
         if [[ "${{ runner.os }}" == 'Windows' ]]; then
-          cp ${{ matrix.config.build_type }}/griddle.exe ${{ matrix.config.build_type }}/*.pk3 package
+          cp ${{ matrix.config.build_type }}/rfgzdoom.exe ${{ matrix.config.build_type }}/*.pk3 package
         elif [[ "${{ runner.os }}" == 'macOS' ]]; then
-          cp -r griddle.app package
+          cp -r rfgzdoom.app package
         elif [[ "${{ runner.os }}" == 'Linux' ]]; then
-          cp griddle *.pk3 package
+          cp rfgzdoom *.pk3 package
         fi
 
     - name: Upload Package
