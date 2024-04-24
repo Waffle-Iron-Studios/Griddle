@@ -41,7 +41,7 @@ const char *GetVersionString();
 
 /** Lots of different version numbers **/
 
-#define VERSIONSTR "1.6.1"
+#define VERSIONSTR "1.6.1 (RF Version)"
 
 // The version as seen in the Windows resource
 #define RC_FILEVERSION 1,6,1,0
@@ -86,7 +86,7 @@ const char *GetVersionString();
 // SAVESIG should match SAVEVER.
 
 // extension for savegames
-#define SAVEGAME_EXT "wds"
+#define SAVEGAME_EXT "rfds"
 
 // MINSAVEVER is the minimum level snapshot version that can be loaded.
 #define MINSAVEVER 4556
@@ -96,18 +96,20 @@ const char *GetVersionString();
 #define SAVEVER 4560
 
 // This is so that derivates can use the same savegame versions without worrying about engine compatibility
-#define GAMESIG "GRIDDLE"
-#define BASEWAD "griddle.pk3"
+#define GAMESIG "RELENTLESSFRONTIER"
+#define SOUNDFONT "griddle_rf"
+#define BASEWAD "griddle_rf.pk3"
 #define OPTIONALWAD "game_support.pk3"
 #define GZDOOM 1
 #define VR3D_ENABLED
 
 // More stuff that needs to be different for derivatives.
-#define GAMENAME "Griddle"
-#define WGAMENAME L"Griddle"
-#define GAMENAMELOWERCASE "griddle"
-#define FORUM_URL "http://forum.zdoom.org/"
-#define BUGS_FORUM_URL	"http://forum.zdoom.org/viewforum.php?f=2"
+#define GAMENAME "Relentless Frontier"
+#define WGAMENAME L"Relentless Frontier"
+#define GAMENAMELOWERCASE "Relentless Frontier"
+#define CONFIGNAME "rfconfig"
+#define FORUM_URL "https://steamcommunity.com/app/1677900/discussions/"
+#define BUGS_FORUM_URL	"https://steamcommunity.com/app/1677900/discussions/"
 
 #if defined(__APPLE__) || defined(_WIN32)
 #define GAME_DIR GAMENAME
@@ -115,7 +117,7 @@ const char *GetVersionString();
 #define GAME_DIR ".config/" GAMENAMELOWERCASE
 #endif
 
-#define DEFAULT_DISCORD_APP_ID "951303644597325885"
+#define DEFAULT_DISCORD_APP_ID ""
 
 const int SAVEPICWIDTH = 216;
 const int SAVEPICHEIGHT = 162;

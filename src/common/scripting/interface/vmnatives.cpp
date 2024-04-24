@@ -991,12 +991,6 @@ DEFINE_ACTION_FUNCTION(FKeyBindings, SetBind)
 	PARAM_INT(k);
 	PARAM_STRING(cmd);
 
-	// Only menus are allowed to change bindings.
-	if (DMenu::InMenu == 0)
-	{
-		I_FatalError("Attempt to change key bindings outside of menu code to '%s'", cmd.GetChars());
-	}
-
 
 	self->SetBind(k, cmd.GetChars());
 	return 0;
@@ -1053,12 +1047,6 @@ DEFINE_ACTION_FUNCTION(FKeyBindings, UnbindACommand)
 	PARAM_SELF_STRUCT_PROLOGUE(FKeyBindings);
 	PARAM_STRING(cmd);
 
-	// Only menus are allowed to change bindings.
-	if (DMenu::InMenu == 0)
-	{
-		I_FatalError("Attempt to unbind key bindings for '%s' outside of menu code", cmd.GetChars());
-	}
-
 	self->UnbindACommand(cmd.GetChars());
 	return 0;
 }
@@ -1069,12 +1057,6 @@ DEFINE_ACTION_FUNCTION(DOptionMenuItemCommand, DoCommand)
 	PARAM_PROLOGUE;
 	PARAM_STRING(cmd);
 	PARAM_BOOL(unsafe);
-
-	// Only menus are allowed to execute CCMDs.
-	if (DMenu::InMenu == 0)
-	{
-		I_FatalError("Attempt to execute CCMD '%s' outside of menu code", cmd.GetChars());
-	}
 
 	UnsafeExecutionScope scope(unsafe);
 	AddCommandString(cmd.GetChars());

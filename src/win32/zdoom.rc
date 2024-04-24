@@ -68,11 +68,11 @@ BEGIN
     "        BLOCK ""040904b0""\r\n"
     "        BEGIN\r\n"
     "            VALUE ""CompanyName"", "" ""\r\n"
-    "            VALUE ""FileDescription"", ""Griddle""\r\n"
+    "            VALUE ""FileDescription"", ""Relentless Frontier""\r\n"
     "            VALUE ""FileVersion"", RC_FILEVERSION2\r\n"
-    "            VALUE ""InternalName"", ""Griddle""\r\n"
-    "            VALUE ""OriginalFilename"", ""griddle.exe""\r\n"
-    "            VALUE ""ProductName"", ""Griddle""\r\n"
+    "            VALUE ""InternalName"", ""Relentless Frontier""\r\n"
+    "            VALUE ""OriginalFilename"", ""rfgzdoom.exe""\r\n"
+    "            VALUE ""ProductName"", ""Relentless Frontier""\r\n"
     "            VALUE ""ProductVersion"", GIT_VERSION\r\n"
     "        END\r\n"
     "    END\r\n"
@@ -312,11 +312,11 @@ BEGIN
         BLOCK "040904b0"
         BEGIN
             VALUE "CompanyName", " "
-            VALUE "FileDescription", "Griddle " GIT_DESCRIPTION
+            VALUE "FileDescription", "Relentless Frontier " GIT_DESCRIPTION
             VALUE "FileVersion", RC_FILEVERSION2
-            VALUE "InternalName", "Griddle"
-            VALUE "OriginalFilename", "griddle.exe"
-            VALUE "ProductName", "Griddle"
+            VALUE "InternalName", "Relentless Frontier"
+            VALUE "OriginalFilename", "rfgzdoom.exe"
+            VALUE "ProductName", "Relentless Frontier"
             VALUE "ProductVersion", GIT_DESCRIPTION
         END
     END

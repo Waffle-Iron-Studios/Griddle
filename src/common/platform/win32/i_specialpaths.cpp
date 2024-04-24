@@ -90,7 +90,7 @@ bool IsPortable()
 	}
 
 	// A portable INI means that this storage location should also be portable if the file can be written to.
-	FStringf path("%s" GAMENAMELOWERCASE "_portable.ini", progdir.GetChars());
+	FStringf path("%s" CONFIGNAME "_portable.ini", progdir.GetChars());
 	if (FileExists(path))
 	{
 		file = CreateFile(path.WideString().c_str(), GENERIC_READ | GENERIC_WRITE, 0, NULL,
@@ -224,7 +224,7 @@ FString M_GetOldConfigPath(int& type)
 	// Check in app data where this was previously stored.
 	// We actually prefer to store the config in a more visible place so this is no longer used.
 	path = GetKnownFolder(CSIDL_APPDATA, FOLDERID_RoamingAppData, true);
-	path += "/" GAME_DIR "/" GAMENAMELOWERCASE ".ini";
+	path += "/" GAME_DIR "/" CONFIGNAME ".ini";
 	type = 1;
 	if (FileExists(path))
 		return path;
@@ -277,14 +277,14 @@ FString M_GetConfigPath(bool for_reading)
 {
 	if (IsPortable())
 	{
-		return FStringf("%s" GAMENAMELOWERCASE "_portable.ini", progdir.GetChars());
+		return FStringf("%s" CONFIGNAME "_portable.ini", progdir.GetChars());
 	}
 
 	// Construct a user-specific config name
 	FString path = GetKnownFolder(CSIDL_APPDATA, FOLDERID_Documents, true);
 	path += "/My Games/" GAME_DIR;
 	CreatePath(path.GetChars());
-	path += "/" GAMENAMELOWERCASE ".ini";
+	path += "/" CONFIGNAME ".ini";
 	if (!for_reading || FileExists(path))
 		return path;
 
@@ -301,7 +301,7 @@ FString M_GetConfigPath(bool for_reading)
 			int action = M_MigrateOldConfig();
 			if (action == IDNO)
 			{
-				path.Format("%s" GAMENAMELOWERCASE "_portable.ini", progdir.GetChars());
+				path.Format("%s" CONFIGNAME "_portable.ini", progdir.GetChars());
 				isportable = true;
 			}
 		}
@@ -317,7 +317,7 @@ FString M_GetConfigPath(bool for_reading)
 		if (!FileExists(path))
 		{
 			path = progdir;
-			path << GAMENAMELOWERCASE ".ini";
+			path << CONFIGNAME ".ini";
 		}
 	}
 
