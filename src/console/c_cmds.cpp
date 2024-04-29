@@ -704,7 +704,7 @@ UNSAFE_CCMD(save)
 	// Backport this from vkDoom
 	if ((primaryLevel->flags9 & LEVEL9_NOUSERSAVE))
 	{
-		Printf("%s\n", GStrings("SAVEDEAD"));
+		Printf("%s\n", GStrings.GetString("SAVEDEAD"));
 		return;
 	}
 	if (argv.argc() < 2 || argv.argc() > 3 || argv[1][0] == 0)
