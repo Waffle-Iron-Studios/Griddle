@@ -156,6 +156,12 @@ static TArray<msecnode_t *> PredictionPortalSectors_sprev_Backup;
 static TArray<FLinePortal *> PredictionPortalLinesBackup;
 static TArray<portnode_t *> PredictionPortalLines_sprev_Backup;
 
+struct
+{
+	DVector3 Pos = {};
+	int Flags = 0;
+} static PredictionViewPosBackup;
+
 // [GRB] Custom player classes
 TArray<FPlayerClass> PlayerClasses;
 
@@ -382,7 +388,7 @@ void player_t::SetLogNumber (int num)
 
 	// First look up TXT_LOGTEXT%d in the string table
 	mysnprintf(lumpname, countof(lumpname), "$TXT_LOGTEXT%d", num);
-	auto text = GStrings[lumpname+1];
+	auto text = GStrings.CheckString(lumpname+1);
 	if (text)
 	{
 		SetLogText(lumpname);	// set the label, not the content, so that a language change can be picked up.
@@ -400,7 +406,7 @@ void player_t::SetLogNumber (int num)
 			// If this is an original IWAD text, try looking up its lower priority string version first.
 
 			mysnprintf(lumpname, countof(lumpname), "$TXT_ILOG%d", num);
-			auto text = GStrings[lumpname + 1];
+			auto text = GStrings.CheckString(lumpname + 1);
 			if (text)
 			{
 				SetLogText(lumpname);	// set the label, not the content, so that a language change can be picked up.
@@ -428,7 +434,7 @@ void player_t::SetLogText (const char *text)
 	if (mo && mo->CheckLocalView())
 	{
 		// Print log text to console
-		Printf(PRINT_HIGH | PRINT_NONOTIFY, TEXTCOLOR_GOLD "%s\n", LogText[0] == '$' ? GStrings(text + 1) : text);
+		Printf(PRINT_HIGH | PRINT_NONOTIFY, TEXTCOLOR_GOLD "%s\n", LogText[0] == '$' ? GStrings.GetString(text + 1) : text);
 	}
 }
 
@@ -1443,6 +1449,14 @@ void P_PredictPlayer (player_t *player)
 	PredictionActorBackupArray.Resize(act->GetClass()->Size);
 	memcpy(PredictionActorBackupArray.Data(), &act->snext, act->GetClass()->Size - ((uint8_t *)&act->snext - (uint8_t *)act));
 
+	// Since this is a DObject it needs to have its fields backed up manually for restore, otherwise any changes
+	// to it will be permanent while predicting. This is now auto-created on pawns to prevent creation spam.
+	if (act->ViewPos != nullptr)
+	{
+		PredictionViewPosBackup.Pos = act->ViewPos->Offset;
+		PredictionViewPosBackup.Flags = act->ViewPos->Flags;
+	}
+
 	act->flags &= ~MF_PICKUP;
 	act->flags2 &= ~MF2_PUSHWALL;
 	player->cheats |= CF_PREDICTING;
@@ -1512,8 +1526,8 @@ void P_PredictPlayer (player_t *player)
 		player->cmd = localcmds[i % LOCALCMDTICS];
 		player->mo->ClearInterpolation();
 		player->mo->ClearFOVInterpolation();
-		P_PlayerThink (player);
-		player->mo->Tick ();
+		P_PlayerThink(player);
+		player->mo->CallTick();
 	}
 
 	if (rubberband)
@@ -1579,6 +1593,12 @@ void P_UnPredictPlayer ()
 
 		act->UnlinkFromWorld(&ctx);
 		memcpy(&act->snext, PredictionActorBackupArray.Data(), PredictionActorBackupArray.Size() - ((uint8_t *)&act->snext - (uint8_t *)act));
+
+		if (act->ViewPos != nullptr)
+		{
+			act->ViewPos->Offset = PredictionViewPosBackup.Pos;
+			act->ViewPos->Flags = PredictionViewPosBackup.Flags;
+		}
 
 		// The blockmap ordering needs to remain unchanged, too.
 		// Restore sector links and refrences.
