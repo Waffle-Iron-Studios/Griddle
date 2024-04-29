@@ -46,6 +46,7 @@
 #include "wildcards.hpp"
 
 namespace FileSys {
+	
 // this is for restricting shared file readers to the main thread.
 thread_local bool mainThread;
 void SetMainThread()

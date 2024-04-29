@@ -5386,6 +5386,10 @@ int MorphPointerSubstitution(AActor* from, AActor* to)
 	{
 		to->player = from->player;
 		from->player = nullptr;
+
+		// Swap the new body into the right network slot if it's a client (this doesn't
+		// really matter for regular Actors since they grab any ID they can get anyway).
+		NetworkEntityManager::SetClientNetworkEntity(to, to->player - players);
 	}
 
 	if (from->alternative != nullptr)
@@ -7702,7 +7706,7 @@ const char *AActor::GetTag(const char *def) const
 		const char *tag = Tag->GetChars();
 		if (tag[0] == '$')
 		{
-			return GStrings(tag + 1);
+			return GStrings.GetString(tag + 1);
 		}
 		else
 		{
@@ -7732,7 +7736,7 @@ const char *AActor::GetCharacterName() const
 		const char *cname = Conversation->SpeakerName.GetChars();
 		if (cname[0] == '$')
 		{
-			return GStrings(cname + 1);
+			return GStrings.GetString(cname + 1);
 		}
 		else return cname;
 	}

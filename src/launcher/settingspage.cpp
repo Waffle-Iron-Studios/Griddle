@@ -131,10 +131,10 @@ void SettingsPage::UpdateLanguage()
 	DontAskAgainCheckbox->SetText(GStrings("PICKER_DONTASK"));
 
 #ifdef RENDER_BACKENDS
-	BackendLabel->SetText(GStrings("PICKER_PREFERBACKEND"));
-	VulkanCheckbox->SetText(GStrings("OPTVAL_VULKAN"));
-	OpenGLCheckbox->SetText(GStrings("OPTVAL_OPENGL"));
-	GLESCheckbox->SetText(GStrings("OPTVAL_OPENGLES"));
+	BackendLabel->SetText(GStrings.GetString("PICKER_PREFERBACKEND"));
+	VulkanCheckbox->SetText(GStrings.GetString("OPTVAL_VULKAN"));
+	OpenGLCheckbox->SetText(GStrings.GetString("OPTVAL_OPENGL"));
+	GLESCheckbox->SetText(GStrings.GetString("OPTVAL_OPENGLES"));
 #endif
 }
 

@@ -1,4 +1,3 @@
-
 #include <algorithm>
 #include "widgets/lineedit/lineedit.h"
 #include "core/utf8reader.h"
