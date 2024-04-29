@@ -123,12 +123,12 @@ void SettingsPage::Save()
 
 void SettingsPage::UpdateLanguage()
 {
-	LangLabel->SetText(GStrings("OPTMNU_LANGUAGE"));
-	GeneralLabel->SetText(GStrings("PICKER_GENERAL"));
-	ExtrasLabel->SetText(GStrings("PICKER_EXTRA"));
-	FullscreenCheckbox->SetText(GStrings("PICKER_FULLSCREEN"));
-	DisableAutoloadCheckbox->SetText(GStrings("PICKER_NOAUTOLOAD"));
-	DontAskAgainCheckbox->SetText(GStrings("PICKER_DONTASK"));
+	LangLabel->SetText(GStrings.GetString("OPTMNU_LANGUAGE"));
+	GeneralLabel->SetText(GStrings.GetString("PICKER_GENERAL"));
+	ExtrasLabel->SetText(GStrings.GetString("PICKER_EXTRA"));
+	FullscreenCheckbox->SetText(GStrings.GetString("PICKER_FULLSCREEN"));
+	DisableAutoloadCheckbox->SetText(GStrings.GetString("PICKER_NOAUTOLOAD"));
+	DontAskAgainCheckbox->SetText(GStrings.GetString("PICKER_DONTASK"));
 
 #ifdef RENDER_BACKENDS
 	BackendLabel->SetText(GStrings.GetString("PICKER_PREFERBACKEND"));
