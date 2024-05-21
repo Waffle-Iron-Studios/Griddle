@@ -410,11 +410,7 @@ void HandleSpriteOffsets(Matrix3x4 *mat, const FRotator *HW, FVector2 *offset, b
 
 bool HWSprite::CalculateVertices(HWDrawInfo* di, FVector3* v, DVector3* vp)
 {
-	float pixelstretch = 1.2;
-	if (actor && actor->Level)
-		pixelstretch = actor->Level->pixelstretch;
-	else if (particle && particle->subsector && particle->subsector->sector && particle->subsector->sector->Level)
-		pixelstretch = particle->subsector->sector->Level->pixelstretch;
+	float pixelstretch = di->Level->pixelstretch;
 
 	FVector3 center = FVector3((x1 + x2) * 0.5, (y1 + y2) * 0.5, (z1 + z2) * 0.5);
 	const auto& HWAngles = di->Viewpoint.HWAngles;
@@ -1060,6 +1056,13 @@ void HWSprite::Process(HWDrawInfo *di, AActor* thing, sector_t * sector, area_t 
 
 		r.Scale(sprscale.X, isSpriteShadow ? sprscale.Y * 0.15 : sprscale.Y);
 
+		if (thing->renderflags & (RF_ROLLSPRITE|RF_FLATSPRITE))
+		{
+			double ps = di->Level->pixelstretch;
+			double mult = 2 * ps / (ps * ps + 1); // shrink slightly
+			r.Scale(mult * ps, mult);
+		}
+
 		float rightfac = -r.left;
 		float leftfac = rightfac - r.width;
 		z1 = z - r.top;
@@ -1502,7 +1505,11 @@ void HWSprite::ProcessParticle(HWDrawInfo *di, particle_t *particle, sector_t *s
 		else factor = 1 / 7.f;
 		float scalefac=particle->size * factor;
 
-		float viewvecX = vp.ViewVector.X * scalefac;
+		float ps = di->Level->pixelstretch;
+
+		scalefac *= 2 * ps / (ps * ps + 1); // shrink it slightly to account for the stretch
+
+		float viewvecX = vp.ViewVector.X * scalefac * ps;
 		float viewvecY = vp.ViewVector.Y * scalefac;
 
 		x1=x+viewvecY;
@@ -1571,6 +1578,13 @@ void HWSprite::AdjustVisualThinker(HWDrawInfo* di, DVisualThinker* spr, sector_t
 
 	auto r = spi.GetSpriteRect();
 	r.Scale(spr->Scale.X, spr->Scale.Y);
+
+	if (spr->PT.flags & SPF_ROLL)
+	{
+		double ps = di->Level->pixelstretch;
+		double mult = 2 * ps / (ps * ps + 1); // shrink slightly
+		r.Scale(mult * ps, mult);
+	}
 
 	if (spr->bXFlip)	
 	{
