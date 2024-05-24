@@ -103,14 +103,11 @@ const char *GetVersionString();
 #define VR3D_ENABLED
 
 // More stuff that needs to be different for derivatives.
-#define GAMENAME "Griddle"
-#define WGAMENAME L"Griddle"
-#define GAMENAMELOWERCASE "griddle"
-#define QUERYIWADDEFAULT false
+#define GAMENAME "GZDoom"
+#define WGAMENAME L"GZDoom"
+#define GAMENAMELOWERCASE "gzdoom"
 #define FORUM_URL "http://forum.zdoom.org/"
 #define BUGS_FORUM_URL	"http://forum.zdoom.org/viewforum.php?f=2"
-// For QUERYIWADDEFAULT: Set to 'true' to always show dialog box on startup by default, 'false' to disable.
-// Should set to 'false' for standalone games, and set to 'true' for regular source port forks that are meant to run any game.
 
 #if defined(__APPLE__) || defined(_WIN32)
 #define GAME_DIR GAMENAME

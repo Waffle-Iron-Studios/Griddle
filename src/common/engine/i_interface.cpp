@@ -4,7 +4,6 @@
 #include "startupinfo.h"
 #include "c_cvars.h"
 #include "gstrings.h"
-#include "version.h"
 
 static_assert(sizeof(void*) == 8,
 	"Only LP64/LLP64 builds are officially supported. "
@@ -30,7 +29,7 @@ bool			pauseext;
 
 FStartupInfo GameStartupInfo;
 
-CVAR(Bool, queryiwad, QUERYIWADDEFAULT, CVAR_ARCHIVE | CVAR_GLOBALCONFIG);
+CVAR(Bool, queryiwad, true, CVAR_ARCHIVE | CVAR_GLOBALCONFIG);
 CVAR(String, defaultiwad, "", CVAR_ARCHIVE | CVAR_GLOBALCONFIG);
 CVAR(Bool, vid_fps, false, 0)
 
