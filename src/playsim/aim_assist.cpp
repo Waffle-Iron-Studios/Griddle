@@ -8,6 +8,7 @@
 #include "p_effect.h"
 
 #include "g_levellocals.h"
+#include "actorinlines.h"
 
 
 CVAR(Bool, AimAssistDebugTrace, false, CVAR_ARCHIVE);
