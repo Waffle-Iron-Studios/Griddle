@@ -162,7 +162,8 @@ enum ActorFlag
 	MF_SKULLFLY			= 0x01000000,	// skull in flight
 	MF_NOTDMATCH		= 0x02000000,	// don't spawn in death match (key cards)
 
-	MF_SPAWNSOUNDSOURCE	= 0x04000000,	// Plays missile's see sound at spawning object.
+	//MF_SPAWNSOUNDSOURCE	= 0x04000000,	// Plays missile's see sound at spawning object. -- MOVED TO MF8_SPAWNSOUNDSOURCE
+	MF_AIMASSISTTARGET = 0x04000000,	// This actor is a valid target for the aim assist
 	MF_FRIENDLY			= 0x08000000,	// [RH] Friendly monsters for Strife (and MBF)
 	MF_UNMORPHED		= 0x10000000,	// [RH] Actor is the unmorphed version of something else
 	MF_NOLIFTDROP		= 0x20000000,	// [RH] Used with MF_NOGRAVITY to avoid dropping with lifts
@@ -416,6 +417,7 @@ enum ActorFlag8
 	MF8_FALLDAMAGE		= 0x00000800,	// Monster will take fall damage regardless of map settings.
 	MF8_MINVISIBLE		= 0x00001000,	// Actor not visible to monsters
 	MF8_MVISBLOCKED		= 0x00002000,	// Monster(only) sight checks to actor always fail
+	MF8_SPAWNSOUNDSOURCE = 0x00004000,	// Plays missile's see sound at spawning object. -- ORIGINALLY MF_SPAWNSOUNDSOURCE
 	MF8_ALLOWTHRUBITS	= 0x00008000,	// [MC] Enable ThruBits property
 	MF8_FULLVOLSEE		= 0x00010000,	// Play see sound at full volume
 	MF8_E1M8BOSS		= 0x00020000,	// MBF21 boss death.

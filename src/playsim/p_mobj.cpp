@@ -6884,7 +6884,7 @@ void P_PlaySpawnSound(AActor *missile, AActor *spawner)
 {
 	if (missile->SeeSound != NO_SOUND)
 	{
-		if (!(missile->flags & MF_SPAWNSOUNDSOURCE))
+		if (!(missile->flags8 & MF8_SPAWNSOUNDSOURCE))
 		{
 			S_Sound (missile, CHAN_VOICE, 0, missile->SeeSound, 1, ATTN_NORM);
 		}
