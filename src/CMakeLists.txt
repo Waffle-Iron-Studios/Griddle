@@ -874,6 +874,7 @@ set (PCH_SOURCES
 	playsim/mapthinkers/a_thruster.cpp
 	playsim/mapthinkers/a_scroll.cpp
 	playsim/mapthinkers/dsectoreffect.cpp
+	playsim/aim_assist.cpp
 	playsim/a_pickups.cpp
 	playsim/a_action.cpp
 	playsim/a_corona.cpp
