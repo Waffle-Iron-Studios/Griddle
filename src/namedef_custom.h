@@ -900,3 +900,9 @@ xx(frictionfactor)
 xx(movefactor)
 
 xx(Corona)
+
+// Aim assist cvar names
+
+xx(AimAssistEnabled)
+xx(AimAssistStrength)
+xx(AimAssistPrecision)

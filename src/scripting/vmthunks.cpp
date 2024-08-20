@@ -2457,6 +2457,16 @@ inline T VecDiff(FLevelLocals *Level, const T& v1, const T& v2)
 	return result;
 }
 
+DVector2 LevelVec2Diff(FLevelLocals* Level, DVector2 x, DVector2 y)
+{
+	return VecDiff(Level, x, y);
+}
+
+DVector3 LevelVec3Diff(FLevelLocals* Level, DVector3 x, DVector3 y)
+{
+	return VecDiff(Level, x, y);
+}
+
 void Vec2Diff(FLevelLocals *Level, double x1, double y1, double x2, double y2, DVector2 *result)
 {
 	*result = VecDiff(Level, DVector2(x1, y1), DVector2(x2, y2));

@@ -4984,6 +4984,31 @@ static ETraceStatus CheckLineTrace(FTraceResults &res, void *userdata)
 	return TRACE_Stop;
 }
 
+static ETraceStatus CheckAimAssistTrace(FTraceResults& res, void* userdata)
+{
+	return TRACE_Stop;
+}
+
+int AimAssistTrace(AActor* t1, DAngle angle, double distance,
+	DAngle pitch, int flags, double sz, FLineTraceData* outdata)
+{
+	FTraceResults trace;
+
+	double pc = pitch.Cos();
+	DVector3 startpos = t1->PosAtZ((t1->Z() - t1->Floorclip) + sz);
+
+	bool ret = Trace(startpos, t1->Level->PointInSector(startpos), { pc * angle.Cos(), pc * angle.Sin(), -pitch.Sin() }, distance, MF_AIMASSISTTARGET, ML_BLOCKEVERYTHING, t1, trace, TRACE_NoSky, CheckAimAssistTrace, nullptr);
+
+	assert(outdata);
+
+	outdata->HitActor = trace.Actor;
+	outdata->HitLocation = trace.HitPos;
+	outdata->Distance = trace.Distance;
+	outdata->HitType = trace.HitType;
+
+	return ret;
+}
+
 int P_LineTrace(AActor *t1, DAngle angle, double distance,
 	DAngle pitch, int flags, double sz, double offsetforward,
 	double offsetside, FLineTraceData *outdata)
