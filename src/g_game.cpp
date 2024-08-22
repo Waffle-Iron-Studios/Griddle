@@ -2327,7 +2327,7 @@ static void PutSaveComment (FSerializer &arc)
 	// Get level name
 	comment.Format("%s - %s\n", primaryLevel->MapName.GetChars(), primaryLevel->LevelName.GetChars());
 
-	comment.AppendFormat("%s - %i\n", GStrings.GetString("SKILL"), G_SkillProperty(SKILLP_ACSReturn));
+	comment.AppendFormat("%s\n", G_SkillName());
 
 	// Append elapsed time
 	const char *const time = GStrings.GetString("SAVECOMMENT_TIME");
