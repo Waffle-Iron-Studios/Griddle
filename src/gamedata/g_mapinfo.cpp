@@ -1827,6 +1827,7 @@ MapFlagHandlers[] =
 	{ "disableskyboxao",				MITYPE_CLRFLAG3,	LEVEL3_SKYBOXAO, 0 },
 	{ "avoidmelee",						MITYPE_SETFLAG3,	LEVEL3_AVOIDMELEE, 0 },
 	{ "attenuatelights",				MITYPE_SETFLAG3,	LEVEL3_ATTENUATE, 0 },
+	{ "nofogofwar",						MITYPE_SETFLAG3,	LEVEL3_NOFOGOFWAR, 0 },
 	{ "nousersave",						MITYPE_SETFLAG9,	LEVEL9_NOUSERSAVE, 0 },	// backport from vkdoom
 	{ "noautomap",						MITYPE_SETFLAG9,	LEVEL9_NOAUTOMAP, 0 },	// backport from vkdoom
 	{ "nototaltime",					MITYPE_SETFLAGWIS,	LEVELWIS_NOTOTALTIME, 0 },
