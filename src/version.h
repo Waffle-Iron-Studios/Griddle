@@ -41,26 +41,26 @@ const char *GetVersionString();
 
 /** Lots of different version numbers **/
 
-#define VERSIONSTR "1.6.5"
+#define VERSIONSTR "1.6.6"
 
 // The version as seen in the Windows resource
-#define RC_FILEVERSION 1,6,5,0
-#define RC_PRODUCTVERSION 1,6,5,0
+#define RC_FILEVERSION 1,6,6,0
+#define RC_PRODUCTVERSION 1,6,6,0
 #define RC_PRODUCTVERSION2 VERSIONSTR
 // These are for content versioning.
 #define VER_MAJOR 1
 #define VER_MINOR 6
-#define VER_REVISION 5
+#define VER_REVISION 6
 
 // These are for ZScript versioning
 #define ZSCRIPT_VER_MAJOR 4
-#define ZSCRIPT_VER_MINOR 12
-#define ZSCRIPT_VER_REVISION 3
+#define ZSCRIPT_VER_MINOR 13
+#define ZSCRIPT_VER_REVISION 0
 
 // This should always refer to the GZDoom version a derived port is based on and not reflect the derived port's version number!
 #define ENG_MAJOR 4
-#define ENG_MINOR 12
-#define ENG_REVISION 3
+#define ENG_MINOR 13
+#define ENG_REVISION 0
 
 // Version identifier for network games.
 // Bump it every time you do a release unless you're certain you
@@ -86,7 +86,7 @@ const char *GetVersionString();
 // SAVESIG should match SAVEVER.
 
 // extension for savegames
-#define SAVEGAME_EXT "wds"
+#define SAVEGAME_EXT "pasave"
 
 // MINSAVEVER is the minimum level snapshot version that can be loaded.
 #define MINSAVEVER 4556
@@ -96,16 +96,16 @@ const char *GetVersionString();
 #define SAVEVER 4560
 
 // This is so that derivates can use the same savegame versions without worrying about engine compatibility
-#define GAMESIG "GRIDDLE"
+#define GAMESIG "PROJECTABSENTIA"
 #define BASEWAD "griddle.pk3"
 #define OPTIONALWAD "game_support.pk3"
 #define GZDOOM 1
 #define VR3D_ENABLED
 
 // More stuff that needs to be different for derivatives.
-#define GAMENAME "Griddle"
-#define WGAMENAME L"Griddle"
-#define GAMENAMELOWERCASE "griddle"
+#define GAMENAME "Project Absentia"
+#define WGAMENAME L"Project Absentia"
+#define GAMENAMELOWERCASE "projectabsentia"
 #define FORUM_URL "http://www.waffleironstudios.com"
 #define BUGS_FORUM_URL	"http://www.waffleironstudios.com"
 
