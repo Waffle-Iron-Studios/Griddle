@@ -592,27 +592,27 @@ EXTERN_CVAR (Int, screenblocks)
 
 CCMD (sizedown)
 {
-	if (shiftState.ShiftPressed())
-	{
+	//if (shiftState.ShiftPressed())
+	//{
 		hud_scalefactor = hud_scalefactor - 0.04f;
-	}
-	else
-	{
-		screenblocks = screenblocks - 1;
-	}
+	//}
+	//else
+	//{
+	//	screenblocks = screenblocks - 1;
+	//}
 	S_Sound (CHAN_VOICE, CHANF_UI, "menu/change", snd_menuvolume, ATTN_NONE);
 }
 
 CCMD (sizeup)
 {
-	if (shiftState.ShiftPressed())
-	{
+	//if (shiftState.ShiftPressed())
+	//{
 		hud_scalefactor = hud_scalefactor + 0.04f;
-	}
-	else
-	{
-		screenblocks = screenblocks + 1;
-	}
+	//}
+	//else
+	//{
+	//	screenblocks = screenblocks + 1;
+	//}
 	S_Sound(CHAN_VOICE, CHANF_UI, "menu/change", snd_menuvolume, ATTN_NONE);
 }
 
