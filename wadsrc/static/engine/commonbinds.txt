@@ -35,7 +35,6 @@ f10 menu_quit
 tab togglemap
 pause pause
 sysrq screenshot
-t messagemode
 \ +showscores
 f12 spynext
 mwheeldown weapnext

@@ -9,7 +9,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - name: Install Griddle dependencies
+      - name: Install GZDoom dependencies
         run: |
           sudo apt-get update
           sudo apt-get install clang-12 libsdl2-dev libvpx-dev libwebp-dev cmake -y

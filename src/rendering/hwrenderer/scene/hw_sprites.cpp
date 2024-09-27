@@ -459,8 +459,8 @@ bool HWSprite::CalculateVertices(HWDrawInfo* di, FVector3* v, DVector3* vp)
 
 	const bool drawBillboardFacingCamera = hw_force_cambbpref ? gl_billboard_faces_camera :
 		gl_billboard_faces_camera
-		&& ((actor && (!(actor->renderflags2 & RF2_BILLBOARDNOFACECAMERA) || (actor->renderflags2 & RF2_BILLBOARDFACECAMERA)))
-		|| (particle && particle->texture.isValid() && (!(particle->flags & SPF_NOFACECAMERA) || (particle->flags & SPF_FACECAMERA))));
+		|| ((actor && (!(actor->renderflags2 & RF2_BILLBOARDNOFACECAMERA) && (actor->renderflags2 & RF2_BILLBOARDFACECAMERA)))
+		|| (particle && particle->texture.isValid() && (!(particle->flags & SPF_NOFACECAMERA) && (particle->flags & SPF_FACECAMERA))));
 
 	// [Nash] has +ROLLSPRITE
 	const bool drawRollSpriteActor = (actor != nullptr && actor->renderflags & RF_ROLLSPRITE);
@@ -480,7 +480,7 @@ bool HWSprite::CalculateVertices(HWDrawInfo* di, FVector3* v, DVector3* vp)
 	float yy = -center.Y + y;
 	float zz = -center.Z + z;
 	// [Nash] check for special sprite drawing modes
-	if (drawWithXYBillboard || isWallSprite)
+	if (drawWithXYBillboard || drawBillboardFacingCamera || isWallSprite)
 	{
 		mat.MakeIdentity();
 		mat.Translate(center.X, center.Z, center.Y); // move to sprite center
@@ -1091,7 +1091,7 @@ void HWSprite::Process(HWDrawInfo *di, AActor* thing, sector_t * sector, area_t 
 
 		r.Scale(sprscale.X, isSpriteShadow ? sprscale.Y * 0.15 * thing->isoscaleY : sprscale.Y * thing->isoscaleY);
 
-		if (thing->renderflags & (RF_ROLLSPRITE|RF_FLATSPRITE))
+		if ((thing->renderflags & (RF_ROLLSPRITE|RF_FLATSPRITE)) || (thing->renderflags2 & RF2_SQUAREPIXELS))
 		{
 			double ps = di->Level->pixelstretch;
 			double mult = 1.0 / sqrt(ps); // shrink slightly
