@@ -1598,6 +1598,24 @@ CCMD (endgame)
 		G_CheckDemoStatus();
 	}
 }
+//====
+// ======================================================================
+//
+// CMD_endgame2
+//
+// [RH] Quit the current game and go to fullscreen console
+//
+//==========================================================================
+
+CCMD(endgame2)
+{
+	if (!netgame)
+	{
+		gameaction = ga_titleloop;
+		demosequence = -1;
+		G_CheckDemoStatus();
+	}
+}
 
 //==========================================================================
 //
