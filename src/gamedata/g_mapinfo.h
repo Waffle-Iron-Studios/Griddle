@@ -331,6 +331,7 @@ struct FExitText
 struct level_info_t
 {
 	int			levelnum;
+	int			broken_id24_levelnum;
 	
 	FString		MapName;
 	FString		NextMap;
@@ -358,6 +359,7 @@ struct level_info_t
 	FString		LightningSound = "world/thunder";
 	FString		Music;
 	FString		LevelName;
+	FString		MapLabel;
 	FString		AuthorName;
 	int8_t		WallVertLight, WallHorizLight;
 	int			musicorder;
@@ -399,6 +401,8 @@ struct level_info_t
 
 	FString		EnterPic;
 	FString		ExitPic;
+	FString		EnterAnim;
+	FString		ExitAnim;
 	FString 	InterMusic;
 	int			intermusicorder;
 	TMap <FName, std::pair<FString, int> > MapInterMusic;
@@ -497,6 +501,8 @@ cluster_info_t *FindClusterInfo (int cluster);
 level_info_t *FindLevelInfo (const char *mapname, bool allowdefault=true);
 level_info_t *FindLevelByNum (int num);
 level_info_t *CheckLevelRedirect (level_info_t *info);
+
+bool SecretLevelVisited();
 
 FString CalcMapName (int episode, int level);
 
