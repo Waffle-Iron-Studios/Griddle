@@ -187,6 +187,7 @@ class Actor : Thinker native
 	native Actor Alternative;
 	native Actor goal;
 	native uint8 MinMissileChance;
+	native double MissileChanceMult;
 	native int8 LastLookPlayerNumber;
 	native uint SpawnFlags;
 	native double meleethreshold;
@@ -339,6 +340,7 @@ class Actor : Thinker native
 	property WeaveIndexXY: WeaveIndexXY;
 	property WeaveIndexZ: WeaveIndexZ;
 	property MinMissileChance: MinMissileChance;
+	property MissileChanceMult: MissileChanceMult;
 	property MaxStepHeight: MaxStepHeight;
 	property MaxDropoffHeight: MaxDropoffHeight;
 	property MaxSlopeSteepness: MaxSlopeSteepness;
@@ -405,6 +407,7 @@ class Actor : Thinker native
 		RenderStyle 'Normal';
 		Alpha 1;
 		MinMissileChance 200;
+		MissileChanceMult 1.0;
 		MeleeRange 64 - MELEEDELTA;
 		MaxDropoffHeight 24;
 		MaxStepHeight 24;
@@ -770,7 +773,7 @@ class Actor : Thinker native
 	native Actor SpawnPuff(class<Actor> pufftype, vector3 pos, double hitdir, double particledir, int updown, int flags = 0, Actor victim = null);
 	native void SpawnBlood (Vector3 pos1, double dir, int damage);
 	native void BloodSplatter (Vector3 pos, double hitangle, bool axe = false);
-	native bool HitWater (sector sec, Vector3 pos, bool checkabove = false, bool alert = true, bool force = false);
+	native bool HitWater (sector sec, Vector3 pos, bool checkabove = false, bool alert = true, bool force = false, int flags = 0);
 	native void PlaySpawnSound(Actor missile);
 	native clearscope bool CountsAsKill() const;
 	
@@ -848,6 +851,7 @@ class Actor : Thinker native
 	native bool LookForTid(bool allaround, LookExParams params = null);
 	native bool LookForEnemies(bool allaround, LookExParams params = null);
 	native bool LookForPlayers(bool allaround, LookExParams params = null);
+	native int LookForEnemiesEx(out Array<Actor> targets, double range = -1, bool noPlayers = true, bool allaround = false, LookExParams params = null);
 	native bool TeleportMove(Vector3 pos, bool telefrag, bool modifyactor = true);
 	native clearscope double DistanceBySpeed(Actor other, double speed) const;
 	native name GetSpecies();
