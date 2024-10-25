@@ -263,8 +263,8 @@ enum ActorFlag4
 	MF4_STRIFEDAMAGE	= 0x00000100,	// Strife projectiles only do up to 4x damage, not 8x
 
 	MF4_CANUSEWALLS		= 0x00000200,	// Can activate 'use' specials
-	MF4_MISSILEMORE		= 0x00000400,	// increases the chance of a missile attack
-	MF4_MISSILEEVENMORE	= 0x00000800,	// significantly increases the chance of a missile attack
+	//		= 0x00000400,
+	//		= 0x00000800,
 	MF4_FORCERADIUSDMG	= 0x00001000,	// if put on an object it will override MF3_NORADIUSDMG
 	MF4_DONTFALL		= 0x00002000,	// Doesn't have NOGRAVITY disabled when dying.
 	MF4_SEESDAGGERS		= 0x00004000,	// This actor can see you striking with a dagger
@@ -447,6 +447,7 @@ enum ActorFlag9
 	MF9_DECOUPLEDANIMATIONS		= 0x00000010,	// [RL0] Decouple model animations from states
 	MF9_NOSECTORDAMAGE			= 0x00000020,	// [inkoalawetrust] Actor ignores any sector-based damage (i.e damaging floors, NOT crushers)
 	MF9_ISPUFF					= 0x00000040,	// [AA] Set on actors by P_SpawnPuff
+	MF9_FORCESECTORDAMAGE		= 0x00000080,	// [inkoalawetrust] Actor ALWAYS takes hurt floor damage if there's any. Even if the floor doesn't have SECMF_HURTMONSTERS.
 };
 
 // --- mobj.renderflags ---
@@ -505,8 +506,9 @@ enum ActorRenderFlag2
 	RF2_FLIPSPRITEOFFSETX		= 0x0010,
 	RF2_FLIPSPRITEOFFSETY		= 0x0020,
 	RF2_CAMFOLLOWSPLAYER		= 0x0040,	// Matches the cam's base position and angles to the main viewpoint.
-	RF2_NOMIPMAP				= 0x0080,	// [Nash] forces no mipmapping on sprites. Useful for tiny sprites that need to remain visually crisp
-	RF2_SQUAREPIXELS			= 0x0200,	// apply +ROLLSPRITE scaling math so that non rolling sprites get the same scaling
+	RF2_ISOMETRICSPRITES		= 0x0080,
+	RF2_SQUAREPIXELS			= 0x0100,	// apply +ROLLSPRITE scaling math so that non rolling sprites get the same scaling
+	RF2_STRETCHPIXELS			= 0x0200,	// don't apply SQUAREPIXELS for ROLLSPRITES
 };
 
 // This translucency value produces the closest match to Heretic's TINTTAB.
@@ -697,8 +699,10 @@ struct FDropItem
 
 enum EViewPosFlags // [MC] Flags for SetViewPos.
 {
-	VPSF_ABSOLUTEOFFSET =	1 << 1,			// Don't include angles.
-	VPSF_ABSOLUTEPOS =		1 << 2,			// Use absolute position.
+	VPSF_ABSOLUTEOFFSET =		1 << 1,			// Don't include angles.
+	VPSF_ABSOLUTEPOS =			1 << 2,			// Use absolute position.
+	VPSF_ALLOWOUTOFBOUNDS =	1 << 3,			// Allow viewpoint to go out of bounds (hardware renderer only).
+	VPSF_ORTHOGRAPHIC =		1 << 4,			// Use orthographic projection (hardware renderer only).
 };
 
 struct ModelOverride
@@ -1110,6 +1114,8 @@ public:
 	DAngle			SpriteAngle;
 	DAngle			SpriteRotation;
 	DVector2		AutomapOffsets;		// Offset the actors' sprite view on the automap by these coordinates.
+	float			isoscaleY;				// Y-scale to compensate for Y-billboarding for isometric sprites
+	float			isotheta;				// Rotation angle to compensate for Y-billboarding for isometric sprites
 	DRotator		Angles;
 	DRotator		ViewAngles;			// Angle offsets for cameras
 	TObjPtr<DViewPosition*> ViewPos;			// Position offsets for cameras
@@ -1252,6 +1258,7 @@ public:
 									// but instead tries to come closer for a melee attack.
 									// This is not the same as meleerange
 	double			maxtargetrange;	// any target farther away cannot be attacked
+	double			missilechancemult; // distance multiplier for CheckMeleeRange, formerly done with MISSILE(EVEN)MORE flags.
 	double			bouncefactor;	// Strife's grenades use 50%, Hexen's Flechettes 70.
 	double			wallbouncefactor;	// The bounce factor for walls can be different.
 	double			Gravity;		// [GRB] Gravity factor

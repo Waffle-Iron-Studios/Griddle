@@ -423,8 +423,10 @@ enum EActivationFlags
 // [MC] Flags for SetViewPos.
 enum EViewPosFlags
 {
-	VPSF_ABSOLUTEOFFSET =	1 << 1,			// Don't include angles.
-	VPSF_ABSOLUTEPOS =		1 << 2,			// Use absolute position.
+	VPSF_ABSOLUTEOFFSET =		1 << 1,			// Don't include angles.
+	VPSF_ABSOLUTEPOS =			1 << 2,			// Use absolute position.
+	VPSF_ALLOWOUTOFBOUNDS =	1 << 3,			// Allow viewpoint to go out of bounds (hardware renderer only).
+	VPSF_ORTHOGRAPHIC =		1 << 4,			// Use orthographic projection (hardware renderer only).
 };
 
 // Flags for A_TakeInventory and A_TakeFromTarget
@@ -720,7 +722,7 @@ enum EParticleFlags
 	SPF_FACECAMERA				= 1 << 11,
 	SPF_NOFACECAMERA			= 1 << 12,
 	SPF_ROLLCENTER				= 1 << 13,
-	SPF_NOMIPMAP				= 1 << 14,
+	SPF_STRETCHPIXELS			= 1 << 14,
 
 	SPF_RELATIVE				= SPF_RELPOS|SPF_RELVEL|SPF_RELACCEL|SPF_RELANG
 };
@@ -1462,6 +1464,12 @@ enum ECompatFlags
 	COMPATF2_STAYONLIFT		= 1 << 13,	// yet another MBF thing.
 	COMPATF2_NOMBF21		= 1 << 14,	// disable MBF21 features that may clash with certain maps
 	COMPATF2_VOODOO_ZOMBIES = 1 << 15,  // allow playerinfo, playerpawn, and voodoo health to all be different, and allow monster targetting of 'dead' players that have positive health
+};
+
+enum HitWaterFlags
+{
+	THW_SMALL	= 1 << 0,
+	THW_NOVEL	= 1 << 1,
 };
 
 const M_E        = 2.7182818284590452354;  // e
