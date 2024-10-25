@@ -41,6 +41,7 @@
 #include "c_cvars.h"
 #include "c_bind.h"
 #include "c_dispatch.h"
+#include "m_misc.h"
 
 #include "menu.h"
 #include "vm.h"
@@ -1032,6 +1033,17 @@ DEFINE_ACTION_FUNCTION(_CVar, FindCVar)
 	ACTION_RETURN_POINTER(FindCVar(name.GetChars(), nullptr));
 }
 
+static int SaveConfig()
+{
+	return M_SaveDefaults(nullptr);
+}
+
+DEFINE_ACTION_FUNCTION_NATIVE(_CVar, SaveConfig, SaveConfig)
+{
+	PARAM_PROLOGUE;
+	ACTION_RETURN_INT(M_SaveDefaults(nullptr));
+}
+
 //=============================================================================
 //
 //
@@ -1141,6 +1153,17 @@ DEFINE_ACTION_FUNCTION(_Console, PrintfEx)
 	FString s = FStringFormat(VM_ARGS_NAMES,1);
 
 	Printf(printlevel,"%s\n", s.GetChars());
+	return 0;
+}
+
+DEFINE_ACTION_FUNCTION(_Console, DebugPrintf)
+{
+	PARAM_PROLOGUE;
+	PARAM_INT(debugLevel);
+	PARAM_VA_POINTER(va_reginfo);
+
+	FString s = FStringFormat(VM_ARGS_NAMES, 1);
+	DPrintf(debugLevel, "%s\n", s.GetChars());
 	return 0;
 }
 

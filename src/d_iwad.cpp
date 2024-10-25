@@ -59,6 +59,8 @@ EXTERN_CVAR(Bool, autoloadbrightmaps)
 EXTERN_CVAR(Bool, autoloadwidescreen)
 EXTERN_CVAR(String, language)
 
+bool foundprio = false; // global to prevent iwad box from appearing
+
 //==========================================================================
 //
 // Parses IWAD definitions
@@ -695,6 +697,7 @@ int FIWadManager::IdentifyVersion (std::vector<std::string>&wadfiles, const char
 				picks.Clear();
 				picks.Push(found);
 				pickedprio = mIWadInfos[found.mInfoIndex].prio;
+				foundprio = true;
 			}
 		}
 	}
@@ -749,8 +752,11 @@ int FIWadManager::IdentifyVersion (std::vector<std::string>&wadfiles, const char
 	}
 	int pick = 0;
 
-	// We got more than one so present the IWAD selection box.
-	if (picks.Size() > 1)
+
+	// Present the IWAD selection box.
+	bool alwaysshow = (queryiwad && !Args->CheckParm("-iwad") && !foundprio);
+
+	if (alwaysshow || picks.Size() > 1)
 	{
 		// Locate the user's prefered IWAD, if it was found.
 		if (defaultiwad[0] != '\0')

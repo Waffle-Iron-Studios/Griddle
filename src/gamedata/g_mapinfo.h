@@ -270,6 +270,8 @@ enum ELevelFlags : unsigned int
 	LEVEL3_AVOIDMELEE			= 0x00020000,	// global flag needed for proper MBF support.
 	LEVEL3_NOJUMPDOWN			= 0x00040000,	// only for MBF21. Inverse of MBF's dog_jumping flag.
 	LEVEL3_LIGHTCREATED			= 0x00080000,	// a light had been created in the last frame
+	LEVEL3_NOFOGOFWAR			= 0x00100000,	// disables effect of r_radarclipper CVAR on this map
+	LEVEL3_SECRET				= 0x00200000,   // level is a secret level
 
 	// backport from vkDoom
 	// Deliberately skip ahead...
@@ -331,6 +333,7 @@ struct FExitText
 struct level_info_t
 {
 	int			levelnum;
+	int			broken_id24_levelnum;
 	
 	FString		MapName;
 	FString		NextMap;
@@ -358,6 +361,7 @@ struct level_info_t
 	FString		LightningSound = "world/thunder";
 	FString		Music;
 	FString		LevelName;
+	FString		MapLabel;
 	FString		AuthorName;
 	int8_t		WallVertLight, WallHorizLight;
 	int			musicorder;
@@ -399,6 +403,8 @@ struct level_info_t
 
 	FString		EnterPic;
 	FString		ExitPic;
+	FString		EnterAnim;
+	FString		ExitAnim;
 	FString 	InterMusic;
 	int			intermusicorder;
 	TMap <FName, std::pair<FString, int> > MapInterMusic;
@@ -497,6 +503,8 @@ cluster_info_t *FindClusterInfo (int cluster);
 level_info_t *FindLevelInfo (const char *mapname, bool allowdefault=true);
 level_info_t *FindLevelByNum (int num);
 level_info_t *CheckLevelRedirect (level_info_t *info);
+
+bool SecretLevelVisited();
 
 FString CalcMapName (int episode, int level);
 

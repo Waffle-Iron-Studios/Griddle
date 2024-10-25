@@ -810,6 +810,8 @@ xx(damageinterval)
 xx(leakiness)
 xx(damageterraineffect)
 xx(damagehazard)
+xx(hurtmonsters)
+xx(harminair)
 xx(floorterrain)
 xx(ceilingterrain)
 xx(floor_reflect)
@@ -866,7 +868,7 @@ xx(lm_dynamic)
 xx(lm_suncolor)
 
 // Light keywords
-xx(SoftShadowRadius)
+xx(light_softshadowradius)
 
 xx(skew_bottom_type)
 xx(skew_middle_type)
