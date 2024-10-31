@@ -215,7 +215,7 @@ FString M_GetOldConfigPath(int& type)
 				*probe = '_';
 			++probe;
 		}
-		path << GAMENAMELOWERCASE "-" << FString(uname) << ".ini";
+		path << GAMENAMECONFIGNAME "-" << FString(uname) << ".ini";
 		type = 0;
 		if (FileExists(path))
 			return path;
@@ -224,7 +224,7 @@ FString M_GetOldConfigPath(int& type)
 	// Check in app data where this was previously stored.
 	// We actually prefer to store the config in a more visible place so this is no longer used.
 	path = GetKnownFolder(CSIDL_APPDATA, FOLDERID_RoamingAppData, true);
-	path += "/" GAME_DIR "/" GAMENAMELOWERCASE ".ini";
+	path += "/" GAME_DIR "/" GAMENAMECONFIGNAME ".ini";
 	type = 1;
 	if (FileExists(path))
 		return path;
@@ -277,14 +277,14 @@ FString M_GetConfigPath(bool for_reading)
 {
 	if (IsPortable())
 	{
-		return FStringf("%s" GAMENAMELOWERCASE "_portable.ini", progdir.GetChars());
+		return FStringf("%s" GAMENAMECONFIGNAME "_portable.ini", progdir.GetChars());
 	}
 
 	// Construct a user-specific config name
 	FString path = GetKnownFolder(CSIDL_APPDATA, FOLDERID_Documents, true);
 	path += "/My Games/" GAME_DIR;
 	CreatePath(path.GetChars());
-	path += "/" GAMENAMELOWERCASE ".ini";
+	path += "/" GAMENAMECONFIGNAME ".ini";
 	if (!for_reading || FileExists(path))
 		return path;
 
@@ -317,7 +317,7 @@ FString M_GetConfigPath(bool for_reading)
 		if (!FileExists(path))
 		{
 			path = progdir;
-			path << GAMENAMELOWERCASE ".ini";
+			path << GAMENAMECONFIGNAME ".ini";
 		}
 	}
 

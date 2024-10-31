@@ -312,11 +312,12 @@ BEGIN
         BLOCK "040904b0"
         BEGIN
             VALUE "CompanyName", " "
-            VALUE "FileDescription", "Griddle " GIT_DESCRIPTION
+            VALUE "FileDescription", "Divine Frequency " GIT_DESCRIPTION
             VALUE "FileVersion", RC_FILEVERSION2
-            VALUE "InternalName", "Griddle"
-            VALUE "OriginalFilename", "griddle.exe"
-            VALUE "ProductName", "Griddle"
+            VALUE "InternalName", "Divine Frequency"
+            VALUE "LegalCopyright", "Copyright © 2023 Good Kama"
+            VALUE "OriginalFilename", "dfgzdoom.exe"
+            VALUE "ProductName", "Divine Frequency"
             VALUE "ProductVersion", GIT_DESCRIPTION
         END
     END

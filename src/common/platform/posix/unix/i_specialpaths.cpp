@@ -112,7 +112,7 @@ FString M_GetAppDataPath(bool create)
 {
 	// Don't use GAME_DIR and such so that ZDoom and its child ports can
 	// share the node cache.
-	FString path = NicePath("$HOME/.config/" GAMENAMELOWERCASE);
+	FString path = NicePath("$HOME/.config/" GAMENAMECONFIGNAME);
 	if (create)
 	{
 		CreatePath(path.GetChars());
@@ -165,7 +165,7 @@ FString M_GetAutoexecPath()
 
 FString M_GetConfigPath(bool for_reading)
 {
-	return GetUserFile(GAMENAMELOWERCASE ".ini");
+	return GetUserFile(GAMENAMECONFIGNAME ".ini");
 }
 
 //===========================================================================

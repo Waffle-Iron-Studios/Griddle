@@ -426,7 +426,7 @@ void FSoundFontManager::CollectSoundfonts()
 
 	if (soundfonts.Size() == 0)
 	{
-		ProcessOneFile(NicePath("$PROGDIR/soundfonts/" GAMENAMELOWERCASE ".sf2").GetChars());
+		ProcessOneFile(NicePath("$PROGDIR/soundfonts/" GAMENAMESOUNDFONT ".sf2").GetChars());
 	}
 }
 

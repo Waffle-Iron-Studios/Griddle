@@ -41,16 +41,16 @@ const char *GetVersionString();
 
 /** Lots of different version numbers **/
 
-#define VERSIONSTR "1.6.6"
+#define VERSIONSTR "1.6.7"
 
 // The version as seen in the Windows resource
-#define RC_FILEVERSION 1,6,6,0
-#define RC_PRODUCTVERSION 1,6,6,0
+#define RC_FILEVERSION 1,6,7,0
+#define RC_PRODUCTVERSION 1,6,7,0
 #define RC_PRODUCTVERSION2 VERSIONSTR
 // These are for content versioning.
 #define VER_MAJOR 1
 #define VER_MINOR 6
-#define VER_REVISION 6
+#define VER_REVISION 7
 
 // These are for ZScript versioning
 #define ZSCRIPT_VER_MAJOR 4
@@ -86,7 +86,7 @@ const char *GetVersionString();
 // SAVESIG should match SAVEVER.
 
 // extension for savegames
-#define SAVEGAME_EXT "wds"
+#define SAVEGAME_EXT "dfds"
 
 // MINSAVEVER is the minimum level snapshot version that can be loaded.
 #define MINSAVEVER 4556
@@ -96,16 +96,18 @@ const char *GetVersionString();
 #define SAVEVER 4560
 
 // This is so that derivates can use the same savegame versions without worrying about engine compatibility
-#define GAMESIG "GRIDDLE"
-#define BASEWAD "griddle.pk3"
+#define GAMESIG "GZDOOM"
+#define BASEWAD "dfgriddle.pk3"
 #define OPTIONALWAD "game_support.pk3"
 #define GZDOOM 1
 #define VR3D_ENABLED
 
 // More stuff that needs to be different for derivatives.
-#define GAMENAME "Griddle"
-#define WGAMENAME L"Griddle"
-#define GAMENAMELOWERCASE "griddle"
+#define GAMENAME "Divine Frequency"
+#define WGAMENAME L"Divine Frequency"
+#define GAMENAMELOWERCASE "divine frequency"
+#define GAMENAMECONFIGNAME "dfconfig"
+#define GAMENAMESOUNDFONT "df"
 #define FORUM_URL "http://www.waffleironstudios.com"
 #define BUGS_FORUM_URL	"http://www.waffleironstudios.com"
 
