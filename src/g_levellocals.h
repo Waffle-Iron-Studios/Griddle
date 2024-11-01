@@ -149,6 +149,7 @@ struct FLevelLocals
 	int GetCompatibility2(int mask);
 	void ApplyCompatibility();
 	void ApplyCompatibility2();
+	AActor* SelectActorFromTID(int tid, size_t index, AActor* defactor);
 
 	void Init();
 
