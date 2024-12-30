@@ -49,8 +49,8 @@ const char *GetVersionString();
 #define RC_PRODUCTVERSION2 VERSIONSTR
 // These are for content versioning.
 #define VER_MAJOR 1
-#define VER_MINOR 6
-#define VER_REVISION 6
+#define VER_MINOR 7
+#define VER_REVISION 7
 
 // These are for ZScript versioning
 #define ZSCRIPT_VER_MAJOR 4
@@ -104,9 +104,9 @@ const char *GetVersionString();
 #define VR3D_ENABLED
 
 // More stuff that needs to be different for derivatives.
-#define GAMENAME "Griddle"
-#define WGAMENAME L"Griddle"
-#define GAMENAMELOWERCASE "griddle"
+#define GAMENAME "Saccharine"
+#define WGAMENAME L"Saccharine"
+#define GAMENAMELOWERCASE "saccharine"
 #define FORUM_URL "http://www.waffleironstudios.com"
 #define BUGS_FORUM_URL	"http://www.waffleironstudios.com"
 
