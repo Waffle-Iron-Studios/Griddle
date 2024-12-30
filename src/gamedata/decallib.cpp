@@ -60,8 +60,8 @@ static TArray<uint8_t> DecalTranslations;
 // Sometimes two machines in a game will disagree on the state of
 // decals. I do not know why.
 
-static FRandom pr_decalchoice ("DecalChoice");
-static FRandom pr_decal ("Decal");
+static FCRandom pr_decalchoice ("DecalChoice");
+static FCRandom pr_decal ("Decal");
 
 class FDecalGroup : public FDecalBase
 {
@@ -397,7 +397,7 @@ void FDecalLib::ParseDecal (FScanner &sc)
 		case DECAL_PIC:
 			sc.MustGetString ();
 			picnum = TexMan.CheckForTexture (sc.String, ETextureType::Any);
-			if (!picnum.Exists() && (lumpnum = fileSystem.CheckNumForName (sc.String, FileSys::ns_graphics)) >= 0)
+			if (!picnum.Exists() && (lumpnum = fileSystem.CheckNumForName (sc.String, ns_graphics)) >= 0)
 			{
 				picnum = TexMan.CreateTexture (lumpnum, ETextureType::Decal);
 			}

@@ -40,11 +40,11 @@ const char *GetGitTime();
 const char *GetVersionString();
 
 /** Lots of different version numbers **/
-#define VERSIONSTR "1.6.7"
+#define VERSIONSTR "1.7.7"
 
 // The version as seen in the Windows resource
-#define RC_FILEVERSION 1,6,7,0
-#define RC_PRODUCTVERSION 1,6,7,0
+#define RC_FILEVERSION 1,7,7,0
+#define RC_PRODUCTVERSION 1,7,7,0
 #define RC_PRODUCTVERSION2 VERSIONSTR
 // These are for content versioning.
 #define VER_MAJOR 1
@@ -53,13 +53,13 @@ const char *GetVersionString();
 
 // These are for ZScript versioning
 #define ZSCRIPT_VER_MAJOR 4
-#define ZSCRIPT_VER_MINOR 13
-#define ZSCRIPT_VER_REVISION 2
+#define ZSCRIPT_VER_MINOR 14
+#define ZSCRIPT_VER_REVISION 0
 
 // This should always refer to the GZDoom version a derived port is based on and not reflect the derived port's version number!
 #define ENG_MAJOR 4
-#define ENG_MINOR 13
-#define ENG_REVISION 2
+#define ENG_MINOR 14
+#define ENG_REVISION 0
 
 // Version identifier for network games.
 // Bump it every time you do a release unless you're certain you
@@ -98,7 +98,8 @@ const char *GetVersionString();
 #define GAMESIG "RELENTLESSFRONTIER"
 #define SOUNDFONT "griddle_rf"
 #define BASEWAD "griddle_rf.pk3"
-#define OPTIONALWAD "game_support.pk3"
+// Set OPTIONALWAD to "" (null) to disable searching for it
+#define OPTIONALWAD ""
 #define GZDOOM 1
 #define VR3D_ENABLED
 
