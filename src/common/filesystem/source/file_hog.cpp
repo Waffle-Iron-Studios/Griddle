@@ -44,7 +44,7 @@ namespace FileSys {
 
 
 
-static bool OpenHog(FResourceFile* rf, LumpFilterInfo* filter)
+static bool OpenHog(FResourceFile* rf, FileSystemFilterInfo* filter)
 {
     auto Reader = rf->GetContainerReader();
     FileReader::Size length = Reader->GetLength();
@@ -66,7 +66,6 @@ static bool OpenHog(FResourceFile* rf, LumpFilterInfo* filter)
         Entry.CompressedSize = Entry.Length = elength;
         Entry.Flags = 0;
         Entry.CRC32 = 0;
-        Entry.Namespace = ns_global;
         Entry.ResourceID = -1;
         Entry.Method = METHOD_STORED;
         Entry.FileName = rf->NormalizeFileName(name);
@@ -86,7 +85,7 @@ static bool OpenHog(FResourceFile* rf, LumpFilterInfo* filter)
 //
 //==========================================================================
 
-FResourceFile* CheckHog(const char* filename, FileReader& file, LumpFilterInfo* filter, FileSystemMessageFunc Printf, StringPool* sp)
+FResourceFile* CheckHog(const char* filename, FileReader& file, FileSystemFilterInfo* filter, FileSystemMessageFunc Printf, StringPool* sp)
 {
     char head[3];
 
@@ -96,7 +95,7 @@ FResourceFile* CheckHog(const char* filename, FileReader& file, LumpFilterInfo* 
         file.Read(&head, 3);
         if (!memcmp(head, "DHF", 3))
         {
-            auto rf = new FResourceFile(filename, file, sp);
+            auto rf = new FResourceFile(filename, file, sp, FResourceFile::NO_FOLDERS | FResourceFile::SHORTNAMES);
             if (OpenHog(rf, filter)) return rf;
             file = rf->Destroy();
         }

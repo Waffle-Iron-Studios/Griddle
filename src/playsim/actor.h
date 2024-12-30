@@ -758,12 +758,6 @@ public:
 	int			Flags;
 
 	// Functions
-	DViewPosition()
-	{
-		Offset = { 0,0,0 };
-		Flags = 0;
-	}
-
 	void Set(DVector3 &off, int f = -1)
 	{
 		ZeroSubnormalsF(off.X);
@@ -779,6 +773,8 @@ public:
 	{
 		return Offset.isZero();
 	}
+
+	void Serialize(FSerializer& arc) override;
 };
 
 const double MinVel = EQUAL_EPSILON;
@@ -875,7 +871,7 @@ public:
 	void PlayPushSound();
 
 	// Called when an actor with MF_MISSILE and MF2_FLOORBOUNCE hits the floor
-	bool FloorBounceMissile (secplane_t &plane);
+	bool FloorBounceMissile (secplane_t &plane, bool is3DFloor);
 
 	// Called by RoughBlockCheck
 	bool IsOkayToAttack (AActor *target);
