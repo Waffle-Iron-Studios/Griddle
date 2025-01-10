@@ -75,7 +75,9 @@
 
 EXTERN_CVAR (Int, disableautosave)
 EXTERN_CVAR (Int, autosavecount)
-EXTERN_CVAR(Bool, cl_capfps)
+EXTERN_CVAR (Bool, cl_capfps)
+EXTERN_CVAR (Bool, vid_vsync)
+EXTERN_CVAR (Int, vid_maxfps)
 
 //#define SIMULATEERRORS		(RAND_MAX/3)
 #define SIMULATEERRORS			0
@@ -149,6 +151,8 @@ static int 	entertic;
 static int	oldentertics;
 
 extern	bool	 advancedemo;
+
+CVAR(Bool, vid_dontdowait, false, CVAR_ARCHIVE|CVAR_GLOBALCONFIG)
 
 CVAR(Bool, net_ticbalance, false, CVAR_SERVERINFO | CVAR_NOSAVE)
 CUSTOM_CVAR(Int, net_extratic, 0, CVAR_SERVERINFO | CVAR_NOSAVE)
@@ -1877,6 +1881,9 @@ void TryRunTics (void)
 	int 		numplaying;
 
 	bool doWait = (cl_capfps || pauseext || (r_NoInterpolate && !M_IsAnimated()));
+
+	if (vid_dontdowait && ((vid_maxfps > 0) || (vid_vsync == true)))
+		doWait = false;
 
 	// get real tics
 	if (doWait)
