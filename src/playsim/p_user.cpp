@@ -1772,7 +1772,9 @@ void player_t::Serialize(FSerializer &arc)
 		("onground", onground)
 		("musinfoactor", MUSINFOactor)
 		("musinfotics", MUSINFOtics)
-		("soundclass", SoundClass);
+		("soundclass", SoundClass)
+		("angleoffsettargets", angleOffsetTargets)
+		("lastsafepos", LastSafePos);
 
 	if (arc.isWriting ())
 	{
