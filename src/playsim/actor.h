@@ -705,24 +705,6 @@ enum EViewPosFlags // [MC] Flags for SetViewPos.
 	VPSF_ORTHOGRAPHIC =		1 << 4,			// Use orthographic projection (hardware renderer only).
 };
 
-enum EAnimOverrideFlags
-{
-	ANIMOVERRIDE_NONE	= 1 << 0, // no animation
-	ANIMOVERRIDE_LOOP	= 1 << 1, // animation loops, otherwise it stays on the last frame once it ends
-};
-
-struct AnimOverride
-{
-	int firstFrame;
-	int lastFrame;
-	int loopFrame;
-	double startFrame;
-	int flags = ANIMOVERRIDE_NONE;
-	float framerate;
-	double startTic; // when the current animation started (changing framerates counts as restarting) (or when animation starts if interpolating from previous animation)
-	double switchOffset; // when the animation was changed -- where to interpolate the switch from
-};
-
 struct ModelOverride
 {
 	int modelID;
