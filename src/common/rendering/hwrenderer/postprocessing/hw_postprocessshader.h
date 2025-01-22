@@ -9,8 +9,7 @@ enum class PostProcessUniformType
 	Int,
 	Float,
 	Vec2,
-	Vec3,
-	Vec4
+	Vec3
 };
 
 struct PostProcessUniformValue
