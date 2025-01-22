@@ -3111,7 +3111,7 @@ static int D_InitGame(const FIWADInfo* iwad_info, std::vector<std::string>& allw
 		// This allocates a dummy framebuffer as a stand-in until V_Init2 is called.
 		V_InitScreen();
 	}
-	SavegameFolder = iwad_info->Name;
+	SavegameFolder = iwad_info->Autoname;
 	gameinfo.gametype = iwad_info->gametype;
 	gameinfo.flags = iwad_info->flags;
 	gameinfo.nokeyboardcheats = iwad_info->nokeyboardcheats;
