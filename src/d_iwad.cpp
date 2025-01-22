@@ -752,7 +752,6 @@ int FIWadManager::IdentifyVersion (std::vector<std::string>&wadfiles, const char
 	}
 	int pick = 0;
 
-
 	// Present the IWAD selection box.
 	bool alwaysshow = (queryiwad && !Args->CheckParm("-iwad") && !foundprio);
 
