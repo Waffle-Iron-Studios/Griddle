@@ -1802,7 +1802,6 @@ void FLevelLocals::Init()
 	flags = 0;
 	flags2 = 0;
 	flags3 = 0;
-	flags3 = 0;
 	flags9 = 0;
 	wisflags = 0;
 	ImpactDecalCount = 0;
