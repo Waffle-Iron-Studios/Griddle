@@ -50,7 +50,6 @@
 #include "actorinlines.h"
 #include "g_game.h"
 #include "serializer_doom.h"
-#include "p_visualthinker.h"
 
 #include "hwrenderer/scene/hw_drawstructs.h"
 
@@ -65,7 +64,7 @@ CVAR (Int, r_rail_trailsparsity, 1, CVAR_ARCHIVE);
 CVAR (Bool, r_particles, true, 0);
 EXTERN_CVAR(Int, r_maxparticles);
 
-FCRandom pr_railtrail("RailTrail");
+FRandom pr_railtrail("RailTrail");
 
 #define FADEFROMTTL(a)	(1.f/(a))
 
@@ -365,9 +364,9 @@ void P_SpawnParticle(FLevelLocals *Level, const DVector3 &pos, const DVector3 &v
 		particle->sizestep = sizestep;
 		particle->texture = texture;
 		particle->style = style;
-		particle->Roll = (float)startroll;
-		particle->RollVel = (float)rollvel;
-		particle->RollAcc = (float)rollacc;
+		particle->Roll = startroll;
+		particle->RollVel = rollvel;
+		particle->RollAcc = rollacc;
 		particle->flags = flags;
 		if(flags & SPF_LOCAL_ANIM)
 		{
@@ -1006,6 +1005,7 @@ void DVisualThinker::Construct()
 	PT.subsector = nullptr;
 	cursector = nullptr;
 	PT.color = 0xffffff;
+	spr = new HWSprite();
 	AnimatedTexture.SetNull();
 }
 
@@ -1017,6 +1017,11 @@ DVisualThinker::DVisualThinker()
 void DVisualThinker::OnDestroy()
 {
 	PT.alpha = 0.0; // stops all rendering.
+	if(spr)
+	{
+		delete spr;
+		spr = nullptr;
+	}
 	Super::OnDestroy();
 }
 
@@ -1045,33 +1050,6 @@ static DVisualThinker* SpawnVisualThinker(FLevelLocals* Level, PClass* type)
 	return DVisualThinker::NewVisualThinker(Level, type);
 }
 
-void DVisualThinker::UpdateSector(subsector_t * newSubsector)
-{
-	assert(newSubsector);
-	if(PT.subsector != newSubsector)
-	{
-		PT.subsector = newSubsector;
-		cursector = newSubsector->sector;
-	}
-}
-
-void DVisualThinker::UpdateSector()
-{
-	UpdateSector(Level->PointInRenderSubsector(PT.Pos));
-}
-
-static void UpdateSector(DVisualThinker * self)
-{
-	self->UpdateSector();
-}
-
-DEFINE_ACTION_FUNCTION_NATIVE(DVisualThinker, UpdateSector, UpdateSector)
-{
-	PARAM_SELF_PROLOGUE(DVisualThinker);
-	self->UpdateSector();
-	return 0;
-}
-
 DEFINE_ACTION_FUNCTION_NATIVE(FLevelLocals, SpawnVisualThinker, SpawnVisualThinker)
 {
 	PARAM_SELF_STRUCT_PROLOGUE(FLevelLocals);
@@ -1089,19 +1067,6 @@ void DVisualThinker::UpdateSpriteInfo()
 		TexAnim.InitStandaloneAnimation(PT.animData, PT.texture, Level->maptime);
 	}
 }
-
-static void UpdateSpriteInfo(DVisualThinker * self)
-{
-	self->UpdateSpriteInfo();
-}
-
-DEFINE_ACTION_FUNCTION_NATIVE(DVisualThinker, UpdateSpriteInfo, UpdateSpriteInfo)
-{
-	PARAM_SELF_PROLOGUE(DVisualThinker);
-	self->UpdateSpriteInfo();
-	return 0;
-}
-
 
 // This runs just like Actor's, make sure to call Super.Tick() in ZScript.
 void DVisualThinker::Tick()
@@ -1132,27 +1097,27 @@ void DVisualThinker::Tick()
 	PT.Pos.Y = newxy.Y;
 	PT.Pos.Z += PT.Vel.Z;
 
-	subsector_t * ss = Level->PointInRenderSubsector(PT.Pos);
-
+	PT.subsector = Level->PointInRenderSubsector(PT.Pos);
+	cursector = PT.subsector->sector;
 	// Handle crossing a sector portal.
-	if (!ss->sector->PortalBlocksMovement(sector_t::ceiling))
+	if (!cursector->PortalBlocksMovement(sector_t::ceiling))
 	{
-		if (PT.Pos.Z > ss->sector->GetPortalPlaneZ(sector_t::ceiling))
+		if (PT.Pos.Z > cursector->GetPortalPlaneZ(sector_t::ceiling))
 		{
-			PT.Pos += ss->sector->GetPortalDisplacement(sector_t::ceiling);
-			ss = Level->PointInRenderSubsector(PT.Pos);
+			PT.Pos += cursector->GetPortalDisplacement(sector_t::ceiling);
+			PT.subsector = Level->PointInRenderSubsector(PT.Pos);
+			cursector = PT.subsector->sector;
 		}
 	}
-	else if (!ss->sector->PortalBlocksMovement(sector_t::floor))
+	else if (!cursector->PortalBlocksMovement(sector_t::floor))
 	{
-		if (PT.Pos.Z < ss->sector->GetPortalPlaneZ(sector_t::floor))
+		if (PT.Pos.Z < cursector->GetPortalPlaneZ(sector_t::floor))
 		{
-			PT.Pos += ss->sector->GetPortalDisplacement(sector_t::floor);
-			ss = Level->PointInRenderSubsector(PT.Pos);
+			PT.Pos += cursector->GetPortalDisplacement(sector_t::floor);
+			PT.subsector = Level->PointInRenderSubsector(PT.Pos);
+			cursector = PT.subsector->sector;
 		}
 	}
-    
-	UpdateSector(ss);
 	UpdateSpriteInfo();
 }
 
@@ -1160,7 +1125,7 @@ int DVisualThinker::GetLightLevel(sector_t* rendersector) const
 {
 	int lightlevel = rendersector->GetSpriteLight();
 
-	if (flags & VTF_AddLightLevel)
+	if (bAddLightLevel)
 	{
 		lightlevel += LightLevel;
 	}
@@ -1173,7 +1138,7 @@ int DVisualThinker::GetLightLevel(sector_t* rendersector) const
 
 FVector3 DVisualThinker::InterpolatedPosition(double ticFrac) const
 {
-	if (flags & VTF_DontInterpolate) return FVector3(PT.Pos);
+	if (bDontInterpolate) return FVector3(PT.Pos);
 
 	DVector3 proc = Prev + (ticFrac * (PT.Pos - Prev));
 	return FVector3(proc);
@@ -1182,7 +1147,7 @@ FVector3 DVisualThinker::InterpolatedPosition(double ticFrac) const
 
 float DVisualThinker::InterpolatedRoll(double ticFrac) const
 {
-	if (flags & VTF_DontInterpolate) return PT.Roll;
+	if (bDontInterpolate) return PT.Roll;
 
 	return float(PrevRoll + (PT.Roll - PrevRoll) * ticFrac);
 }
@@ -1262,29 +1227,17 @@ int DVisualThinker::GetRenderStyle()
 float DVisualThinker::GetOffset(bool y) const // Needed for the renderer.
 {
 	if (y)
-		return (float)((flags & VTF_FlipOffsetY) ? Offset.Y : -Offset.Y);
+		return (float)(bFlipOffsetY ? Offset.Y : -Offset.Y);
 	else
-		return (float)((flags & VTF_FlipOffsetX) ? Offset.X : -Offset.X);
-}
-
-
-FSerializer& Serialize(FSerializer& arc, const char* key, FStandaloneAnimation& value, FStandaloneAnimation* defval)
-{
-	arc.BeginObject(key);
-	arc("SwitchTic",	value.SwitchTic);
-	arc("AnimIndex",	value.AnimIndex);
-	arc("CurFrame",		value.CurFrame);
-	arc("Ok",			value.ok);
-	arc("AnimType",		value.AnimType);
-	arc.EndObject();
-	return arc;
+		return (float)(bFlipOffsetX ? Offset.X : -Offset.X);
 }
 
 void DVisualThinker::Serialize(FSerializer& arc)
 {
 	Super::Serialize(arc);
 
-	arc ("pos", PT.Pos)
+	arc
+		("pos", PT.Pos)
 		("vel", PT.Vel)
 		("prev", Prev)
 		("scale", Scale)
@@ -1297,15 +1250,15 @@ void DVisualThinker::Serialize(FSerializer& arc)
 		("translation", Translation)
 		("cursector", cursector)
 		("scolor", PT.color)
+		("flipx", bXFlip)
+		("flipy", bYFlip)
+		("dontinterpolate", bDontInterpolate)
+		("addlightlevel", bAddLightLevel)
+		("flipoffsetx", bFlipOffsetX)
+		("flipoffsetY", bFlipOffsetY)
 		("lightlevel", LightLevel)
-		("animData", PT.animData)
-		("flags", PT.flags)
-		("visualThinkerFlags", flags);
-    
-    if(arc.isReading())
-    {
-        UpdateSector();
-    }
+		("flags", PT.flags);
+		
 }
 
 IMPLEMENT_CLASS(DVisualThinker, false, false);
@@ -1316,7 +1269,6 @@ DEFINE_FIELD_NAMED(DVisualThinker, PT.Roll, Roll);
 DEFINE_FIELD_NAMED(DVisualThinker, PT.alpha, Alpha);
 DEFINE_FIELD_NAMED(DVisualThinker, PT.texture, Texture);
 DEFINE_FIELD_NAMED(DVisualThinker, PT.flags, Flags);
-DEFINE_FIELD_NAMED(DVisualThinker, flags, VisualThinkerFlags);
 
 DEFINE_FIELD(DVisualThinker, Prev);
 DEFINE_FIELD(DVisualThinker, Scale);
@@ -1325,3 +1277,9 @@ DEFINE_FIELD(DVisualThinker, PrevRoll);
 DEFINE_FIELD(DVisualThinker, Translation);
 DEFINE_FIELD(DVisualThinker, LightLevel);
 DEFINE_FIELD(DVisualThinker, cursector);
+DEFINE_FIELD(DVisualThinker, bXFlip);
+DEFINE_FIELD(DVisualThinker, bYFlip);
+DEFINE_FIELD(DVisualThinker, bDontInterpolate);
+DEFINE_FIELD(DVisualThinker, bAddLightLevel);
+DEFINE_FIELD(DVisualThinker, bFlipOffsetX);
+DEFINE_FIELD(DVisualThinker, bFlipOffsetY);

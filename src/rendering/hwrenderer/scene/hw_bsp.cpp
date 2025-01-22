@@ -44,8 +44,6 @@
 #include "hw_vertexbuilder.h"
 #include "hw_walldispatcher.h"
 
-#include "p_visualthinker.h"
-
 #ifdef ARCH_IA32
 #include <immintrin.h>
 #endif // ARCH_IA32
@@ -288,12 +286,12 @@ void HWDrawInfo::AddLine (seg_t *seg, bool portalclip)
 	angle_t startAngleR = clipperr.PointToPseudoAngle(seg->v2->fX(), seg->v2->fY());
 	angle_t endAngleR = clipperr.PointToPseudoAngle(seg->v1->fX(), seg->v1->fY());
 
-	if(Viewpoint.IsAllowedOoB() && r_radarclipper && !(Level->flags3 & LEVEL3_NOFOGOFWAR) && (startAngleR - endAngleR >= ANGLE_180))
+	if(r_radarclipper && !(Level->flags3 & LEVEL3_NOFOGOFWAR) && (startAngleR - endAngleR >= ANGLE_180))
 	{
 		if (!seg->backsector) clipperr.SafeAddClipRange(startAngleR, endAngleR);
 		else if((seg->sidedef != nullptr) && !uint8_t(seg->sidedef->Flags & WALLF_POLYOBJ) && (currentsector->sectornum != seg->backsector->sectornum))
 		{
-			if (in_area == area_default) in_area = hw_CheckViewArea(seg->v1, seg->v2, seg->frontsector, seg->backsector);
+			if (in_area == area_default) in_area = hw_CheckViewArea(seg->v2, seg->v1, seg->frontsector, seg->backsector);
 			backsector = hw_FakeFlat(seg->backsector, in_area, true);
 			if (hw_CheckClip(seg->sidedef, currentsector, backsector)) clipperr.SafeAddClipRange(startAngleR, endAngleR);
 		}
@@ -669,9 +667,10 @@ void HWDrawInfo::RenderParticles(subsector_t *sub, sector_t *front)
 			int clipres = mClipPortal->ClipPoint(sp->PT.Pos.XY());
 			if (clipres == PClip_InFront) continue;
 		}
+		
+		assert(sp->spr);
 
-		HWSprite sprite;
-		sprite.ProcessParticle(this, &sp->PT, front, sp);
+		sp->spr->ProcessParticle(this, &sp->PT, front, sp);
 	}
 	for (int i = Level->ParticlesInSubsec[sub->Index()]; i != NO_PARTICLE; i = Level->Particles[i].snext)
 	{
@@ -1012,7 +1011,7 @@ void HWDrawInfo::RenderBSP(void *node, bool drawpsprites)
 	// Give the DrawInfo the viewpoint in fixed point because that's what the nodes are.
 	viewx = FLOAT2FIXED(Viewpoint.Pos.X);
 	viewy = FLOAT2FIXED(Viewpoint.Pos.Y);
-	if (r_radarclipper && !(Level->flags3 & LEVEL3_NOFOGOFWAR) && Viewpoint.IsAllowedOoB())
+	if (r_radarclipper && !(Level->flags3 & LEVEL3_NOFOGOFWAR) && Viewpoint.IsAllowedOoB() && (Viewpoint.camera->ViewPos->Flags & VPSF_ABSOLUTEOFFSET))
 	{
 		if (Viewpoint.camera->tracer != NULL)
 		{

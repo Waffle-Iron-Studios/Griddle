@@ -5610,13 +5610,16 @@ AActor *FLevelLocals::SpawnPlayer (FPlayerStart *mthing, int playernum, int flag
 
 	PlayerSpawnPickClass(playernum);
 
-	if ((dmflags2 & DF2_SAME_SPAWN_SPOT) && !deathmatch
-		&& p->mo != nullptr && p->playerstate == PST_REBORN
-		&& gameaction != ga_worlddone
-		&& !(p->mo->Sector->Flags & SECF_NORESPAWN)
-		&& p->LastDamageType != NAME_Suicide)
+	if (( dmflags2 & DF2_SAME_SPAWN_SPOT ) &&
+		( p->playerstate == PST_REBORN ) &&
+		( deathmatch == false ) &&
+		( gameaction != ga_worlddone ) &&
+		( p->mo != NULL ) && 
+		( !(p->mo->Sector->Flags & SECF_NORESPAWN) ) &&
+		( NULL != p->attacker ) &&							// don't respawn on damaging floors
+		( p->mo->Sector->damageamount < TELEFRAG_DAMAGE ))	// this really should be a bit smarter...
 	{
-		spawn = p->LastSafePos;
+		spawn = p->mo->Pos();
 		SpawnAngle = p->mo->Angles.Yaw;
 	}
 	else
@@ -7818,19 +7821,6 @@ void AActor::Revive()
 	health = SpawnHealth();
 	target = nullptr;
 	lastenemy = nullptr;
-
-	// Make sure to clear poison damage.
-	PoisonDamageReceived = 0;
-	PoisonDamageTypeReceived = NAME_None;
-	PoisonDurationReceived = 0;
-	PoisonPeriodReceived = 0;
-	Poisoner = nullptr;
-	if (player != nullptr)
-	{
-		player->poisoncount = 0;
-		player->poisoner = nullptr;
-		player->poisontype = player->poisonpaintype = NAME_None;
-	}
 
 	// [RH] If it's a monster, it gets to count as another kill
 	if (CountsAsKill())

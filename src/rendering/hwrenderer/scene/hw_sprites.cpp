@@ -60,8 +60,6 @@
 #include "hw_renderstate.h"
 #include "quaternion.h"
 
-#include "p_visualthinker.h"
-
 extern TArray<spritedef_t> sprites;
 extern TArray<spriteframe_t> SpriteFrames;
 extern uint32_t r_renderercaps;
@@ -1656,7 +1654,7 @@ void HWSprite::AdjustVisualThinker(HWDrawInfo* di, DVisualThinker* spr, sector_t
 			? TexAnim.UpdateStandaloneAnimation(spr->PT.animData, di->Level->maptime + timefrac)
 			: spr->PT.texture, !custom_anim);
 
-	if (spr->flags & VTF_DontInterpolate)
+	if (spr->bDontInterpolate)
 		timefrac = 0.;
 
 	FVector3 interp = spr->InterpolatedPosition(timefrac);
@@ -1686,12 +1684,13 @@ void HWSprite::AdjustVisualThinker(HWDrawInfo* di, DVisualThinker* spr, sector_t
 		double mult = 1.0 / sqrt(ps); // shrink slightly
 		r.Scale(mult * ps, mult);
 	}
-	if (spr->flags & VTF_FlipX)
+
+	if (spr->bXFlip)	
 	{
 		std::swap(ul,ur);
 		r.left = -r.width - r.left;	// mirror the sprite's x-offset
 	}
-	if (spr->flags & VTF_FlipY)	std::swap(vt,vb);
+	if (spr->bYFlip)	std::swap(vt,vb);
 
 	float viewvecX = vp.ViewVector.X;
 	float viewvecY = vp.ViewVector.Y;

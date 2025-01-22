@@ -36,7 +36,7 @@
 #include "actorinlines.h"
 #include <p_maputl.h>
 
-static FCRandom pr_quake ("Quake");
+static FRandom pr_quake ("Quake");
 
 IMPLEMENT_CLASS(DEarthquake, false, true)
 

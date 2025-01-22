@@ -1908,6 +1908,7 @@ void DStaticEventHandler::WorldThingGround(AActor* actor, FState* st)
 	}
 }
 
+
 void DStaticEventHandler::WorldThingRevived(AActor* actor)
 {
 	IFVIRTUAL(DStaticEventHandler, WorldThingRevived)

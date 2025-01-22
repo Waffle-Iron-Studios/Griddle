@@ -55,7 +55,6 @@
 #include "texturemanager.h"
 #include "d_main.h"
 #include "maps.h"
-#include "p_visualthinker.h"
 
 extern void LoadActors ();
 extern void InitBotStuff();
@@ -780,15 +779,11 @@ static void SummonActor (int command, int command2, FCommandLine argv)
 
 	if (argv.argc() > 1)
 	{
-		PClass *type = PClass::FindActor(argv[1]);
+		PClassActor *type = PClass::FindActor(argv[1]);
 		if (type == nullptr)
 		{
-			type = PClass::FindClass(argv[1]);
-			if(!type || !type->IsDescendantOf("VisualThinker"))
-			{
-				Printf ("Unknown actor or visual thinker '%s'\n", argv[1]);
-				return;
-			}
+			Printf ("Unknown actor '%s'\n", argv[1]);
+			return;
 		}
 		Net_WriteInt8 (argv.argc() > 2 ? command2 : command);
 		Net_WriteString (type->TypeName.GetChars());

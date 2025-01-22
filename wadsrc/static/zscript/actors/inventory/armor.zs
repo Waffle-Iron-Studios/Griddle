@@ -468,12 +468,11 @@ class HexenArmor : Armor
 
 	override Inventory CreateCopy (Actor other)
 	{
-		// Unlike BasicArmor, Hexen's armor pieces directly inherit from this class.
-		// Health is the slot this armor occupies.
+		// Like BasicArmor, HexenArmor is used in the inventory but not the map.
+		// health is the slot this armor occupies.
 		// Amount is the quantity to give (0 = normal max).
-		let copy = HexenArmor(Spawn(GetClass()));
-		copy.Health = Health;
-		copy.Amount = Amount;
+		let copy = HexenArmor(Spawn(GetHexenArmorClass()));
+		copy.AddArmorToSlot (health, Amount);
 		GoAwayAndDie ();
 		return copy;
 	}
