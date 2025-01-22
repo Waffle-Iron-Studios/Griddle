@@ -844,7 +844,6 @@ class Actor : Thinker native
 	native void Thrust(double speed = 1e37, double angle = 1e37);
 	native clearscope bool isFriend(Actor other) const;
 	native clearscope bool isHostile(Actor other) const;
-	native clearscope bool ShouldPassThroughPlayer(Actor other) const;
 	native void AdjustFloorClip();
 	native clearscope DropItem GetDropItems() const;
 	native void CopyFriendliness (Actor other, bool changeTarget, bool resetHealth = true);
@@ -866,7 +865,7 @@ class Actor : Thinker native
 	native void PlayPushSound();
 	native bool BounceActor(Actor blocking, bool onTop);
 	native bool BounceWall(Line l = null);
-	native bool BouncePlane(readonly<SecPlane> plane, bool is3DFloor = false);
+	native bool BouncePlane(readonly<SecPlane> plane);
 	native void PlayBounceSound(bool onFloor);
 	native bool ReflectOffActor(Actor blocking);
 

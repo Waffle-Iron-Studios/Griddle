@@ -319,7 +319,7 @@ void WriteUserInfo(FSerializer &arc, userinfo_t &info);
 class player_t
 {
 public:
-	player_t() { angleOffsetTargets.Zero(); }
+	player_t() = default;
 	~player_t();
 	player_t &operator= (const player_t &p) = delete;
 	void CopyFrom(player_t &src, bool copyPSP);
@@ -335,8 +335,8 @@ public:
 	AActor *mo = nullptr;
 	uint8_t		playerstate = 0;
 	ticcmd_t	cmd = {};
-	usercmd_t	original_cmd = {};
-	uint32_t		original_oldbuttons = 0;
+	usercmd_t	original_cmd;
+	uint32_t		original_oldbuttons;
 
 	userinfo_t	userinfo;				// [RH] who is this?
 	
@@ -353,7 +353,7 @@ public:
 	// mo->velx and mo->vely represent true velocity experienced by player.
 	// This only represents the thrust that the player applies himself.
 	// This avoids anomalies with such things as Boom ice and conveyors.
-	DVector2 Vel = { 0.0, 0.0 };
+	DVector2 Vel = { 0,0 };
 
 	bool		centering = false;
 	uint8_t		turnticks = 0;
@@ -432,7 +432,7 @@ public:
 	FString		SoundClass;
 	FString		LogText;	// [RH] Log for Strife
 	FString		SubtitleText;
-	int			SubtitleCounter = 0;
+	int			SubtitleCounter;
 
 	DAngle			MinPitch = nullAngle;	// Viewpitch limits (negative is up, positive is down)
 	DAngle			MaxPitch = nullAngle;
@@ -447,8 +447,6 @@ public:
 	TObjPtr<AActor*> ConversationNPC = MakeObjPtr<AActor*>(nullptr), ConversationPC = MakeObjPtr<AActor*>(nullptr);
 	DAngle ConversationNPCAngle = nullAngle;
 	bool ConversationFaceTalker = false;
-
-	DVector3 LastSafePos = {}; // Mark the last known safe location the player was standing.
 
 	double GetDeltaViewHeight() const
 	{

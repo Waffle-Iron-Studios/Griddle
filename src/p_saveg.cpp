@@ -627,8 +627,8 @@ void FLevelLocals::SerializePlayers(FSerializer &arc, bool skipload)
 				{
 					if (arc.BeginObject(nullptr))
 					{
-						FString name = Players[i]->userinfo.GetName();
-						arc("playername", name);
+						const char *n = Players[i]->userinfo.GetName();
+						arc.StringPtr("playername", n);
 						Players[i]->Serialize(arc);
 						arc.EndObject();
 					}
@@ -651,7 +651,7 @@ void FLevelLocals::SerializePlayers(FSerializer &arc, bool skipload)
 			}
 			else
 			{
-				ReadMultiplePlayers(arc, numPlayers, skipload);
+				ReadMultiplePlayers(arc, numPlayers, numPlayersNow, skipload);
 			}
 			arc.EndArray();
 
@@ -680,41 +680,53 @@ void FLevelLocals::SerializePlayers(FSerializer &arc, bool skipload)
 //
 //==========================================================================
 
-void FLevelLocals::ReadOnePlayer(FSerializer &arc, bool fromHub)
+void FLevelLocals::ReadOnePlayer(FSerializer &arc, bool skipload)
 {
-	if (!arc.BeginObject(nullptr))
-		return;
+	int i;
+	const char *name = NULL;
+	bool didIt = false;
 
-	FString name = {};
-	arc("playername", name);
-	player_t temp = {};
-	temp.Serialize(arc);
-
-	for (int i = 0; i < MAXPLAYERS; ++i)
+	if (arc.BeginObject(nullptr))
 	{
-		if (!PlayerInGame(i))
-			continue;
+		arc.StringPtr("playername", name);
 
-		if (!fromHub)
+		for (i = 0; i < MAXPLAYERS; ++i)
 		{
-			// This temp player has undefined pitch limits, so set them to something
-			// that should leave the pitch stored in the savegame intact when
-			// rendering. The real pitch limits will be set by P_SerializePlayers()
-			// via a net command, but that won't be processed in time for a screen
-			// wipe, so we need something here.
-			temp.MaxPitch = temp.MinPitch = temp.mo->Angles.Pitch;
-			CopyPlayer(Players[i], &temp, name.GetChars());
+			if (playeringame[i])
+			{
+				if (!didIt)
+				{
+					didIt = true;
+					player_t playerTemp;
+					playerTemp.Serialize(arc);
+					if (!skipload)
+					{
+						// This temp player has undefined pitch limits, so set them to something
+						// that should leave the pitch stored in the savegame intact when
+						// rendering. The real pitch limits will be set by P_SerializePlayers()
+						// via a net command, but that won't be processed in time for a screen
+						// wipe, so we need something here.
+						playerTemp.MaxPitch = playerTemp.MinPitch = playerTemp.mo->Angles.Pitch;
+						CopyPlayer(Players[i], &playerTemp, name);
+					}
+					else
+					{
+						// we need the player actor, so that G_FinishTravel can destroy it later.
+						Players[i]->mo = playerTemp.mo;
+					}
+				}
+				else
+				{
+					if (Players[i]->mo != NULL)
+					{
+						Players[i]->mo->Destroy();
+						Players[i]->mo = NULL;
+					}
+				}
+			}
 		}
-		else
-		{
-			// we need the player actor, so that G_FinishTravel can destroy it later.
-			Players[i]->mo = temp.mo;
-		}
-
-		break;
+		arc.EndObject();
 	}
-
-	arc.EndObject();
 }
 
 //==========================================================================
@@ -723,96 +735,109 @@ void FLevelLocals::ReadOnePlayer(FSerializer &arc, bool fromHub)
 //
 //==========================================================================
 
-struct NetworkPlayerInfo
+void FLevelLocals::ReadMultiplePlayers(FSerializer &arc, int numPlayers, int numPlayersNow, bool skipload)
 {
-	FString Name = {};
-	player_t Info = {};
-	bool bUsed = false;
-};
+	// For two or more players, read each player into a temporary array.
+	int i, j;
+	const char **nametemp = new const char *[numPlayers];
+	player_t *playertemp = new player_t[numPlayers];
+	uint8_t *tempPlayerUsed = new uint8_t[numPlayers];
+	uint8_t playerUsed[MAXPLAYERS];
 
-void FLevelLocals::ReadMultiplePlayers(FSerializer &arc, int numPlayers, bool fromHub)
-{
-	TArray<NetworkPlayerInfo> tempPlayers = {};
-	tempPlayers.Reserve(numPlayers);
-	TArray<bool> assignedPlayers = {};
-	assignedPlayers.Reserve(MAXPLAYERS);
-
-	// Read all the save game players into a temporary array
-	for (auto& p : tempPlayers)
+	for (i = 0; i < numPlayers; ++i)
 	{
+		nametemp[i] = NULL;
 		if (arc.BeginObject(nullptr))
 		{
-			arc("playername", p.Name);
-			p.Info.Serialize(arc);
+			arc.StringPtr("playername", nametemp[i]);
+			playertemp[i].Serialize(arc);
 			arc.EndObject();
 		}
+		tempPlayerUsed[i] = 0;
+	}
+	for (i = 0; i < MAXPLAYERS; ++i)
+	{
+		playerUsed[i] = playeringame[i] ? 0 : 2;
 	}
 
-	// Now try to match players from the savegame with players present
-	// based on their names. If two players in the savegame have the
-	// same name, then they are assigned to players in the current game
-	// on a first-come, first-served basis.
-	for (int i = 0; i < MAXPLAYERS; ++i)
+	if (!skipload)
 	{
-		if (!PlayerInGame(i))
-			continue;
-
-		for (auto& p : tempPlayers)
+		// Now try to match players from the savegame with players present
+		// based on their names. If two players in the savegame have the
+		// same name, then they are assigned to players in the current game
+		// on a first-come, first-served basis.
+		for (i = 0; i < numPlayers; ++i)
 		{
-			if (!p.bUsed && !p.Name.Compare(Players[i]->userinfo.GetName()))
+			for (j = 0; j < MAXPLAYERS; ++j)
 			{
-				// Found a match, so copy our temp player to the real player
-				if (!fromHub)
-				{
-					Printf("Found %s's (%d) data\n", Players[i]->userinfo.GetName(), i);
-					CopyPlayer(Players[i], &p.Info, p.Name.GetChars());
+				if (playerUsed[j] == 0 && stricmp(players[j].userinfo.GetName(), nametemp[i]) == 0)
+				{ // Found a match, so copy our temp player to the real player
+					Printf("Found player %d (%s) at %d\n", i, nametemp[i], j);
+					CopyPlayer(Players[j], &playertemp[i], nametemp[i]);
+					playerUsed[j] = 1;
+					tempPlayerUsed[i] = 1;
+					break;
 				}
-				else
-				{
-					Players[i]->mo = p.Info.mo;
-				}
+			}
+		}
 
-				p.bUsed = true;
-				assignedPlayers[i] = true;
-				break;
+		// Any players that didn't have matching names are assigned to existing
+		// players on a first-come, first-served basis.
+		for (i = 0; i < numPlayers; ++i)
+		{
+			if (tempPlayerUsed[i] == 0)
+			{
+				for (j = 0; j < MAXPLAYERS; ++j)
+				{
+					if (playerUsed[j] == 0)
+					{
+						Printf("Assigned player %d (%s) to %d (%s)\n", i, nametemp[i], j, players[j].userinfo.GetName());
+						CopyPlayer(&players[j], &playertemp[i], nametemp[i]);
+						playerUsed[j] = 1;
+						tempPlayerUsed[i] = 1;
+						break;
+					}
+				}
+			}
+		}
+
+		// Make sure any extra players don't have actors spawned yet. Happens if the players
+		// present now got the same slots as they had in the save, but there are not as many
+		// as there were in the save.
+		for (j = 0; j < MAXPLAYERS; ++j)
+		{
+			if (playerUsed[j] == 0)
+			{
+				if (players[j].mo != NULL)
+				{
+					players[j].mo->Destroy();
+					players[j].mo = NULL;
+				}
+			}
+		}
+
+		// Remove any temp players that were not used. Happens if there are fewer players
+		// than there were in the save, and they got shuffled.
+		for (i = 0; i < numPlayers; ++i)
+		{
+			if (tempPlayerUsed[i] == 0)
+			{
+				playertemp[i].mo->Destroy();
+				playertemp[i].mo = NULL;
 			}
 		}
 	}
-
-	// Any players that didn't have matching names are assigned to existing
-	// players on a first-come, first-served basis.
-	for (int i = 0; i < MAXPLAYERS; ++i)
+	else
 	{
-		if (!PlayerInGame(i) || assignedPlayers[i])
-			continue;
-
-		for (auto& p : tempPlayers)
+		for (i = 0; i < numPlayers; ++i)
 		{
-			if (!p.bUsed)
-			{
-				if (!fromHub)
-				{
-					Printf("Assigned %s (%d) to %s's data\n", Players[i]->userinfo.GetName(), i, p.Name.GetChars());
-					CopyPlayer(Players[i], &p.Info, p.Name.GetChars());
-				}
-				else
-				{
-					Players[i]->mo = p.Info.mo;
-				}
-
-				p.bUsed = true;
-				break;
-			}
+			players[i].mo = playertemp[i].mo;
 		}
 	}
 
-	// Remove any temp players that were not used. Happens if there are now
-	// less players in the game than there were in the save
-	for (auto& p : tempPlayers)
-	{
-		if (!p.bUsed)
-			p.Info.mo->Destroy();
-	}
+	delete[] tempPlayerUsed;
+	delete[] playertemp;
+	delete[] nametemp;
 }
 
 //==========================================================================

@@ -1545,13 +1545,6 @@ void DActorModelData::OnDestroy()
 	animationIDs.Reset();
 }
 
-void DViewPosition::Serialize(FSerializer& arc)
-{
-	Super::Serialize(arc);
-	arc("offset", Offset)
-		("flags", Flags);
-}
-
 //----------------------------------------------------------------------------
 //
 // PROC P_ExplodeMissile
@@ -1739,7 +1732,7 @@ void AActor::PlayBounceSound(bool onfloor)
 // Returns true if the missile was destroyed
 //----------------------------------------------------------------------------
 
-bool AActor::FloorBounceMissile (secplane_t &plane, bool is3DFloor)
+bool AActor::FloorBounceMissile (secplane_t &plane)
 {
 	if (flags & MF_MISSILE)
 	{
@@ -1782,13 +1775,9 @@ bool AActor::FloorBounceMissile (secplane_t &plane, bool is3DFloor)
 		}
 	}
 
-	DVector3 norm = plane.Normal();
-	if (is3DFloor)
-		norm = -norm;
-
 	bool onsky;
 
-	if (norm.Z < 0)
+	if (plane.fC() < 0)
 	{ // on ceiling
 		if (!(BounceFlags & BOUNCE_Ceilings))
 			return true;
@@ -1819,11 +1808,11 @@ bool AActor::FloorBounceMissile (secplane_t &plane, bool is3DFloor)
 		return true;
 	}
 
-	double dot = (Vel | norm) * 2;
+	double dot = (Vel | plane.Normal()) * 2;
 
 	if (BounceFlags & (BOUNCE_HereticType | BOUNCE_MBF))
 	{
-		Vel -= norm * dot;
+		Vel -= plane.Normal() * dot;
 		AngleFromVel();
 		if (!(BounceFlags & BOUNCE_MBF)) // Heretic projectiles die, MBF projectiles don't.
 		{
@@ -1837,7 +1826,7 @@ bool AActor::FloorBounceMissile (secplane_t &plane, bool is3DFloor)
 	else // Don't run through this for MBF-style bounces
 	{
 		// The reflected velocity keeps only about 70% of its original speed
-		Vel = (Vel - norm * dot) * bouncefactor;
+		Vel = (Vel - plane.Normal() * dot) * bouncefactor;
 		AngleFromVel();
 	}
 
@@ -1846,7 +1835,7 @@ bool AActor::FloorBounceMissile (secplane_t &plane, bool is3DFloor)
 	// Set bounce state
 	if (BounceFlags & BOUNCE_UseBounceState)
 	{
-		FName names[2] = { NAME_Bounce, norm.Z < 0 ? NAME_Ceiling : NAME_Floor };
+		FName names[2] = { NAME_Bounce, plane.fC() < 0 ? NAME_Ceiling : NAME_Floor };
 		FState *bouncestate = FindState(2, names);
 		if (bouncestate != nullptr)
 		{
@@ -1861,10 +1850,10 @@ bool AActor::FloorBounceMissile (secplane_t &plane, bool is3DFloor)
 	}
 	else if (BounceFlags & (BOUNCE_AutoOff|BOUNCE_AutoOffFloorOnly))
 	{
-		if (norm.Z > 0 || (BounceFlags & BOUNCE_AutoOff))
+		if (plane.fC() > 0 || (BounceFlags & BOUNCE_AutoOff))
 		{
 			// AutoOff only works when bouncing off a floor, not a ceiling (or in compatibility mode.)
-			if (!(flags & MF_NOGRAVITY) && (norm.Z < 0 || ((Vel | norm) < 3)))
+			if (!(flags & MF_NOGRAVITY) && (Vel.Z < 3))
 				BounceFlags &= ~BOUNCE_TypeMask;
 		}
 	}
@@ -2657,9 +2646,7 @@ static void P_ZMovement (AActor *mo, double oldfloorz)
 				mo->SetZ(mo->floorz);
 				if (mo->BounceFlags & BOUNCE_Floors)
 				{
-					F3DFloor* ff = nullptr;
-					NextLowestFloorAt(mo->Sector, mo->X(), mo->Y(), mo->Z(), 0, mo->MaxStepHeight, nullptr, &ff);
-					mo->FloorBounceMissile (ff != nullptr ? *ff->top.plane : mo->floorsector->floorplane, ff != nullptr);
+					mo->FloorBounceMissile (mo->floorsector->floorplane);
 					/* if (!CanJump(mo)) */ return;
 				}
 				else if (mo->flags3 & MF3_NOEXPLODEFLOOR)
@@ -2695,9 +2682,7 @@ static void P_ZMovement (AActor *mo, double oldfloorz)
 			}
 			else if (mo->BounceFlags & BOUNCE_MBF && mo->Vel.Z) // check for MBF-like bounce on non-missiles
 			{
-				F3DFloor* ff = nullptr;
-				NextLowestFloorAt(mo->Sector, mo->X(), mo->Y(), mo->Z(), 0, mo->MaxStepHeight, nullptr, &ff);
-				mo->FloorBounceMissile(ff != nullptr ? *ff->top.plane : mo->floorsector->floorplane, ff != nullptr);
+				mo->FloorBounceMissile(mo->floorsector->floorplane);
 			}
 			if (mo->flags3 & MF3_ISMONSTER)		// Blasted mobj falling
 			{
@@ -2768,9 +2753,7 @@ static void P_ZMovement (AActor *mo, double oldfloorz)
 			mo->SetZ(mo->ceilingz - mo->Height);
 			if (mo->BounceFlags & BOUNCE_Ceilings)
 			{	// ceiling bounce
-				F3DFloor* ff = nullptr;
-				NextHighestCeilingAt(mo->Sector, mo->X(), mo->Y(), mo->Z(), mo->Top(), 0, nullptr, &ff);
-				mo->FloorBounceMissile(ff != nullptr ? *ff->bottom.plane : mo->ceilingsector->ceilingplane, ff != nullptr);
+				mo->FloorBounceMissile (mo->ceilingsector->ceilingplane);
 				/* if (!CanJump(mo)) */ return;
 			}
 			if (mo->flags & MF_SKULLFLY)
@@ -4379,13 +4362,14 @@ void AActor::Tick ()
 					}
 					if (Vel.Z != 0 && (BounceFlags & BOUNCE_Actors))
 					{
-						if (flags & MF_MISSILE)
-							P_DoMissileDamage(this, onmo);
-
+						bool res = P_BounceActor(this, onmo, true);
 						// If the bouncer is a missile and has hit the other actor it needs to be exploded here
 						// to be in line with the case when an actor's side is hit.
-						if (!P_BounceActor(this, onmo, true) && (flags & MF_MISSILE))
+						if (!res && (flags & MF_MISSILE))
+						{
+							P_DoMissileDamage(this, onmo);
 							P_ExplodeMissile(this, nullptr, onmo);
+						}
 					}
 					else
 					{
@@ -5610,13 +5594,16 @@ AActor *FLevelLocals::SpawnPlayer (FPlayerStart *mthing, int playernum, int flag
 
 	PlayerSpawnPickClass(playernum);
 
-	if ((dmflags2 & DF2_SAME_SPAWN_SPOT) && !deathmatch
-		&& p->mo != nullptr && p->playerstate == PST_REBORN
-		&& gameaction != ga_worlddone
-		&& !(p->mo->Sector->Flags & SECF_NORESPAWN)
-		&& p->LastDamageType != NAME_Suicide)
+	if (( dmflags2 & DF2_SAME_SPAWN_SPOT ) &&
+		( p->playerstate == PST_REBORN ) &&
+		( deathmatch == false ) &&
+		( gameaction != ga_worlddone ) &&
+		( p->mo != NULL ) && 
+		( !(p->mo->Sector->Flags & SECF_NORESPAWN) ) &&
+		( NULL != p->attacker ) &&							// don't respawn on damaging floors
+		( p->mo->Sector->damageamount < TELEFRAG_DAMAGE ))	// this really should be a bit smarter...
 	{
-		spawn = p->LastSafePos;
+		spawn = p->mo->Pos();
 		SpawnAngle = p->mo->Angles.Yaw;
 	}
 	else
@@ -7818,19 +7805,6 @@ void AActor::Revive()
 	health = SpawnHealth();
 	target = nullptr;
 	lastenemy = nullptr;
-
-	// Make sure to clear poison damage.
-	PoisonDamageReceived = 0;
-	PoisonDamageTypeReceived = NAME_None;
-	PoisonDurationReceived = 0;
-	PoisonPeriodReceived = 0;
-	Poisoner = nullptr;
-	if (player != nullptr)
-	{
-		player->poisoncount = 0;
-		player->poisoner = nullptr;
-		player->poisontype = player->poisonpaintype = NAME_None;
-	}
 
 	// [RH] If it's a monster, it gets to count as another kill
 	if (CountsAsKill())

@@ -1851,9 +1851,8 @@ DEFINE_ACTION_FUNCTION(AActor, BouncePlane)
 {
 	PARAM_SELF_PROLOGUE(AActor);
 	PARAM_POINTER(plane, secplane_t);
-	PARAM_BOOL(is3DFloor);
 
-	ACTION_RETURN_BOOL(self->FloorBounceMissile(*plane, is3DFloor));
+	ACTION_RETURN_BOOL(self->FloorBounceMissile(*plane));
 }
 
 DEFINE_ACTION_FUNCTION(AActor, PlayBounceSound)

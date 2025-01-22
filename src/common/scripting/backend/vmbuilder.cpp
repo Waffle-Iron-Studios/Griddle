@@ -40,7 +40,6 @@
 #include "filesystem.h"
 
 CVAR(Bool, strictdecorate, false, CVAR_GLOBALCONFIG | CVAR_ARCHIVE)
-CVAR(Bool, warningstoerrors, false, CVAR_GLOBALCONFIG | CVAR_ARCHIVE)
 
 EXTERN_CVAR(Bool, vm_jit)
 EXTERN_CVAR(Bool, vm_jit_aot)
@@ -880,18 +879,10 @@ void FFunctionBuildList::Build()
 		{
 			if (!item.Code->CheckReturn())
 			{
-				if (ctx.ReturnProto == nullptr || !ctx.ReturnProto->ReturnTypes.Size())
-				{
-					auto newcmpd = new FxCompoundStatement(item.Code->ScriptPosition);
-					newcmpd->Add(item.Code);
-					newcmpd->Add(new FxReturnStatement(nullptr, item.Code->ScriptPosition));
-					item.Code = newcmpd->Resolve(ctx);
-				}
-				else
-				{
-					item.Code->ScriptPosition.Message(MSG_ERROR, "Missing return statement in %s", item.PrintableName.GetChars());
-					continue;
-				}
+				auto newcmpd = new FxCompoundStatement(item.Code->ScriptPosition);
+				newcmpd->Add(item.Code);
+				newcmpd->Add(new FxReturnStatement(nullptr, item.Code->ScriptPosition));
+				item.Code = newcmpd->Resolve(ctx);
 			}
 
 			item.Proto = ctx.ReturnProto;
