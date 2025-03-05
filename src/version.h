@@ -55,8 +55,8 @@ const char *GetVersionString();
 
 // These are for ZScript versioning
 #define ZSCRIPT_VER_MAJOR 4
-#define ZSCRIPT_VER_MINOR 14
-#define ZSCRIPT_VER_REVISION 0
+#define ZSCRIPT_VER_MINOR 15
+#define ZSCRIPT_VER_REVISION 1
 
 // This should always refer to the GZDoom version a derived port is based on and not reflect the derived port's version number!
 #define ENG_MAJOR 1

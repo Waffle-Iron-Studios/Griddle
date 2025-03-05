@@ -1,42 +1,28 @@
-# Welcome to the Griddle Engine
+# Welcome to GZDoom!
 
-## Griddle Engine is an id Tech 1 centric source port for Waffle Iron Studios, Ltd.'s games
+[![Continuous Integration](https://github.com/ZDoom/gzdoom/actions/workflows/continuous_integration.yml/badge.svg)](https://github.com/ZDoom/gzdoom/actions/workflows/continuous_integration.yml)
 
-**Griddle** is a GZDoom fork that aims to better serve Waffle Iron Studio's freeware and commercial games.
+## GZDoom is a modder-friendly OpenGL and Vulkan source port based on the DOOM engine
 
-While GZDoom is an advanced Doom engine and does this very well, Griddle aims to further separate itself.
+Copyright (c) 1998-2025 ZDoom + GZDoom teams, and contributors
 
-This means adding features that may not align with GZDoom's goals, and discarding backwards compatibility with previous iterations of the engines, and existing mods, while still offering it's very capable core featureset.
+Doom Source (c) 1997 id Software, Raven Software, and contributors
 
-## Griddle Features
+Please see license files for individual contributor licenses
 
-### Bespoke™ to Griddle
-* Level flag keyword for defining on-keypress/buttonpress skippable cutscene levels
-* Level flag keyword for stopping total timer the level (cutscene levels do this too)
-* Level flag keyword for disabling autosaves on a level entirely (cutscene levels do this too)
-* Fine tuning of Randomized ActiveSound playing during A_Chase routine
-* Software Mode is disabled
-* Better Defaults (including more tight air control)
-* Different save directory/user config/etc handling
-* Menus use game's smallfont and not that fixedsys looking stuff
-* Other minor quality of life fixes
-
-### From PRs not yet merged into GZDoom upstream
-* Some objects can be marked as transient (not saved in savestates)
-* Pitch correction fixes
-
-### From vkDoom
-* Removal of OpenGL ES Backend
-* hitbox debugging feature
-* Rotating models are paused when game is paused/menus are open
-* Level flag keyword for disabiling automap
-* Level flag keyword for disabling user-initiated saves
-* Even simpler menu layout/organization for default menus
-
-_**More features are planned.**_
-
-Please see license files for individual contributor licenses.
+Special thanks to Coraline of the EDGE team for allowing us to use her [README.md](https://github.com/3dfxdev/EDGE/blob/master/README.md) as a template for this one.
 
 ### Licensed under the GPL v3
 ##### https://www.gnu.org/licenses/quick-guide-gplv3.en.html
 ---
+
+## How to build GZDoom
+
+To build GZDoom, please see the [wiki](https://zdoom.org/wiki/) and see the "Programmer's Corner" on the bottom-right corner of the page to build for your platform.
+
+# Resources
+- https://zdoom.org/ - Home Page
+- https://forum.zdoom.org/ - Forum
+- https://zdoom.org/wiki/ - Wiki
+- https://dsc.gg/zdoom - Discord Server
+- https://docs.google.com/spreadsheets/d/1pvwXEgytkor9SClCiDn4j5AH7FedyXS-ocCbsuQIXDU/edit?usp=sharing - Translation sheet (Google Docs)

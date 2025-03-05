@@ -1562,11 +1562,26 @@ DEFINE_ACTION_FUNCTION(FLevelLocals, WorldDone)
 
 //==========================================================================
 //
+// Started the game loaded into a map from the console. Run at least one tic
+// so it can properly render out in net games.
+//
+//==========================================================================
+
+void G_DoMapWarp()
+{
+	gameaction = ga_nothing;
+	Net_ResetCommands(true);
+	Net_SetWaiting();
+}
+
+//==========================================================================
+//
 //
 //==========================================================================
 
 void G_DoWorldDone (void) 
-{		 
+{		
+	Net_ResetCommands(true);
 	gamestate = GS_LEVEL;
 	if (nextlevel.IsEmpty())
 	{
@@ -1578,6 +1593,7 @@ void G_DoWorldDone (void)
 	G_DoLoadLevel (nextlevel, startpos, true, false);
 	gameaction = ga_nothing;
 	viewactive = true; 
+	Net_SetWaiting();
 }
 
 //==========================================================================
@@ -1607,6 +1623,7 @@ void FLevelLocals::StartTravel ()
 			if (Players[i]->health > 0)
 			{
 				pawn->UnlinkFromWorld (nullptr);
+				pawn->UnlinkBehaviorsFromLevel();
 				int tid = pawn->tid;	// Save TID
 				pawn->SetTID(0);
 				pawn->tid = tid;		// Restore TID (but no longer linked into the hash chain)
@@ -1617,6 +1634,7 @@ void FLevelLocals::StartTravel ()
 				{
 					inv->ChangeStatNum (STAT_TRAVELLING);
 					inv->UnlinkFromWorld (nullptr);
+					inv->UnlinkBehaviorsFromLevel();
 					inv->DeleteAttachedLights();
 				}
 			}
@@ -1720,6 +1738,7 @@ int FLevelLocals::FinishTravel ()
 			pawndup->Destroy();
 		}
 		pawn->LinkToWorld (nullptr);
+		pawn->LinkBehaviorsToLevel();
 		pawn->ClearInterpolation();
 		pawn->ClearFOVInterpolation();
 		const int tid = pawn->tid;	// Save TID (actor isn't linked into the hash chain yet)
@@ -1733,6 +1752,7 @@ int FLevelLocals::FinishTravel ()
 			inv->ChangeStatNum (STAT_INVENTORY);
 			inv->LinkToWorld (nullptr);
 			P_FindFloorCeiling(inv, FFCF_ONLYSPAWNPOS);
+			inv->LinkBehaviorsToLevel();
 
 			IFVIRTUALPTRNAME(inv, NAME_Inventory, Travelled)
 			{
