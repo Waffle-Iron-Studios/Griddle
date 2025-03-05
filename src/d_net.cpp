@@ -86,6 +86,8 @@ extern FString	savegamefile;
 
 extern short consistancy[MAXPLAYERS][BACKUPTICS];
 
+extern bool AppActive;
+
 #define netbuffer (doomcom.data)
 
 enum { NET_PeerToPeer, NET_PacketServer };
@@ -149,6 +151,9 @@ static int 	entertic;
 static int	oldentertics;
 
 extern	bool	 advancedemo;
+
+CVAR(Bool, vid_dontdowait, false, CVAR_ARCHIVE|CVAR_GLOBALCONFIG)
+CVAR(Bool, vid_lowerinbackground, true, CVAR_ARCHIVE|CVAR_GLOBALCONFIG)
 
 CVAR(Bool, net_ticbalance, false, CVAR_SERVERINFO | CVAR_NOSAVE)
 CUSTOM_CVAR(Int, net_extratic, 0, CVAR_SERVERINFO | CVAR_NOSAVE)
@@ -1878,6 +1883,12 @@ void TryRunTics (void)
 
 	bool doWait = (cl_capfps || pauseext || (r_NoInterpolate && !M_IsAnimated()));
 
+	if (vid_dontdowait && ((vid_maxfps > 0) || (vid_vsync == true)))
+		doWait = false;
+
+	if (!AppActive && vid_lowerinbackground)
+		doWait = true;
+	
 	// get real tics
 	if (doWait)
 	{
