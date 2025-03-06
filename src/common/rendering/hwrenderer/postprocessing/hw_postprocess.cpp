@@ -1085,6 +1085,13 @@ void PPCustomShaderInstance::SetUniforms(PPRenderState *renderstate)
 				fValues[2] = (float)pair->Value.Values[2];
 				memcpy(dst, fValues, sizeof(float) * 3);
 				break;
+			case PostProcessUniformType::Vec4:
+				fValues[0] = (float)pair->Value.Values[0];
+				fValues[1] = (float)pair->Value.Values[1];
+				fValues[2] = (float)pair->Value.Values[2];
+				fValues[3] = (float)pair->Value.Values[3];
+				memcpy(dst, fValues, sizeof(float) * 4);
+				break;
 			default:
 				break;
 			}
