@@ -1313,7 +1313,7 @@ class PlayerPawn : Actor
 		if (player.turnticks)
 		{
 			player.turnticks--;
-			Angle += (180. / TURN180_TICKS);
+			A_SetAngle(Angle + (180. / TURN180_TICKS), SPF_INTERPOLATE);
 		}
 		else
 		{
