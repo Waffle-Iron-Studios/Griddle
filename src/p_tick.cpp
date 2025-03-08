@@ -66,7 +66,7 @@ bool P_CheckTickerPaused ()
 		 && wipegamestate == gamestate)
 	{
 		// Only the current UI level's settings are relevant for sound.
-		bool dontpausemusic = !(primaryLevel->flags2 & LEVEL2_PAUSE_MUSIC_IN_MENUS) && !(primaryLevel->wisflags & LEVELWIS_CUTSCENELEVEL);
+		bool dontpausemusic = !(primaryLevel->flags2 & LEVEL2_PAUSE_MUSIC_IN_MENUS);
 		S_PauseSound (dontpausemusic, false);
 		return true;
 	}

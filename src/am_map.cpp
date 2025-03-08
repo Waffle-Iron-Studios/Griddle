@@ -1556,7 +1556,7 @@ void DAutomap::Ticker ()
 		return;
 	
 	// Backport this from vkDoom
-	if ((primaryLevel->flags9 & LEVEL9_NOAUTOMAP) || (primaryLevel->wisflags & LEVELWIS_CUTSCENELEVEL))
+	if ((primaryLevel->flags9 & LEVEL9_NOAUTOMAP))
 	{
 		AM_ToggleMap();
 		return;

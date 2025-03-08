@@ -280,7 +280,6 @@ enum ELevelFlags : unsigned int
 
 	LEVELWIS_NOTOTALTIME = 0x00000001,	// Sanya - no time++
 	LEVELWIS_NOAUTOSAVES = 0x00000002,	// Sanya - no autosaves on this level at all
-	LEVELWIS_CUTSCENELEVEL = 0x00000004,	// Sanya - Cutscene Level
 };
 
 

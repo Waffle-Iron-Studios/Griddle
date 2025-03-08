@@ -1870,7 +1870,6 @@ MapFlagHandlers[] =
 	{ "noautomap",						MITYPE_SETFLAG9,	LEVEL9_NOAUTOMAP, 0 },	// backport from vkdoom
 	{ "nototaltime",					MITYPE_SETFLAGWIS,	LEVELWIS_NOTOTALTIME, 0 },
 	{ "noautosaves",					MITYPE_SETFLAGWIS,	LEVELWIS_NOAUTOSAVES, 0 },
-	{ "cutscenelevel",					MITYPE_SETFLAGWIS,	LEVELWIS_CUTSCENELEVEL, 0 },
 	{ "nobotnodes",						MITYPE_IGNORE,	0, 0 },		// Skulltag option: nobotnodes
 	{ "nopassover",						MITYPE_COMPATFLAG, COMPATF_NO_PASSMOBJ, 0 },
 	{ "passover",						MITYPE_CLRCOMPATFLAG, COMPATF_NO_PASSMOBJ, 0 },
