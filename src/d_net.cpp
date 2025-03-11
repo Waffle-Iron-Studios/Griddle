@@ -73,6 +73,8 @@
 #include "i_interface.h"
 #include "savegamemanager.h"
 
+void P_RunClientsideLogic();
+
 EXTERN_CVAR (Int, disableautosave)
 EXTERN_CVAR (Int, autosavecount)
 EXTERN_CVAR (Bool, cl_capfps)
@@ -394,7 +396,6 @@ void Net_ResetCommands(bool midTic)
 		// Make sure not to run its current command either.
 		auto& curTic = state.Tics[tic % BACKUPTICS];
 		memset(&curTic.Command, 0, sizeof(curTic.Command));
-		curTic.Data.SetData(nullptr, 0);
 	}
 
 	NetEvents.ResetStream();
@@ -1801,6 +1802,12 @@ static bool ShouldStabilizeTick()
 void TryRunTics()
 {
 	GC::CheckGC();
+
+	if (ToggleFullscreen)
+	{
+		ToggleFullscreen = false;
+		AddCommandString("toggle vid_fullscreen");
+	}
 	
 	bool doWait = (cl_capfps || pauseext || (!netgame && r_NoInterpolate && !M_IsAnimated()));
 	if (vid_dontdowait && (vid_maxfps > 0 || vid_vsync))
@@ -1853,14 +1860,6 @@ void TryRunTics()
 	// commands to predict.
 	if (runTics <= 0)
 	{
-		// If we actually did have some tics available, make sure the UI
-		// still has a chance to run.
-		for (int i = 0; i < totalTics; ++i)
-		{
-			C_Ticker();
-			M_Ticker();
-		}
-
 		// If we're in between a tic, try and balance things out.
 		if (totalTics <= 0)
 			TicStabilityWait();
@@ -1875,6 +1874,11 @@ void TryRunTics()
 			P_PredictPlayer(&players[consoleplayer]);
 			S_UpdateSounds(players[consoleplayer].camera);	// Update sounds only after predicting the client's newest position.
 		}
+
+		// If we actually did have some tics available, make sure the UI
+		// still has a chance to run.
+		for (int i = 0; i < totalTics; ++i)
+			P_RunClientsideLogic();
 
 		return;
 	}
@@ -1896,8 +1900,6 @@ void TryRunTics()
 		if (advancedemo)
 			D_DoAdvanceDemo();
 
-		C_Ticker();
-		M_Ticker();
 		G_Ticker();
 		MakeConsistencies();
 		++gametic;
@@ -1913,6 +1915,11 @@ void TryRunTics()
 	}
 	P_PredictPlayer(&players[consoleplayer]);
 	S_UpdateSounds(players[consoleplayer].camera);	// Update sounds only after predicting the client's newest position.
+
+	// These should use the actual tics since they're not actually tied to the gameplay logic.
+	// Make sure it always comes after so the HUD has the correct game state when updating.
+	for (int i = 0; i < totalTics; ++i)
+		P_RunClientsideLogic();
 }
 
 void Net_NewClientTic()
