@@ -446,14 +446,6 @@ DEFINE_ACTION_FUNCTION_NATIVE(_TexMan, CheckForTexture, CheckForTexture)
 	ACTION_RETURN_INT(CheckForTexture(name, type, flags));
 }
 
-DEFINE_ACTION_FUNCTION(_TexMan, FlushAll)
-{
-	PARAM_PROLOGUE;
-	PARAM_STRING(name);
-	TexMan.FlushAll();
-	return 0;
-}
-
 //==========================================================================
 //
 //
