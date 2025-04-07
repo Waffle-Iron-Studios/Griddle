@@ -452,8 +452,6 @@ xx(Readthismenu)
 xx(Playermenu)
 
 // more stuff
-xx(Behavior)
-xx(BehaviorIterator)
 xx(ColorSet)
 xx(NeverSwitchOnPickup)
 xx(MoveBob)

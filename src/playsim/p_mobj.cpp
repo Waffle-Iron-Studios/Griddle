@@ -143,7 +143,6 @@ static FRandom pr_uniquetid("UniqueTID");
 // PUBLIC DATA DEFINITIONS -------------------------------------------------
 
 FRandom pr_spawnmobj ("SpawnActor");
-FCRandom pr_spawncsmobj("SpawnClientsideActor");
 FRandom pr_bounce("Bounce");
 FRandom pr_spawnmissile("SpawnMissile");
 
@@ -181,14 +180,6 @@ IMPLEMENT_POINTERS_START(AActor)
 	IMPLEMENT_POINTER(modelData)
 IMPLEMENT_POINTERS_END
 
-IMPLEMENT_CLASS(DBehavior, false, true)
-IMPLEMENT_POINTERS_START(DBehavior)
-	IMPLEMENT_POINTER(Owner)
-IMPLEMENT_POINTERS_END
-
-DEFINE_FIELD(DBehavior, Owner)
-DEFINE_FIELD(DBehavior, Level)
-
 //==========================================================================
 //
 // Make sure Actors can never have their networking disabled.
@@ -197,29 +188,13 @@ DEFINE_FIELD(DBehavior, Level)
 
 void AActor::EnableNetworking(const bool enable)
 {
-	if (!enable && !IsClientside())
+	if (!enable)
 	{
-		ThrowAbortException(X_OTHER, "Cannot disable networking on Actors. Consider a Thinker or clientside Actor instead.");
+		ThrowAbortException(X_OTHER, "Cannot disable networking on Actors. Consider a Thinker instead.");
 		return;
 	}
 
 	Super::EnableNetworking(true);
-}
-
-//==========================================================================
-//
-// AActor :: PropagateMark
-//
-//==========================================================================
-
-size_t AActor::PropagateMark()
-{
-	TMap<FName, TObjPtr<DBehavior*>>::Iterator it = { Behaviors };
-	TMap<FName, TObjPtr<DBehavior*>>::Pair* pair = nullptr;
-	while (it.NextPair(pair))
-		GC::Mark(pair->Value);
-
-	return Super::PropagateMark();
 }
 
 //==========================================================================
@@ -427,8 +402,7 @@ void AActor::Serialize(FSerializer &arc)
 		("morphflags", MorphFlags)
 		("premorphproperties", PremorphProperties)
 		("morphexitflash", MorphExitFlash)
-		("damagesource", damagesource)
-		("behaviors", Behaviors);
+		("damagesource", damagesource);
 
 
 		SerializeTerrain(arc, "floorterrain", floorterrain, &def->floorterrain);
@@ -470,322 +444,6 @@ void AActor::PostSerialize()
 	UpdateWaterLevel(false);
 }
 
-//==========================================================================
-//
-// Behaviors allow for actions to be defined on Actors not coupled to
-// specific inventory tokens. Only one can be attached at a time.
-//
-//==========================================================================
-
-void DBehavior::Serialize(FSerializer& arc)
-{
-	Super::Serialize(arc);
-	arc("owner", Owner)
-		("level", Level);
-}
-
-void DBehavior::OnDestroy()
-{
-	if (Level != nullptr)
-		Level->RemoveActorBehavior(*this);
-
-	Super::OnDestroy();
-}
-
-bool AActor::RemoveBehavior(FName type)
-{
-	bool res = false;
-	auto b = Behaviors.CheckKey(type);
-	if (b != nullptr)
-	{
-		if (b->Get() != nullptr)
-		{
-			b->ForceGet()->Destroy();
-			res = true;
-		}
-
-		Behaviors.Remove(type);
-	}
-
-	return res;
-}
-
-static int RemoveBehavior(AActor* self, PClass* type)
-{
-	return self->RemoveBehavior(type->TypeName);
-}
-
-DEFINE_ACTION_FUNCTION_NATIVE(AActor, RemoveBehavior, RemoveBehavior)
-{
-	PARAM_SELF_PROLOGUE(AActor);
-	PARAM_CLASS_NOT_NULL(type, DBehavior);
-	ACTION_RETURN_BOOL(self->RemoveBehavior(type->TypeName));
-}
-
-DBehavior* AActor::AddBehavior(PClass& type)
-{
-	if (type.bAbstract || !type.IsDescendantOf(NAME_Behavior))
-		return nullptr;
-
-	auto b = FindBehavior(type.TypeName);
-	if (b == nullptr)
-	{
-		b = dyn_cast<DBehavior>(type.CreateNew());
-		if (b == nullptr)
-			return nullptr;
-
-		b->Owner = this;
-		Behaviors[type.TypeName] = b;
-		Level->AddActorBehavior(*b);
-		IFOVERRIDENVIRTUALPTRNAME(b, NAME_Behavior, Initialize)
-		{
-			VMValue params[] = { b };
-			VMCall(func, params, 1, nullptr, 0);
-
-			if (!IsValidBehavior(*b))
-			{
-				RemoveBehavior(type.TypeName);
-				return nullptr;
-			}
-		}
-	}
-	else
-	{
-		IFOVERRIDENVIRTUALPTRNAME(b, NAME_Behavior, Reinitialize)
-		{
-			VMValue params[] = { b };
-			VMCall(func, params, 1, nullptr, 0);
-
-			if (!IsValidBehavior(*b))
-			{
-				RemoveBehavior(type.TypeName);
-				return nullptr;
-			}
-		}
-	}
-
-	return b;
-}
-
-static DBehavior* AddBehavior(AActor* self, PClass* type)
-{
-	return self->AddBehavior(*type);
-}
-
-DEFINE_ACTION_FUNCTION_NATIVE(AActor, AddBehavior, AddBehavior)
-{
-	PARAM_SELF_PROLOGUE(AActor);
-	PARAM_CLASS_NOT_NULL(type, DBehavior);
-	ACTION_RETURN_OBJECT(self->AddBehavior(*type));
-}
-
-void AActor::TickBehaviors()
-{
-	TArray<FName> toRemove = {};
-	TArray<DBehavior*> toTick = {};
-
-	TMap<FName, TObjPtr<DBehavior*>>::Iterator it = { Behaviors };
-	TMap<FName, TObjPtr<DBehavior*>>::Pair* pair = nullptr;
-	while (it.NextPair(pair))
-	{
-		auto b = pair->Value.Get();
-		if (b == nullptr)
-		{
-			toRemove.Push(pair->Key);
-			continue;
-		}
-
-		toTick.Push(b);
-	}
-
-	for (auto& b : toTick)
-	{
-		if (!IsValidBehavior(*b))
-		{
-			toRemove.Push(b->GetClass()->TypeName);
-			continue;
-		}
-
-		IFOVERRIDENVIRTUALPTRNAME(b, NAME_Behavior, Tick)
-		{
-			VMValue params[] = { b };
-			VMCall(func, params, 1, nullptr, 0);
-
-			if (!IsValidBehavior(*b))
-				toRemove.Push(b->GetClass()->TypeName);
-		}
-	}
-
-	for (auto& type : toRemove)
-		RemoveBehavior(type);
-}
-
-static void TickBehaviors(AActor* self)
-{
-	self->TickBehaviors();
-}
-
-DEFINE_ACTION_FUNCTION_NATIVE(AActor, TickBehaviors, TickBehaviors)
-{
-	PARAM_SELF_PROLOGUE(AActor);
-	self->TickBehaviors();
-	return 0;
-}
-
-static DBehavior* FindBehavior(AActor* self, PClass* type)
-{
-	return self->FindBehavior(type->TypeName);
-}
-
-DEFINE_ACTION_FUNCTION_NATIVE(AActor, FindBehavior, FindBehavior)
-{
-	PARAM_SELF_PROLOGUE(AActor);
-	PARAM_CLASS_NOT_NULL(type, DBehavior);
-	ACTION_RETURN_OBJECT(self->FindBehavior(type->TypeName));
-}
-
-void AActor::MoveBehaviors(AActor& from)
-{
-	if (&from == this)
-		return;
-
-	// Clean these up properly before transferring.
-	ClearBehaviors();
-
-	Behaviors.TransferFrom(from.Behaviors);
-
-	TArray<FName> toRemove = {};
-	TArray<DBehavior*> toTransfer = {};
-	
-	// Clean up any empty behaviors that remained as well while
-	// changing the owner.
-	TMap<FName, TObjPtr<DBehavior*>>::Iterator it = { Behaviors };
-	TMap<FName, TObjPtr<DBehavior*>>::Pair* pair = nullptr;
-	while (it.NextPair(pair))
-	{
-		auto b = pair->Value.Get();
-		if (b == nullptr)
-		{
-			toRemove.Push(pair->Key);
-			continue;
-		}
-
-		b->Owner = this;
-		if (b->Level != Level)
-		{
-			b->Level->RemoveActorBehavior(*b);
-			Level->AddActorBehavior(*b);
-		}
-
-		toTransfer.Push(b);
-	}
-
-	for (auto& b : toTransfer)
-	{
-		if (!IsValidBehavior(*b))
-		{
-			toRemove.Push(b->GetClass()->TypeName);
-			continue;
-		}
-
-		IFOVERRIDENVIRTUALPTRNAME(b, NAME_Behavior, TransferredOwner)
-		{
-			VMValue params[] = { b, &from };
-			VMCall(func, params, 2, nullptr, 0);
-
-			if (!IsValidBehavior(*b))
-				toRemove.Push(b->GetClass()->TypeName);
-		}
-	}
-
-	for (auto& type : toRemove)
-		RemoveBehavior(type);
-}
-
-static void MoveBehaviors(AActor* self, AActor* from)
-{
-	self->MoveBehaviors(*from);
-}
-
-DEFINE_ACTION_FUNCTION_NATIVE(AActor, MoveBehaviors, MoveBehaviors)
-{
-	PARAM_SELF_PROLOGUE(AActor);
-	PARAM_OBJECT_NOT_NULL(from, AActor);
-	self->MoveBehaviors(*from);
-	return 0;
-}
-
-void AActor::ClearBehaviors(PClass* type)
-{
-	TArray<FName> toRemove = {};
-
-	TMap<FName, TObjPtr<DBehavior*>>::Iterator it = { Behaviors };
-	TMap<FName, TObjPtr<DBehavior*>>::Pair* pair = nullptr;
-	while (it.NextPair(pair))
-	{
-		auto b = pair->Value.Get();
-		if (type == nullptr || b == nullptr || b->IsKindOf(type))
-			toRemove.Push(pair->Key);
-	}
-
-	for (auto& type : toRemove)
-		RemoveBehavior(type);
-
-	// If not removing a specific type, clear whatever remains.
-	if (type == nullptr)
-		Behaviors.Clear();
-}
-
-static void ClearBehaviors(AActor* self, PClass* type)
-{
-	self->ClearBehaviors(type);
-}
-
-DEFINE_ACTION_FUNCTION_NATIVE(AActor, ClearBehaviors, ClearBehaviors)
-{
-	PARAM_SELF_PROLOGUE(AActor);
-	PARAM_CLASS(type, DBehavior);
-	self->ClearBehaviors(type);
-	return 0;
-}
-
-void AActor::UnlinkBehaviorsFromLevel()
-{
-	TArray<FName> toRemove = {};
-
-	TMap<FName, TObjPtr<DBehavior*>>::Iterator it = { Behaviors };
-	TMap<FName, TObjPtr<DBehavior*>>::Pair* pair = nullptr;
-	while (it.NextPair(pair))
-	{
-		auto b = pair->Value.Get();
-		if (b == nullptr)
-			toRemove.Push(pair->Key);
-		else
-			b->Level->RemoveActorBehavior(*b);
-	}
-
-	for (auto& type : toRemove)
-		RemoveBehavior(type);
-}
-
-void AActor::LinkBehaviorsToLevel()
-{
-	TArray<FName> toRemove = {};
-
-	TMap<FName, TObjPtr<DBehavior*>>::Iterator it = { Behaviors };
-	TMap<FName, TObjPtr<DBehavior*>>::Pair* pair = nullptr;
-	while (it.NextPair(pair))
-	{
-		auto b = pair->Value.Get();
-		if (b == nullptr)
-			toRemove.Push(pair->Key);
-		else
-			Level->AddActorBehavior(*b);
-	}
-
-	for (auto& type : toRemove)
-		RemoveBehavior(type);
-}
 
 //==========================================================================
 //
@@ -845,7 +503,7 @@ bool AActor::IsMapActor()
 
 inline int GetTics(AActor* actor, FState * newstate)
 {
-	int tics = actor->IsClientside() ? newstate->GetClientsideTics() : newstate->GetTics();
+	int tics = newstate->GetTics();
 	if (actor->isFast() && newstate->GetFast())
 	{
 		return tics - (tics>>1);
@@ -2573,7 +2231,7 @@ static double P_XYMovement (AActor *mo, DVector2 scroll)
 				{ // slide against wall
 					if (BlockingLine != NULL &&
 						mo->player && mo->waterlevel && mo->waterlevel < 3 &&
-						(mo->player->cmd.forwardmove | mo->player->cmd.sidemove) &&
+						(mo->player->cmd.ucmd.forwardmove | mo->player->cmd.ucmd.sidemove) &&
 						mo->BlockingLine->sidedef[1] != NULL)
 					{
 						double spd = mo->FloatVar(NAME_WaterClimbSpeed);
@@ -2812,7 +2470,7 @@ static double P_XYMovement (AActor *mo, DVector2 scroll)
 	// moving corresponding player:
 	if (fabs(mo->Vel.X) < STOPSPEED && fabs(mo->Vel.Y) < STOPSPEED
 		&& (!player || (player->mo != mo)
-			|| !(player->cmd.forwardmove | player->cmd.sidemove)))
+			|| !(player->cmd.ucmd.forwardmove | player->cmd.ucmd.sidemove)))
 	{
 		// if in a walking frame, stop moving
 		// killough 10/98:
@@ -3274,7 +2932,7 @@ void AActor::FallAndSink(double grav, double oldfloorz)
 		double startvelz = Vel.Z;
 
 		if (waterlevel == 0 || (player &&
-			!(player->cmd.forwardmove | player->cmd.sidemove)))
+			!(player->cmd.ucmd.forwardmove | player->cmd.ucmd.sidemove)))
 		{
 			// [RH] Double gravity only if running off a ledge. Coming down from
 			// an upward thrust (e.g. a jump) should not double it.
@@ -3485,7 +3143,7 @@ void AActor::AddToHash ()
 	else
 	{
 		int hash = TIDHASH (tid);
-		auto &slot = IsClientside() ? Level->ClientSideTIDHash[hash] : Level->TIDHash[hash];
+		auto &slot = Level->TIDHash[hash];
 
 		inext = slot;
 		iprev = &slot;
@@ -3543,9 +3201,9 @@ void AActor::SetTID (int newTID)
 //
 //==========================================================================
 
-bool FLevelLocals::IsTIDUsed(int tid, bool clientside)
+bool FLevelLocals::IsTIDUsed(int tid)
 {
-	AActor *probe = clientside ? ClientSideTIDHash[tid & 127] : TIDHash[tid & 127];
+	AActor *probe = TIDHash[tid & 127];
 	while (probe != NULL)
 	{
 		if (probe->tid == tid)
@@ -3568,7 +3226,7 @@ bool FLevelLocals::IsTIDUsed(int tid, bool clientside)
 //
 //==========================================================================
 
-int FLevelLocals::FindUniqueTID(int start_tid, int limit, bool clientside)
+int FLevelLocals::FindUniqueTID(int start_tid, int limit)
 {
 	int tid;
 
@@ -3584,7 +3242,7 @@ int FLevelLocals::FindUniqueTID(int start_tid, int limit, bool clientside)
 		}
 		for (tid = start_tid; tid <= limit; ++tid)
 		{
-			if (tid != 0 && !IsTIDUsed(tid, clientside))
+			if (tid != 0 && !IsTIDUsed(tid))
 			{
 				return tid;
 			}
@@ -3606,7 +3264,7 @@ int FLevelLocals::FindUniqueTID(int start_tid, int limit, bool clientside)
 	{
 		// Use a positive starting TID.
 		tid = pr_uniquetid.GenRand32() & INT_MAX;
-		tid = FindUniqueTID(tid == 0 ? 1 : tid, 5, clientside);
+		tid = FindUniqueTID(tid == 0 ? 1 : tid, 5);
 		if (tid != 0)
 		{
 			return tid;
@@ -3622,7 +3280,7 @@ CCMD(utid)
 	for (auto Level : AllLevels())
 	{
 		Printf("%s, %d\n", Level->MapName.GetChars(), Level->FindUniqueTID(argv.argc() > 1 ? atoi(argv[1]) : 0,
-			(argv.argc() > 2 && atoi(argv[2]) >= 0) ? atoi(argv[2]) : 0, false));
+			(argv.argc() > 2 && atoi(argv[2]) >= 0) ? atoi(argv[2]) : 0));
 	}
 }
 
@@ -4272,11 +3930,6 @@ void AActor::Tick ()
 		Destroy();
 		return;
 	}
-
-	// These should always tick regardless of prediction or not (let the behavior itself
-	// handle this).
-	if (!isFrozen())
-		TickBehaviors();
 
 	if (flags5 & MF5_NOINTERACTION)
 	{
@@ -5114,7 +4767,6 @@ DEFINE_ACTION_FUNCTION(AActor, UpdateWaterLevel)
 
 void ConstructActor(AActor *actor, const DVector3 &pos, bool SpawningMapThing)
 {
-	const bool clientside = actor->IsClientside();
 	auto Level = actor->Level;
 	actor->SpawnTime = Level->totaltime;
 	actor->SpawnOrder = Level->spawnindex++;
@@ -5138,7 +4790,7 @@ void ConstructActor(AActor *actor, const DVector3 &pos, bool SpawningMapThing)
 	// Actors with zero gravity need the NOGRAVITY flag set.
 	if (actor->Gravity == 0) actor->flags |= MF_NOGRAVITY;
 
-	FRandom &rng = clientside ? pr_spawncsmobj : (Level->BotInfo.m_Thinking ? pr_botspawnmobj : pr_spawnmobj);
+	FRandom &rng = Level->BotInfo.m_Thinking ? pr_botspawnmobj : pr_spawnmobj;
 
 	if ((!!G_SkillProperty(SKILLP_InstantReaction) || actor->flags5 & MF5_ALWAYSFAST || !!(dmflags & DF_INSTANT_REACTION))
 		&& actor->flags3 & MF3_ISMONSTER)
@@ -5155,7 +4807,7 @@ void ConstructActor(AActor *actor, const DVector3 &pos, bool SpawningMapThing)
 	// routine, it will not be called.
 	FState *st = actor->SpawnState;
 	actor->state = st;
-	actor->tics = clientside ? st->GetClientsideTics() : st->GetTics();
+	actor->tics = st->GetTics();
 	
 	actor->sprite = st->sprite;
 	actor->frame = st->GetFrame();
@@ -5310,15 +4962,8 @@ AActor *AActor::StaticSpawn(FLevelLocals *Level, PClassActor *type, const DVecto
 
 	AActor *actor;
 
-	if (GetDefaultByType(type)->ObjectFlags & OF_ClientSide)
-	{
-		actor = static_cast<AActor*>(Level->CreateClientsideThinker(type));
-	}
-	else
-	{
-		actor = static_cast<AActor*>(Level->CreateThinker(type));
-		actor->EnableNetworking(true);
-	}
+	actor = static_cast<AActor *>(Level->CreateThinker(type));
+	actor->EnableNetworking(true);
 
 	ConstructActor(actor, pos, SpawningMapThing);
 	return actor;
@@ -5333,28 +4978,6 @@ DEFINE_ACTION_FUNCTION(AActor, Spawn)
 	PARAM_FLOAT(z);
 	PARAM_INT(flags);
 	ACTION_RETURN_OBJECT(AActor::StaticSpawn(currentVMLevel, type, DVector3(x, y, z), replace_t(flags)));
-}
-
-static AActor* SpawnClientside(PClassActor* type, double x, double y, double z, int flags)
-{
-	if (!(GetDefaultByType(type)->ObjectFlags & OF_ClientSide))
-	{
-		ThrowAbortException(X_OTHER, "Tried to spawn a non-clientside Actor from a clientside spawn function.");
-		return nullptr;
-	}
-
-	return AActor::StaticSpawn(currentVMLevel, type, { x, y, z }, (replace_t)flags);
-}
-
-DEFINE_ACTION_FUNCTION_NATIVE(AActor, SpawnClientside, SpawnClientside)
-{
-	PARAM_PROLOGUE;
-	PARAM_CLASS_NOT_NULL(type, AActor);
-	PARAM_FLOAT(x);
-	PARAM_FLOAT(y);
-	PARAM_FLOAT(z);
-	PARAM_INT(flags);
-	ACTION_RETURN_OBJECT(SpawnClientside(type, x, y, z, flags));
 }
 
 PClassActor *ClassForSpawn(FName classname)
@@ -5383,7 +5006,6 @@ void AActor::LevelSpawned ()
 	{
 		flags &= ~MF_DROPPED;
 	}
-	SpawnFlags |= MTF_MAPTHING;
 	HandleSpawnFlags ();
 }
 
@@ -5400,10 +5022,6 @@ void AActor::HandleSpawnFlags ()
 	if (SpawnFlags & MTF_STANDSTILL)
 	{
 		flags4 |= MF4_STANDSTILL;
-	}
-	if (SpawnFlags & MTF_NOINFIGHTING)
-	{
-		flags5 |= MF5_NOINFIGHTING;
 	}
 	if (SpawnFlags & MTF_FRIENDLY)
 	{
@@ -5632,9 +5250,6 @@ void AActor::OnDestroy ()
 	{
 		Level->localEventManager->WorldThingDestroyed(this);
 	}
-
-	
-	ClearBehaviors();
 
 	DeleteAttachedLights();
 	ClearRenderSectorList();
@@ -5882,8 +5497,6 @@ int MorphPointerSubstitution(AActor* from, AActor* to)
 		VMCall(func, params, 2, nullptr, 0);
 	}
 
-	to->MoveBehaviors(*from);
-
 	// Go through player infos.
 	for (int i = 0; i < MAXPLAYERS; ++i)
 	{
@@ -6050,8 +5663,6 @@ AActor *FLevelLocals::SpawnPlayer (FPlayerStart *mthing, int playernum, int flag
 	const auto heldWeap = state == PST_REBORN && (dmflags3 & DF3_REMEMBER_LAST_WEAP) ? p->ReadyWeapon : nullptr;
 	if (state == PST_REBORN || state == PST_ENTER)
 	{
-		if (state == PST_REBORN && oldactor != nullptr)
-			p->mo->MoveBehaviors(*oldactor);
 		PlayerReborn (playernum);
 	}
 	else if (oldactor != NULL && oldactor->player == p && !(flags & SPF_TEMPPLAYER))
@@ -6115,10 +5726,8 @@ AActor *FLevelLocals::SpawnPlayer (FPlayerStart *mthing, int playernum, int flag
 
 	IFVIRTUALPTRNAME(p->mo, NAME_PlayerPawn, ResetAirSupply)
 	{
-		int drowning = 0;
 		VMValue params[] = { p->mo, false };
-		VMReturn rets[] = { &drowning };
-		VMCall(func, params, 2, rets, 1);
+		VMCall(func, params, 2, nullptr, 0);
 	}
 
 	for (int ii = 0; ii < MAXPLAYERS; ++ii)
@@ -6134,7 +5743,7 @@ AActor *FLevelLocals::SpawnPlayer (FPlayerStart *mthing, int playernum, int flag
 		p->cheats = CF_CHASECAM;
 
 	// setup gun psprite
-	if (!(flags & SPF_TEMPPLAYER) || oldactor == nullptr)
+	if (!(flags & SPF_TEMPPLAYER))
 	{ // This can also start a script so don't do it for the dummy player.
 		P_SetupPsprites (p, !!(flags & SPF_WEAPONFULLYUP));
 	}
@@ -6153,7 +5762,7 @@ AActor *FLevelLocals::SpawnPlayer (FPlayerStart *mthing, int playernum, int flag
 		IFVM(PlayerPawn, FilterCoopRespawnInventory)
 		{
 			VMValue params[] = { p->mo, oldactor, ((heldWeap == nullptr || (heldWeap->ObjectFlags & OF_EuthanizeMe)) ? nullptr : heldWeap) };
-			VMCall(func, params, 3, nullptr, 0);
+			VMCall(func, params, 2, nullptr, 0);
 		}
 	}
 	if (oldactor != NULL)
@@ -6189,7 +5798,7 @@ AActor *FLevelLocals::SpawnPlayer (FPlayerStart *mthing, int playernum, int flag
 	}
 
 	// [BC] Do script stuff
-	if (!(flags & SPF_TEMPPLAYER) || oldactor == nullptr)
+	if (!(flags & SPF_TEMPPLAYER))
 	{
 		if (state == PST_ENTER || (state == PST_LIVE && !savegamerestore))
 		{

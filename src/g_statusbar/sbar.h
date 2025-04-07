@@ -413,10 +413,6 @@ public:
 		return SBarTop;
 	}
 	void DoDrawAutomapHUD(int crdefault, int highlight);
-	void ClearInterpolation()
-	{
-		PrevCrosshairSize = CrosshairSize;
-	}
 
 //protected:
 	void DrawPowerups ();

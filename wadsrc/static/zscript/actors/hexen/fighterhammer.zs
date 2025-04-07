@@ -10,7 +10,6 @@ class FWeapHammer : FighterWeapon
 		+BLOODSPLATTER
 		Weapon.SelectionOrder 900;
 		+WEAPON.AMMO_OPTIONAL
-		+WEAPON.EXPLOSIVE
 		Weapon.AmmoUse1 3;
 		Weapon.AmmoGive1 25;
 		Weapon.KickBack 150;

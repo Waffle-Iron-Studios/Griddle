@@ -37,7 +37,6 @@ enum
 	VARF_VirtualScope	= (1<<22),  // [ZZ] virtualscope: object should use the scope of the particular class it's being used with (methods only)
 	VARF_ClearScope		= (1<<23),  // [ZZ] clearscope: this method ignores the member access chain that leads to it and is always plain data.
 	VARF_Abstract		= (1<<24),  // [Player701] Function does not have a body and must be overridden in subclasses
-	VARF_SafeConst		= (1<<25),  // [Jay] properly-working const function/unsafe clearscope field
 };
 
 // Basic information shared by all types ------------------------------------
@@ -109,15 +108,6 @@ public:
 	uint8_t loadOp, storeOp, moveOp, RegType, RegCount;
 	EScopeFlags ScopeFlags = (EScopeFlags)0;
 	bool            SizeKnown = true;
-
-	bool			VMInternalStruct = false;
-	bool			TypeDeprecated = false; // mVersion is deprecation version, not minimum version
-	FString			mDeprecationMessage;
-
-	PType * LocalType = nullptr;
-
-	PType * SetLocalType(PType * LocalType) { this->LocalType = LocalType; return this; }
-	PType * GetLocalType() { return LocalType ? LocalType : this; }
 
 	PType(unsigned int size = 1, unsigned int align = 1);
 	virtual ~PType();

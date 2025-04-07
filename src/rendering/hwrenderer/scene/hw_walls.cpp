@@ -83,31 +83,15 @@ void SetSplitPlanes(FRenderState& state, const secplane_t& top, const secplane_t
 
 void HWWall::RenderWall(FRenderState &state, int textured)
 {
-	bool ditherT = (type == RENDERWALL_BOTTOM) && (seg->sidedef->Flags & WALLF_DITHERTRANS_BOTTOM);
-	ditherT |= (type == RENDERWALL_TOP) && (seg->sidedef->Flags & WALLF_DITHERTRANS_TOP);
-	ditherT = ditherT || (seg->sidedef->Flags & WALLF_DITHERTRANS_MID);
-	if (ditherT)
-	{
-		state.SetEffect(EFF_DITHERTRANS);
-	}
+	if (seg->sidedef->Flags & WALLF_DITHERTRANS) state.SetEffect(EFF_DITHERTRANS);
 	assert(vertcount > 0);
 	state.SetLightIndex(dynlightindex);
 	state.Draw(DT_TriangleFan, vertindex, vertcount);
 	vertexcount += vertcount;
-	if (ditherT)
+	if (seg->sidedef->Flags & WALLF_DITHERTRANS)
 	{
 		state.SetEffect(EFF_NONE);
-		switch(type) // reset this every frame
-		{
-		case RENDERWALL_TOP:
-			seg->sidedef->Flags &= ~WALLF_DITHERTRANS_TOP;
-			break;
-		case RENDERWALL_BOTTOM:
-			seg->sidedef->Flags &= ~WALLF_DITHERTRANS_BOTTOM;
-			break;
-		default:
-			if (seg->sidedef->dithertranscount-- <= 0) seg->sidedef->Flags &= ~WALLF_DITHERTRANS_MID;
-		}
+		seg->sidedef->Flags &= ~WALLF_DITHERTRANS; // reset this every frame
 	}
 }
 
@@ -644,8 +628,7 @@ void HWWall::PutPortal(HWWallDispatcher *di, int ptype, int plane)
 			break;
 
 		case PORTALTYPE_PLANEMIRROR:
-			if (ddi->Viewpoint.IsOrtho() ? (ddi->Viewpoint.ViewVector3D.dot(planemirror->Normal()) < 0)
-				: (portalState.PlaneMirrorMode * planemirror->fC() <= 0))
+			if (portalState.PlaneMirrorMode * planemirror->fC() <= 0)
 			{
 				planemirror = portalState.UniquePlaneMirrors.Get(planemirror);
 				portal = ddi->FindPortal(planemirror);
@@ -2198,6 +2181,8 @@ void HWWall::Process(HWWallDispatcher *di, seg_t *seg, sector_t * frontsector, s
 	}
 
 	bool isportal = seg->linedef->isVisualPortal() && seg->sidedef == seg->linedef->sidedef[0];
+	// Don't render portal insides if in orthographic mode
+	if (di->di) isportal &= !(di->di->Viewpoint.IsOrtho());
 
 	//return;
 	// [GZ] 3D middle textures are necessarily two-sided, even if they lack the explicit two-sided flag

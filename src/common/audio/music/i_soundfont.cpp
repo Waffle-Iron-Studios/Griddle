@@ -314,7 +314,7 @@ FileReader FLumpPatchSetReader::OpenMainConfigFile()
 FileReader FLumpPatchSetReader::OpenFile(const char *name)
 {
 	FString path;
-	if (IsAbsPath(name)) return FileReader();	// no absolute paths in the virtual file system.
+	if (IsAbsPath(name)) return FileReader();	// no absolute paths in the lump directory.
 	path = mBasePath + name;
 	auto index = fileSystem.CheckNumForFullName(path.GetChars());
 	if (index < 0) return FileReader();
