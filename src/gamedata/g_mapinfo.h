@@ -41,8 +41,6 @@
 #include "screenjob.h"
 #include "hwrenderer/postprocessing/hw_postprocess.h"
 #include "hw_viewpointuniforms.h"
-#include "vm.h"
-#include "maps.h"
 
 struct level_info_t;
 struct cluster_info_t;
@@ -548,9 +546,9 @@ int G_SkillProperty(ESkillProperty prop);
 double G_SkillProperty(EFSkillProperty prop);
 const char * G_SkillName();
 
-typedef ZSMap<FName, FString> SkillMenuNames;
+typedef TMap<FName, FString> SkillMenuNames;
 
-typedef ZSMap<FName, FName> SkillActorReplacement;
+typedef TMap<FName, FName> SkillActorReplacement;
 
 struct FSkillInfo
 {

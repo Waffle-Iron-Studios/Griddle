@@ -137,46 +137,14 @@ void FBasicStartupScreen::Progress()
 //
 //==========================================================================
 
-void FBasicStartupScreen::NetInit(const char *message, bool host)
+void FBasicStartupScreen::NetInit(const char *message, int numplayers)
 {
-	mainwindow.NetInit(message, host);
+	NetMaxPos = numplayers;
+	mainwindow.ShowNetStartPane(message, numplayers);
+
+	NetMaxPos = numplayers;
 	NetCurPos = 0;
-}
-
-void FBasicStartupScreen::NetMessage(const char* message)
-{
-	mainwindow.NetMessage(message);
-}
-
-void FBasicStartupScreen::NetConnect(int client, const char* name, unsigned flags, int status)
-{
-	mainwindow.NetConnect(client, name, flags, status);
-}
-
-void FBasicStartupScreen::NetUpdate(int client, int status)
-{
-	mainwindow.NetUpdate(client, status);
-}
-
-void FBasicStartupScreen::NetDisconnect(int client)
-{
-	mainwindow.NetDisconnect(client);
-}
-
-//==========================================================================
-//
-// FBasicStartupScreen :: NetProgress
-//
-// Sets the network progress meter. If count is 0, it gets bumped by 1.
-// Otherwise, it is set to count.
-//
-//==========================================================================
-
-void FBasicStartupScreen::NetProgress(int cur, int limit)
-{
-	NetMaxPos = limit;
-	NetCurPos = cur;
-	mainwindow.NetProgress(cur, limit);
+	NetProgress(1);	// You always know about yourself
 }
 
 //==========================================================================
@@ -189,27 +157,30 @@ void FBasicStartupScreen::NetProgress(int cur, int limit)
 
 void FBasicStartupScreen::NetDone()
 {
-	mainwindow.NetDone();
+	mainwindow.HideNetStartPane();
 }
 
-void FBasicStartupScreen::NetClose()
-{
-	mainwindow.NetClose();
-}
+//==========================================================================
+//
+// FBasicStartupScreen :: NetProgress
+//
+// Sets the network progress meter. If count is 0, it gets bumped by 1.
+// Otherwise, it is set to count.
+//
+//==========================================================================
 
-bool FBasicStartupScreen::ShouldStartNet()
+void FBasicStartupScreen::NetProgress(int count)
 {
-	return mainwindow.ShouldStartNet();
-}
+	if (count == 0)
+	{
+		NetCurPos++;
+	}
+	else
+	{
+		NetCurPos = count;
+	}
 
-int FBasicStartupScreen::GetNetKickClient()
-{
-	return mainwindow.GetNetKickClient();
-}
-
-int FBasicStartupScreen::GetNetBanClient()
-{
-	return mainwindow.GetNetBanClient();
+	mainwindow.SetNetStartProgress(count);
 }
 
 //==========================================================================
@@ -226,7 +197,12 @@ int FBasicStartupScreen::GetNetBanClient()
 //
 //==========================================================================
 
-bool FBasicStartupScreen::NetLoop(bool (*loopCallback)(void*), void* data)
+bool FBasicStartupScreen::NetLoop(bool (*timer_callback)(void *), void *userdata)
 {
-	return mainwindow.NetLoop(loopCallback, data);
+	return mainwindow.RunMessageLoop(timer_callback, userdata);
+}
+
+void FBasicStartupScreen::NetClose()
+{
+	mainwindow.CloseNetStartPane();
 }

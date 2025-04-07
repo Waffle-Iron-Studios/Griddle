@@ -184,7 +184,7 @@ class OptionMenuItemCommand : OptionMenuItemSubmenu
 		return self;
 	}
 
-	native static void DoCommand(String cmd, bool is_unsafe);	// This is very intentionally limited to this menu item to prevent abuse.
+	native static void DoCommand(String cmd, bool unsafe);	// This is very intentionally limited to this menu item to prevent abuse.
 
 	override bool Activate()
 	{

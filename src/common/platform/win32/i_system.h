@@ -8,6 +8,7 @@
 #include "zstring.h"
 #include "utf8.h"
 
+struct ticcmd_t;
 struct WadStuff;
 
 // [RH] Detects the OS the game is running under.

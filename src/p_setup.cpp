@@ -296,7 +296,6 @@ void FLevelLocals::ClearLevelData(bool fullgc)
 	
 	interpolator.ClearInterpolations();	// [RH] Nothing to interpolate on a fresh level.
 	Thinkers.DestroyAllThinkers(fullgc);
-	ClientsideThinkers.DestroyAllThinkers(fullgc);
 	ClearAllSubsectorLinks(); // can't be done as part of the polyobj deletion process.
 
 	total_monsters = total_items = total_secrets =
@@ -332,7 +331,6 @@ void FLevelLocals::ClearLevelData(bool fullgc)
 	if (SpotState) SpotState->Destroy();
 	SpotState = nullptr;
 	ACSThinker = nullptr;
-	ClientSideACSThinker = nullptr;
 	FraggleScriptThinker = nullptr;
 	CorpseQueue.Clear();
 	canvasTextureInfo.EmptyList();
@@ -382,7 +380,6 @@ void FLevelLocals::ClearLevelData(bool fullgc)
 	aabbTree = nullptr;
 	levelMesh = nullptr;
 	VisualThinkerHead = nullptr;
-	ActorBehaviors.Clear();
 	if (screen)
 		screen->SetAABBTree(nullptr);
 }
@@ -646,7 +643,6 @@ void P_Shutdown ()
 	for (auto Level : AllLevels())
 	{
 		Level->Thinkers.DestroyThinkersInList(STAT_STATIC);
-		Level->ClientsideThinkers.DestroyThinkersInList(STAT_STATIC);
 	}
 	P_FreeLevelData ();
 	// [ZZ] delete global event handlers

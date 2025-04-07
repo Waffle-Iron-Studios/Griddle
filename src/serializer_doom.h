@@ -3,11 +3,11 @@
 #include "serializer.h"
 
 class player_t;
-class DBehavior;
 struct sector_t;
 struct line_t;
 struct side_t;
 struct vertex_t;
+struct ticcmd_t;
 struct usercmd_t;
 class PClassActor;
 struct FStrifeDialogueNode;
@@ -39,10 +39,10 @@ FSerializer &SerializeArgs(FSerializer &arc, const char *key, int *args, int *de
 FSerializer &SerializeTerrain(FSerializer &arc, const char *key, int &terrain, int *def = nullptr);
 
 FSerializer& Serialize(FSerializer& arc, const char* key, char& value, char* defval);
+FSerializer &Serialize(FSerializer &arc, const char *key, ticcmd_t &sid, ticcmd_t *def);
 FSerializer &Serialize(FSerializer &arc, const char *key, usercmd_t &cmd, usercmd_t *def);
 FSerializer &Serialize(FSerializer &arc, const char *key, FInterpolator &rs, FInterpolator *def);
 FSerializer& Serialize(FSerializer& arc, const char* key, struct FStandaloneAnimation& value, struct FStandaloneAnimation* defval);
-FSerializer& Serialize(FSerializer& arc, const char* key, TMap<FName, TObjPtr<DBehavior*>>& value, TMap<FName, TObjPtr<DBehavior*>>* def);
 
 template<> FSerializer &Serialize(FSerializer &arc, const char *key, FPolyObj *&value, FPolyObj **defval);
 template<> FSerializer &Serialize(FSerializer &arc, const char *key, sector_t *&value, sector_t **defval);

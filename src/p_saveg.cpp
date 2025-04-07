@@ -949,7 +949,6 @@ void FLevelLocals::Serialize(FSerializer &arc, bool hubload)
 	if (arc.isReading())
 	{
 		Thinkers.DestroyAllThinkers();
-		ClientsideThinkers.DestroyAllThinkers();
 		interpolator.ClearInterpolations();
 		arc.ReadObjects(hubload);
 		// If there have been object deserialization errors we must absolutely not continue here because scripted objects can do unpredictable things.
@@ -994,8 +993,7 @@ void FLevelLocals::Serialize(FSerializer &arc, bool hubload)
 		("automap", automap)
 		("interpolator", interpolator)
 		("frozenstate", frozenstate)
-		("visualthinkerhead", VisualThinkerHead)
-		("actorbehaviors", ActorBehaviors);
+		("visualthinkerhead", VisualThinkerHead);
 
 
 	// Hub transitions must keep the current total time

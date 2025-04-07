@@ -540,8 +540,6 @@
 
 
 
-extern int Net_Arbitrator;
-
 FRandom pr_acs ("ACS");
 
 // I imagine this much stack space is probably overkill, but it could
@@ -653,11 +651,6 @@ struct CallReturn
 };
 
 
-static bool IsClientSideScript(const ScriptPtr& script)
-{
-	return (script.Flags & SCRIPTF_ClientSide);
-}
-
 class DLevelScript : public DObject
 {
 	DECLARE_CLASS(DLevelScript, DObject)
@@ -680,7 +673,7 @@ public:
 	};
 
 	DLevelScript(FLevelLocals *l, AActor *who, line_t *where, int num, const ScriptPtr *code, FBehavior *module,
-		const int *args, int argcount, int flags, bool clientside);
+		const int *args, int argcount, int flags);
 
 	void Serialize(FSerializer &arc);
 	int RunScript();
@@ -713,7 +706,6 @@ protected:
 	TObjPtr<AActor*>	activator;
 	line_t			*activationline;
 	bool			backSide;
-	bool			bClientSide;
 	FFont			*activefont = nullptr;
 	int				hudwidth, hudheight;
 	int				ClipRectLeft, ClipRectTop, ClipRectWidth, ClipRectHeight;
@@ -741,7 +733,6 @@ protected:
 		}
 	}
 
-	DACSThinker* GetController() const;
 	void Link();
 	void Unlink();
 	void PutLast();
@@ -790,7 +781,7 @@ private:
 };
 
 static DLevelScript *P_GetScriptGoing (FLevelLocals *Level, AActor *who, line_t *where, int num, const ScriptPtr *code, FBehavior *module,
-	const int *args, int argcount, int flags, bool clientside);
+	const int *args, int argcount, int flags);
 
 
 struct FBehavior::ArrayInfo
@@ -2022,13 +2013,6 @@ void FBehaviorContainer::MarkLevelVarStrings()
 			script->MarkLocalVarStrings();
 		}
 	}
-	if (Level->ClientSideACSThinker != nullptr)
-	{
-		for (DLevelScript* script = Level->ClientSideACSThinker->Scripts; script != NULL; script = script->GetNext())
-		{
-			script->MarkLocalVarStrings();
-		}
-	}
 }
 
 void FBehaviorContainer::LockLevelVarStrings(int levelnum)
@@ -2042,13 +2026,6 @@ void FBehaviorContainer::LockLevelVarStrings(int levelnum)
 	if (Level->ACSThinker != nullptr)
 	{
 		for (DLevelScript *script = Level->ACSThinker->Scripts; script != NULL; script = script->GetNext())
-		{
-			script->LockLocalVarStrings(levelnum);
-		}
-	}
-	if (Level->ClientSideACSThinker != nullptr)
-	{
-		for (DLevelScript* script = Level->ClientSideACSThinker->Scripts; script != NULL; script = script->GetNext())
 		{
 			script->LockLocalVarStrings(levelnum);
 		}
@@ -3328,7 +3305,7 @@ void FBehavior::StartTypedScripts (uint16_t type, AActor *activator, bool always
 		if (ptr->Type == type)
 		{
 			DLevelScript *runningScript = P_GetScriptGoing (Level, activator, NULL, ptr->Number,
-				ptr, this, &arg1, 1, always ? ACS_ALWAYS : 0, IsClientSideScript(*ptr));
+				ptr, this, &arg1, 1, always ? ACS_ALWAYS : 0);
 			if (nullptr != runningScript && runNow)
 			{
 				runningScript->RunScript();
@@ -3350,12 +3327,6 @@ void FBehaviorContainer::StopMyScripts (AActor *actor)
 	if (controller != NULL)
 	{
 		controller->StopScriptsFor (actor);
-	}
-
-	controller = actor->Level->ClientSideACSThinker;
-	if (controller != NULL)
-	{
-		controller->StopScriptsFor(actor);
 	}
 }
 
@@ -3520,8 +3491,7 @@ void DLevelScript::Serialize(FSerializer &arc)
 		("cliprectheight", ClipRectHeight)
 		("wrapwidth", WrapWidth)
 		("inmodulescriptnum", InModuleScriptNumber)
-		("level", Level)
-		("bclientside", bClientSide);
+		("level", Level);
 
 	if (arc.isReading())
 	{
@@ -3536,14 +3506,10 @@ void DLevelScript::Serialize(FSerializer &arc)
 	}
 }
 
-DACSThinker* DLevelScript::GetController() const
-{
-	return bClientSide ? Level->ClientSideACSThinker : Level->ACSThinker;
-}
-
 void DLevelScript::Unlink ()
 {
-	auto controller = GetController();
+	DACSThinker *controller = Level->ACSThinker;
+
 	if (controller->LastScript == this)
 	{
 		controller->LastScript = prev;
@@ -3568,7 +3534,8 @@ void DLevelScript::Unlink ()
 
 void DLevelScript::Link ()
 {
-	auto controller = GetController();
+	DACSThinker *controller = Level->ACSThinker;
+
 	next = controller->Scripts;
 	GC::WriteBarrier(this, next);
 	if (controller->Scripts)
@@ -3587,7 +3554,8 @@ void DLevelScript::Link ()
 
 void DLevelScript::PutLast ()
 {
-	auto controller = GetController();
+	DACSThinker *controller = Level->ACSThinker;
+
 	if (controller->LastScript == this)
 		return;
 
@@ -3608,7 +3576,8 @@ void DLevelScript::PutLast ()
 
 void DLevelScript::PutFirst ()
 {
-	auto controller = GetController();
+	DACSThinker *controller = Level->ACSThinker;
+
 	if (controller->Scripts == this)
 		return;
 
@@ -5885,11 +5854,11 @@ int DLevelScript::CallFunction(int argCount, int funcIndex, int32_t *args, int &
 			break;
 
 		case ACSF_UniqueTID:
-			return Level->FindUniqueTID(argCount > 0 ? args[0] : 0, (argCount > 1 && args[1] >= 0) ? args[1] : 0, false);
+			return Level->FindUniqueTID(argCount > 0 ? args[0] : 0, (argCount > 1 && args[1] >= 0) ? args[1] : 0);
 
 		case ACSF_IsTIDUsed:
 			MIN_ARG_COUNT(1);
-			return Level->IsTIDUsed(args[0], false);
+			return Level->IsTIDUsed(args[0]);
 
 		case ACSF_Sqrt:
 			MIN_ARG_COUNT(1);
@@ -6931,6 +6900,7 @@ PClass *DLevelScript::GetClassForIndex(int index) const
 
 int DLevelScript::RunScript()
 {
+	DACSThinker *controller = Level->ACSThinker;
 	ACSLocalVariables locals(Localvars);
 	ACSLocalArrays noarrays;
 	ACSLocalArrays *localarrays = &noarrays;
@@ -6951,7 +6921,6 @@ int DLevelScript::RunScript()
 
 	// Hexen truncates all special arguments to bytes (only when using an old MAPINFO and old ACS format
 	const int specialargmask = ((Level->flags2 & LEVEL2_HEXENHACK) && activeBehavior->GetFormat() == ACS_Old) ? 255 : ~0;
-	auto controller = GetController();
 
 	switch (state)
 	{
@@ -10418,9 +10387,9 @@ scriptwait:
 #undef PushtoStack
 
 static DLevelScript *P_GetScriptGoing (FLevelLocals *l, AActor *who, line_t *where, int num, const ScriptPtr *code, FBehavior *module,
-	const int *args, int argcount, int flags, bool clientside)
+	const int *args, int argcount, int flags)
 {
-	DACSThinker *controller = clientside ? l->ClientSideACSThinker : l->ACSThinker;
+	DACSThinker *controller = l->ACSThinker;
 	DLevelScript **running;
 
 	if (controller && !(flags & ACS_ALWAYS) && (running = controller->RunningScripts.CheckKey(num)) != NULL)
@@ -10433,28 +10402,16 @@ static DLevelScript *P_GetScriptGoing (FLevelLocals *l, AActor *who, line_t *whe
 		return NULL;
 	}
 
-	return Create<DLevelScript> (l, who, where, num, code, module, args, argcount, flags, clientside);
+	return Create<DLevelScript> (l, who, where, num, code, module, args, argcount, flags);
 }
 
 DLevelScript::DLevelScript (FLevelLocals *l, AActor *who, line_t *where, int num, const ScriptPtr *code, FBehavior *module,
-	const int *args, int argcount, int flags, bool clientside)
+	const int *args, int argcount, int flags)
 	: activeBehavior (module)
 {
 	Level = l;
-	if (clientside)
-	{
-		if (Level->ClientSideACSThinker == nullptr)
-			Level->ClientSideACSThinker = Level->CreateClientsideThinker<DACSThinker>();
-
-		bClientSide = true;
-	}
-	else
-	{
-		if (Level->ACSThinker == nullptr)
-			Level->ACSThinker = Level->CreateThinker<DACSThinker>();
-
-		bClientSide = false;
-	}
+	if (Level->ACSThinker == nullptr)
+		Level->ACSThinker = Level->CreateThinker<DACSThinker>();
 
 	script = num;
 	assert(code->VarCount >= code->ArgCount);
@@ -10481,11 +10438,11 @@ DLevelScript::DLevelScript (FLevelLocals *l, AActor *who, line_t *where, int num
 	// goes by while they're in their default state.
 
 	if (!(flags & ACS_ALWAYS))
-		GetController()->RunningScripts[num] = this;
+		Level->ACSThinker->RunningScripts[num] = this;
 
 	Link();
 
-	if (!clientside && (Level->flags2 & LEVEL2_HEXENHACK))
+	if (Level->flags2 & LEVEL2_HEXENHACK)
 	{
 		PutLast();
 	}
@@ -10493,20 +10450,14 @@ DLevelScript::DLevelScript (FLevelLocals *l, AActor *who, line_t *where, int num
 	DPrintf(DMSG_SPAMMY, "%s started.\n", ScriptPresentation(num).GetChars());
 }
 
-void SetScriptState (FLevelLocals& level, int script, DLevelScript::EScriptState state)
+void SetScriptState (DACSThinker *controller, int script, DLevelScript::EScriptState state)
 {
 	DLevelScript **running;
 
-	auto controller = level.ACSThinker;
 	if (controller != NULL && (running = controller->RunningScripts.CheckKey(script)) != NULL)
 	{
 		(*running)->SetState (state);
-		return;
 	}
-
-	controller = level.ClientSideACSThinker;
-	if (controller != NULL && (running = controller->RunningScripts.CheckKey(script)) != NULL)
-		(*running)->SetState(state);
 }
 
 void FLevelLocals::DoDeferedScripts ()
@@ -10518,32 +10469,33 @@ void FLevelLocals::DoDeferedScripts ()
 	for(int i = info->deferred.Size()-1; i>=0; i--)
 	{
 		acsdefered_t *def = &info->deferred[i];
-		scriptdata = Behaviors.FindScript(def->script, module);
-		if (scriptdata == nullptr)
-		{
-			Printf("P_DoDeferredScripts: Unknown %s\n", ScriptPresentation(def->script).GetChars());
-			continue;
-		}
-
 		switch (def->type)
 		{
 		case acsdefered_t::defexecute:
 		case acsdefered_t::defexealways:
-			P_GetScriptGoing (this, (unsigned)def->playernum < MAXPLAYERS &&
-				PlayerInGame(def->playernum) ? Players[def->playernum]->mo : nullptr,
-				nullptr, def->script,
-				scriptdata, module,
-				def->args, 3,
-				def->type == acsdefered_t::defexealways ? ACS_ALWAYS : 0, IsClientSideScript(*scriptdata));
+			scriptdata = Behaviors.FindScript (def->script, module);
+			if (scriptdata)
+			{
+				P_GetScriptGoing (this, (unsigned)def->playernum < MAXPLAYERS &&
+					PlayerInGame(def->playernum) ? Players[def->playernum]->mo : nullptr,
+					nullptr, def->script,
+					scriptdata, module,
+					def->args, 3,
+					def->type == acsdefered_t::defexealways ? ACS_ALWAYS : 0);
+			}
+			else
+			{
+				Printf ("P_DoDeferredScripts: Unknown %s\n", ScriptPresentation(def->script).GetChars());
+			}
 			break;
 
 		case acsdefered_t::defsuspend:
-			SetScriptState (*this, def->script, DLevelScript::SCRIPT_Suspended);
+			SetScriptState (ACSThinker, def->script, DLevelScript::SCRIPT_Suspended);
 			DPrintf (DMSG_SPAMMY, "Deferred suspend of %s\n", ScriptPresentation(def->script).GetChars());
 			break;
 
 		case acsdefered_t::defterminate:
-			SetScriptState (*this, def->script, DLevelScript::SCRIPT_PleaseRemove);
+			SetScriptState (ACSThinker, def->script, DLevelScript::SCRIPT_PleaseRemove);
 			DPrintf (DMSG_SPAMMY, "Deferred terminate of %s\n", ScriptPresentation(def->script).GetChars());
 			break;
 		}
@@ -10607,15 +10559,8 @@ int P_StartScript (FLevelLocals *Level, AActor *who, line_t *where, int script, 
 					return false;
 				}
 			}
-
-			DLevelScript* runningScript = nullptr;
-			const bool clientside = IsClientSideScript(*scriptdata);
-			if (!(flags & ACS_NET) || !clientside || (who && Level->isConsolePlayer(who->player->mo)))
-			{
-				runningScript = P_GetScriptGoing(Level, who, where, script,
-					scriptdata, module, args, argcount, flags, clientside);
-			}
-
+			DLevelScript *runningScript = P_GetScriptGoing (Level, who, where, script,
+				scriptdata, module, args, argcount, flags);
 			if (runningScript != NULL)
 			{
 				if (flags & ACS_WANTRESULT)
@@ -10649,7 +10594,7 @@ void P_SuspendScript (FLevelLocals *Level, int script, const char *map)
 	if (strnicmp (Level->MapName.GetChars(), map, 8))
 		addDefered (FindLevelInfo (map), acsdefered_t::defsuspend, script, NULL, 0, NULL);
 	else
-		SetScriptState (*Level, script, DLevelScript::SCRIPT_Suspended);
+		SetScriptState (Level->ACSThinker, script, DLevelScript::SCRIPT_Suspended);
 }
 
 void P_TerminateScript (FLevelLocals *Level, int script, const char *map)
@@ -10657,7 +10602,7 @@ void P_TerminateScript (FLevelLocals *Level, int script, const char *map)
 	if (strnicmp (Level->MapName.GetChars(), map, 8))
 		addDefered (FindLevelInfo (map), acsdefered_t::defterminate, script, NULL, 0, NULL);
 	else
-		SetScriptState (*Level, script, DLevelScript::SCRIPT_PleaseRemove);
+		SetScriptState (Level->ACSThinker, script, DLevelScript::SCRIPT_PleaseRemove);
 }
 
 FSerializer &Serialize(FSerializer &arc, const char *key, acsdefered_t &defer, acsdefered_t *def)

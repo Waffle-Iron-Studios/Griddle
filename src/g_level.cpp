@@ -150,7 +150,7 @@ CUSTOM_CVAR(Bool, gl_notexturefill, false, CVAR_NOINITCALL)
 
 CUSTOM_CVAR(Int, gl_maplightmode, -1, CVAR_NOINITCALL | CVAR_CHEAT) // this is just for testing. -1 means 'inactive'
 {
-	if (self > 4 || self < -1) self = -1;
+	if (self > 5 || self < -1) self = -1;
 }
 
 CUSTOM_CVARD(Int, gl_lightmode, 1, CVAR_ARCHIVE, "Select lighting mode. 2 is vanilla accurate, 1 is accurate to the ZDoom software renderer and 0 is a less demanding non-shader implementation")
@@ -457,7 +457,7 @@ void G_NewInit ()
 	int i;
 
 	// Destory all old player refrences that may still exist
-	TThinkerIterator<AActor> it(primaryLevel, NAME_PlayerPawn, STAT_TRAVELLING, false);
+	TThinkerIterator<AActor> it(primaryLevel, NAME_PlayerPawn, STAT_TRAVELLING);
 	AActor *pawn, *next;
 
 	next = it.Next();
@@ -473,7 +473,6 @@ void G_NewInit ()
 	// Destroy thinkers that may remain after change level failure
 	// Usually, the list contains just a sentinel when such error occurred
 	primaryLevel->Thinkers.DestroyThinkersInList(STAT_TRAVELLING);
-	primaryLevel->ClientsideThinkers.DestroyThinkersInList(STAT_TRAVELLING); // This isn't currently supported, but maybe in the future
 
 	G_ClearSnapshots ();
 	netgame = false;
@@ -587,7 +586,6 @@ void G_InitNew (const char *mapname, bool bTitleLevel)
 	for (auto Level : AllLevels())
 	{
 		Level->Thinkers.DestroyThinkersInList(STAT_STATIC);
-		Level->ClientsideThinkers.DestroyThinkersInList(STAT_STATIC);
 	}
 
 	if (paused)
@@ -1564,26 +1562,11 @@ DEFINE_ACTION_FUNCTION(FLevelLocals, WorldDone)
 
 //==========================================================================
 //
-// Started the game loaded into a map from the console. Run at least one tic
-// so it can properly render out in net games.
-//
-//==========================================================================
-
-void G_DoMapWarp()
-{
-	gameaction = ga_nothing;
-	Net_ResetCommands(true);
-	Net_SetWaiting();
-}
-
-//==========================================================================
-//
 //
 //==========================================================================
 
 void G_DoWorldDone (void) 
-{		
-	Net_ResetCommands(true);
+{		 
 	gamestate = GS_LEVEL;
 	if (nextlevel.IsEmpty())
 	{
@@ -1595,7 +1578,6 @@ void G_DoWorldDone (void)
 	G_DoLoadLevel (nextlevel, startpos, true, false);
 	gameaction = ga_nothing;
 	viewactive = true; 
-	Net_SetWaiting();
 }
 
 //==========================================================================
@@ -1625,7 +1607,6 @@ void FLevelLocals::StartTravel ()
 			if (Players[i]->health > 0)
 			{
 				pawn->UnlinkFromWorld (nullptr);
-				pawn->UnlinkBehaviorsFromLevel();
 				int tid = pawn->tid;	// Save TID
 				pawn->SetTID(0);
 				pawn->tid = tid;		// Restore TID (but no longer linked into the hash chain)
@@ -1636,7 +1617,6 @@ void FLevelLocals::StartTravel ()
 				{
 					inv->ChangeStatNum (STAT_TRAVELLING);
 					inv->UnlinkFromWorld (nullptr);
-					inv->UnlinkBehaviorsFromLevel();
 					inv->DeleteAttachedLights();
 				}
 			}
@@ -1740,7 +1720,6 @@ int FLevelLocals::FinishTravel ()
 			pawndup->Destroy();
 		}
 		pawn->LinkToWorld (nullptr);
-		pawn->LinkBehaviorsToLevel();
 		pawn->ClearInterpolation();
 		pawn->ClearFOVInterpolation();
 		const int tid = pawn->tid;	// Save TID (actor isn't linked into the hash chain yet)
@@ -1754,7 +1733,6 @@ int FLevelLocals::FinishTravel ()
 			inv->ChangeStatNum (STAT_INVENTORY);
 			inv->LinkToWorld (nullptr);
 			P_FindFloorCeiling(inv, FFCF_ONLYSPAWNPOS);
-			inv->LinkBehaviorsToLevel();
 
 			IFVIRTUALPTRNAME(inv, NAME_Inventory, Travelled)
 			{
@@ -1782,7 +1760,6 @@ int FLevelLocals::FinishTravel ()
 	// Since this list is excluded from regular thinker cleaning, anything that may survive through here
 	// will endlessly multiply and severely break the following savegames or just simply crash on broken pointers.
 	Thinkers.DestroyThinkersInList(STAT_TRAVELLING);
-	ClientsideThinkers.DestroyThinkersInList(STAT_TRAVELLING);
 	return failnum;
 }
  
@@ -2291,7 +2268,6 @@ void FLevelLocals::Mark()
 	GC::Mark(SpotState);
 	GC::Mark(FraggleScriptThinker);
 	GC::Mark(ACSThinker);
-	GC::Mark(ClientSideACSThinker);
 	GC::Mark(automap);
 	GC::Mark(interpolator.Head);
 	GC::Mark(SequenceListHead);
@@ -2304,7 +2280,6 @@ void FLevelLocals::Mark()
 		GC::Mark(localEventManager->LastEventHandler);
 	}
 	Thinkers.MarkRoots();
-	ClientsideThinkers.MarkRoots();
 	canvasTextureInfo.Mark();
 	for (auto &c : CorpseQueue)
 	{
