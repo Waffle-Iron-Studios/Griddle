@@ -446,14 +446,6 @@ DEFINE_ACTION_FUNCTION_NATIVE(_TexMan, CheckForTexture, CheckForTexture)
 	ACTION_RETURN_INT(CheckForTexture(name, type, flags));
 }
 
-DEFINE_ACTION_FUNCTION(_TexMan, FlushAll)
-{
-	PARAM_PROLOGUE;
-	PARAM_STRING(name);
-	TexMan.FlushAll();
-	return 0;
-}
-
 //==========================================================================
 //
 //
@@ -859,6 +851,27 @@ DEFINE_ACTION_FUNCTION(_Wads, GetLumpFullName)
 	PARAM_PROLOGUE;
 	PARAM_INT(lump);
 	ACTION_RETURN_STRING(fileSystem.GetFileFullName(lump));
+}
+
+DEFINE_ACTION_FUNCTION(_Wads, GetLumpContainer)
+{
+	PARAM_PROLOGUE;
+	PARAM_INT(lump);
+	ACTION_RETURN_INT(fileSystem.GetFileContainer(lump));
+}
+
+DEFINE_ACTION_FUNCTION(_Wads, GetContainerName)
+{
+	PARAM_PROLOGUE;
+	PARAM_INT(lump);
+	ACTION_RETURN_STRING(fileSystem.GetResourceFileName(lump));
+}
+
+DEFINE_ACTION_FUNCTION(_Wads, GetLumpFullPath)
+{
+	PARAM_PROLOGUE;
+	PARAM_INT(lump);
+	ACTION_RETURN_STRING(fileSystem.GetFileFullPath(lump));
 }
 
 DEFINE_ACTION_FUNCTION(_Wads, GetLumpNamespace)
