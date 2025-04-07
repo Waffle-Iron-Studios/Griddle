@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------
 **
 ** Copyright(C) 2017 Magnus Norddahl
-** Copyright(C) 2017-2024 Rachael Alexanderson
+** Copyright(C) 2017-2020 Rachael Alexanderson
 ** All rights reserved.
 **
 ** Redistribution and use in source and binary forms, with or without

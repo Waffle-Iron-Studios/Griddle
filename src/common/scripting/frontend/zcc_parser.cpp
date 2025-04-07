@@ -468,7 +468,7 @@ PNamespace *ParseOneScript(const int baselump, ZCCParseState &state)
 			}
 			if (state.ParseVersion > MakeVersion(ZSCRIPT_VER_MAJOR, ZSCRIPT_VER_MINOR, ZSCRIPT_VER_REVISION))
 			{
-				sc.ScriptError("The file you are attempting to run requires a newer version of " GAMENAME ".\n\nA version with ZScript version %d.%d.%d is required, but your copy of " GAMENAME " only supports %d.%d.%d. Please upgrade!", state.ParseVersion.major, state.ParseVersion.minor, state.ParseVersion.revision, ZSCRIPT_VER_MAJOR, ZSCRIPT_VER_MINOR, ZSCRIPT_VER_REVISION);
+				sc.ScriptError("The file you are attempting to run requires a newer version of " GAMENAME ".\n\nA version with ZScript version %d.%d.%d is required, but your copy of " GAMENAME " only supports %d.%d.%d. Please upgrade!", state.ParseVersion.major, state.ParseVersion.minor, state.ParseVersion.revision, VER_MAJOR, VER_MINOR, VER_REVISION);
 			}
 		}
 		else

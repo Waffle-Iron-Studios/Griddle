@@ -372,7 +372,7 @@ static void I_NetLog(const char* text, ...)
 static void I_NetError(const char* error)
 {
 	StartWindow->NetClose();
-	I_FatalError("%s", error);
+	I_FatalError(error);
 }
 
 static void I_NetInit(const char* msg, bool host)
@@ -762,7 +762,7 @@ static bool Host_CheckForConnections(void* connected)
 			{
 				RejectConnection(from, PRE_BANNED);
 			}
-			else if (NetBuffer[2] % 256 != ENG_MAJOR || NetBuffer[3] % 256 != ENG_MINOR || NetBuffer[4] % 256 != ENG_REVISION)
+			else if (NetBuffer[2] % 256 != VER_MAJOR || NetBuffer[3] % 256 != VER_MINOR || NetBuffer[4] % 256 != VER_REVISION)
 			{
 				RejectConnection(from, PRE_WRONG_ENGINE);
 			}
@@ -1143,9 +1143,9 @@ static bool Guest_ContactHost(void* unused)
 	if (consoleplayer == -1)
 	{
 		NetBuffer[1] = PRE_CONNECT;
-		NetBuffer[2] = ENG_MAJOR % 256;
-		NetBuffer[3] = ENG_MINOR % 256;
-		NetBuffer[4] = ENG_REVISION % 256;
+		NetBuffer[2] = VER_MAJOR % 256;
+		NetBuffer[3] = VER_MINOR % 256;
+		NetBuffer[4] = VER_REVISION % 256;
 		const size_t passSize = strlen(net_password) + 1;
 		memcpy(&NetBuffer[5], net_password, passSize);
 		NetBufferLength = 5u + passSize;

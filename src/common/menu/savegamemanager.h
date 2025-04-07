@@ -11,7 +11,6 @@ struct FSaveGameNode
 {
 	FString SaveTitle;
 	FString Filename;
-	FString CreationTime;
 	bool bOldVersion = false;
 	bool bMissingWads = false;
 	bool bNoDelete = false;
