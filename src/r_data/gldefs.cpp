@@ -1655,9 +1655,9 @@ class GLDefsParser
 
 						if(ok)
 						{
-							sc.MustGetString();
-							cvarname = sc.String;
-							cvar = FindCVar(cvarname.GetChars(), NULL);
+						sc.MustGetString();
+						cvarname = sc.String;
+						cvar = FindCVar(cvarname.GetChars(), NULL);
 
 							if (!cvar)
 							{
@@ -1665,41 +1665,41 @@ class GLDefsParser
 								ok = false;
 							}
 						}
-
+						
 						if(ok)
 						{
 							switch (cvar->GetRealType())
 							{
 							case CVAR_Int:
 								if(parsedType != PostProcessUniformType::Int && parsedType != PostProcessUniformType::Float)
-								{
+						{
 									sc.ScriptError("CVar '%s' type (int) is not convertible to uniform type (%s), must be int or float", cvarname.GetChars(), uniformType.GetChars());
 									ok = false;
-								}
-								else
-								{
+						}
+						else
+						{
 									callback = (void (*)(FBaseCVar&))(&uniform_callback1<FIntCVar>);
 									Values[0] = cvar->GetGenericRep(CVAR_Int).Int;
 								}
 								break;
 							case CVAR_Float:
 								if(parsedType != PostProcessUniformType::Int && parsedType != PostProcessUniformType::Float)
-								{
+							{
 									sc.ScriptError("CVar '%s' type (float) is not convertible to uniform type (%s), must be int or float", cvarname.GetChars(), uniformType.GetChars());
 									ok = false;
-								}
+							}
 								else
-								{
+							{
 									callback = (void (*)(FBaseCVar&))(&uniform_callback1<FFloatCVar>);
 									Values[0] = cvar->GetGenericRep(CVAR_Float).Float;
-								}
+							}
 								break;
 							case CVAR_Color:
 								if(parsedType != PostProcessUniformType::Vec3 && parsedType != PostProcessUniformType::Vec4)
-								{
+							{
 									sc.ScriptError("CVar '%s' type (color) is not convertible to uniform type (%s), must be vec3 or vec4", cvarname.GetChars(), uniformType.GetChars());
 									ok = false;
-								}
+							}
 								else
 								{
 									callback = (void (*)(FBaseCVar&))uniform_callback_color;
@@ -1717,7 +1717,7 @@ class GLDefsParser
 								ok = false;
 								break;
 							}
-						}
+							}
 
 						if(ok)
 						{

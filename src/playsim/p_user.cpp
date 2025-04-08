@@ -95,6 +95,8 @@
 #include "s_music.h"
 #include "d_main.h"
 
+extern int paused;
+
 static FRandom pr_skullpop ("SkullPop");
 
 // [SP] Allows respawn in single player
@@ -131,6 +133,8 @@ CUSTOM_CVAR(Float, cl_rubberband_limit, 756.0f, CVAR_ARCHIVE | CVAR_GLOBALCONFIG
 		self = 0.0f;
 }
 
+EXTERN_CVAR (Int, cl_debugprediction)
+
 ColorSetList ColorSets;
 PainFlashList PainFlashes;
 
@@ -154,15 +158,6 @@ static TArray<AActor *> PredictionSectorListBackup;
 
 static TArray<sector_t *> PredictionTouchingSectorsBackup;
 static TArray<msecnode_t *> PredictionTouchingSectors_sprev_Backup;
-
-static TArray<sector_t *> PredictionRenderSectorsBackup;
-static TArray<msecnode_t *> PredictionRenderSectors_sprev_Backup;
-
-static TArray<sector_t *> PredictionPortalSectorsBackup;
-static TArray<msecnode_t *> PredictionPortalSectors_sprev_Backup;
-
-static TArray<FLinePortal *> PredictionPortalLinesBackup;
-static TArray<portnode_t *> PredictionPortalLines_sprev_Backup;
 
 struct
 {
@@ -1236,7 +1231,7 @@ DEFINE_ACTION_FUNCTION(APlayerPawn, CheckEnvironment)
 void P_CheckUse(player_t *player)
 {
 	// check for use
-	if (player->cmd.ucmd.buttons & BT_USE)
+	if (player->cmd.buttons & BT_USE)
 	{
 		if (!player->usedown)
 		{
@@ -1269,7 +1264,7 @@ DEFINE_ACTION_FUNCTION(APlayerPawn, CheckUse)
 
 void P_PlayerThink (player_t *player)
 {
-	ticcmd_t *cmd = &player->cmd;
+	usercmd_t *cmd = &player->cmd;
 
 	if (player->mo == NULL)
 	{
@@ -1309,14 +1304,14 @@ void P_PlayerThink (player_t *player)
 	{
 		fprintf (debugfile, "tic %d for pl %d: (%f, %f, %f, %f) b:%02x p:%d y:%d f:%d s:%d u:%d\n",
 			gametic, (int)(player-players), player->mo->X(), player->mo->Y(), player->mo->Z(),
-			player->mo->Angles.Yaw.Degrees(), player->cmd.ucmd.buttons,
-			player->cmd.ucmd.pitch, player->cmd.ucmd.yaw, player->cmd.ucmd.forwardmove,
-			player->cmd.ucmd.sidemove, player->cmd.ucmd.upmove);
+			player->mo->Angles.Yaw.Degrees(), player->cmd.buttons,
+			player->cmd.pitch, player->cmd.yaw, player->cmd.forwardmove,
+			player->cmd.sidemove, player->cmd.upmove);
 	}
 
 	// Make unmodified copies for ACS's GetPlayerInput.
 	player->original_oldbuttons = player->original_cmd.buttons;
-	player->original_cmd = cmd->ucmd;
+	player->original_cmd = *cmd;
 	// Don't interpolate the view for more than one tic
 	player->cheats &= ~CF_INTERPVIEW;
 	player->cheats &= ~CF_INTERPVIEWANGLES;
@@ -1379,19 +1374,9 @@ void BackupNodeList(AActor *act, nodetype *head, nodetype *linktype::*otherlist,
 }
 
 template<class nodetype, class linktype>
-nodetype *RestoreNodeList(AActor *act, nodetype *head, nodetype *linktype::*otherlist, TArray<nodetype*, nodetype*> &prevbackup, TArray<linktype *, linktype *> &otherbackup)
+nodetype *RestoreNodeList(AActor *act, nodetype *linktype::*otherlist, TArray<nodetype*, nodetype*> &prevbackup, TArray<linktype *, linktype *> &otherbackup)
 {
-	// Destroy old refrences
-	nodetype *node = head;
-	while (node)
-	{
-		node->m_thing = NULL;
-		node = node->m_tnext;
-	}
-
-	// Make the sector_list match the player's touching_sectorlist before it got predicted.
-	P_DelSeclist(head, otherlist);
-	head = NULL;
+	nodetype* head = NULL;
 	for (auto i = otherbackup.Size(); i-- > 0;)
 	{
 		head = P_AddSecnode(otherbackup[i], act, head, otherbackup[i]->*otherlist);
@@ -1400,7 +1385,7 @@ nodetype *RestoreNodeList(AActor *act, nodetype *head, nodetype *linktype::*othe
 	//ctx.sector_list = NULL;		// clear for next time
 
 	// In the old code this block never executed because of the commented-out NULL assignment above. Needs to be checked
-	node = head;
+	nodetype* node = head;
 	while (node)
 	{
 		if (node->m_thing == NULL)
@@ -1453,19 +1438,18 @@ void P_PredictPlayer (player_t *player)
 {
 	int maxtic;
 
-	if (singletics ||
-		demoplayback ||
+	if (demoplayback ||
 		player->mo == NULL ||
 		player != player->mo->Level->GetConsolePlayer() ||
 		player->playerstate != PST_LIVE ||
-		!netgame ||
+		(!netgame && cl_debugprediction == 0) ||
 		/*player->morphTics ||*/
 		(player->cheats & CF_PREDICTING))
 	{
 		return;
 	}
 
-	maxtic = maketic;
+	maxtic = ClientTic;
 
 	if (gametic == maxtic)
 	{
@@ -1495,9 +1479,6 @@ void P_PredictPlayer (player_t *player)
 	player->cheats |= CF_PREDICTING;
 
 	BackupNodeList(act, act->touching_sectorlist, &sector_t::touching_thinglist, PredictionTouchingSectors_sprev_Backup, PredictionTouchingSectorsBackup);
-	BackupNodeList(act, act->touching_rendersectors, &sector_t::touching_renderthings, PredictionRenderSectors_sprev_Backup, PredictionRenderSectorsBackup);
-	BackupNodeList(act, act->touching_sectorportallist, &sector_t::sectorportal_thinglist, PredictionPortalSectors_sprev_Backup, PredictionPortalSectorsBackup);
-	BackupNodeList(act, act->touching_lineportallist, &FLinePortal::lineportal_thinglist, PredictionPortalLines_sprev_Backup, PredictionPortalLinesBackup);
 
 	// Keep an ordered list off all actors in the linked sector.
 	PredictionSectorListBackup.Clear();
@@ -1557,8 +1538,11 @@ void P_PredictPlayer (player_t *player)
 			}
 		}
 
-		player->oldbuttons = player->cmd.ucmd.buttons;
-		player->cmd = localcmds[i % LOCALCMDTICS];
+		player->oldbuttons = player->cmd.buttons;
+		player->cmd = LocalCmds[i % LOCALCMDTICS];
+		if (paused)
+			continue;
+
 		player->mo->ClearInterpolation();
 		player->mo->ClearFOVInterpolation();
 		P_PlayerThink(player);
@@ -1590,6 +1574,10 @@ void P_PredictPlayer (player_t *player)
 			player->mo->SetXYZ(snapPos);
 			player->viewz = snapPos.Z + zOfs;
 		}
+	}
+	else if (paused)
+	{
+		r_NoInterpolate = true;
 	}
 
 	// This is intentionally done after rubberbanding starts since it'll automatically smooth itself towards
@@ -1629,15 +1617,15 @@ void P_UnPredictPlayer ()
 		// could cause it to change during prediction.
 		player->camera = savedcamera;
 
-		FLinkContext ctx;
-		// Unlink from all list, including those which are not being handled by UnlinkFromWorld.
-		auto sectorportal_list = act->touching_sectorportallist;
-		auto lineportal_list = act->touching_lineportallist;
-		act->touching_sectorportallist = nullptr;
-		act->touching_lineportallist = nullptr;
-
-		act->UnlinkFromWorld(&ctx);
+		// Unlink from all lists
+		act->UnlinkFromWorld(nullptr);
 		memcpy(&act->snext, PredictionActorBackupArray.Data(), PredictionActorBackupArray.Size() - ((uint8_t *)&act->snext - (uint8_t *)act));
+		// Clear stale pointers. The blockmap node is kept since it's the one that will be relinked back into the blockmap. Given
+		// it was removed from the list without being freed before predicting it's still valid.
+		act->touching_lineportallist = nullptr;
+		act->touching_rendersectors = act->touching_sectorlist = act->touching_sectorportallist = nullptr;
+		act->sprev = (AActor**)(size_t)0xBeefCafe;
+		act->snext = nullptr;
 
 		if (act->ViewPos != nullptr)
 		{
@@ -1670,15 +1658,15 @@ void P_UnPredictPlayer ()
 				*link = me;
 			}
 
-			act->touching_sectorlist = RestoreNodeList(act, ctx.sector_list, &sector_t::touching_thinglist, PredictionTouchingSectors_sprev_Backup, PredictionTouchingSectorsBackup);
-			act->touching_rendersectors = RestoreNodeList(act, ctx.render_list, &sector_t::touching_renderthings, PredictionRenderSectors_sprev_Backup, PredictionRenderSectorsBackup);
-			act->touching_sectorportallist = RestoreNodeList(act, sectorportal_list, &sector_t::sectorportal_thinglist, PredictionPortalSectors_sprev_Backup, PredictionPortalSectorsBackup);
-			act->touching_lineportallist = RestoreNodeList(act, lineportal_list, &FLinePortal::lineportal_thinglist, PredictionPortalLines_sprev_Backup, PredictionPortalLinesBackup);
+			// Only the touching list actually needs to be restored to avoid impacting gameplay. The rest is just clientside fluff that can
+			// be handled by relinking.
+			act->touching_sectorlist = RestoreNodeList(act, &sector_t::touching_thinglist, PredictionTouchingSectors_sprev_Backup, PredictionTouchingSectorsBackup);
+			if (act->renderradius >= 0.0)
+				act->touching_rendersectors = P_CreateSecNodeList(act, act->RenderRadius(), nullptr, &sector_t::touching_renderthings);
 		}
 
 		// Now fix the pointers in the blocknode chain
 		FBlockNode *block = act->BlockNode;
-
 		while (block != NULL)
 		{
 			*(block->PrevActor) = block;
@@ -1688,6 +1676,8 @@ void P_UnPredictPlayer ()
 			}
 			block = block->NextBlock;
 		}
+
+		act->UpdateRenderSectorList();
 
 		actInvSel = InvSel;
 		player->inventorytics = inventorytics;
@@ -1900,11 +1890,11 @@ DEFINE_FIELD_X(PlayerInfo, player_t, ConversationNPC)
 DEFINE_FIELD_X(PlayerInfo, player_t, ConversationPC)
 DEFINE_FIELD_X(PlayerInfo, player_t, ConversationNPCAngle)
 DEFINE_FIELD_X(PlayerInfo, player_t, ConversationFaceTalker)
-DEFINE_FIELD_NAMED_X(PlayerInfo, player_t, cmd.ucmd, cmd)
+DEFINE_FIELD_NAMED_X(PlayerInfo, player_t, cmd, cmd)
 DEFINE_FIELD_X(PlayerInfo, player_t, original_cmd)
 DEFINE_FIELD_X(PlayerInfo, player_t, userinfo)
 DEFINE_FIELD_X(PlayerInfo, player_t, weapons)
-DEFINE_FIELD_NAMED_X(PlayerInfo, player_t, cmd.ucmd.buttons, buttons)
+DEFINE_FIELD_NAMED_X(PlayerInfo, player_t, cmd.buttons, buttons)
 DEFINE_FIELD_X(PlayerInfo, player_t, SoundClass)
 
 DEFINE_FIELD_X(UserCmd, usercmd_t, buttons)

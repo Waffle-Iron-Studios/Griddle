@@ -244,7 +244,16 @@ void ClientObituary (AActor *self, AActor *inflictor, AActor *attacker, int dmgf
 	{
 		if (attacker == self)
 		{
-			message = "$OB_KILLEDSELF";
+			messagename = "$OB_KILLEDSELF";
+
+			IFVIRTUALPTR(self, AActor, GetSelfObituary)
+			{
+				VMValue params[] = { self, inflictor, mod.GetIndex() };
+				VMReturn rett(&ret);
+				VMCall(func, params, countof(params), &rett, 1);
+				if (ret.IsNotEmpty()) message = ret.GetChars();
+			}
+
 		}
 		else
 		{
@@ -336,7 +345,10 @@ void AActor::Die (AActor *source, AActor *inflictor, int dmgflags, FName MeansOf
 				}
 			}
 
-			VMCall(func, params, 1, nullptr, 0);
+			AActor* unused = nullptr;
+			int unused2 = 0, unused3 = 0;
+			VMReturn ret[] = { (void**)&unused, &unused2, &unused3 };
+			VMCall(func, params, 1, ret, 3);
 
 			// Kill the dummy Actor if it didn't unmorph, otherwise checking the morph flags. Player pawns need
 			// to stay, otherwise they won't respawn correctly.
