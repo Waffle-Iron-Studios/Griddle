@@ -44,7 +44,7 @@ const char *GetVersionString();
 #define VERSIONSTR "1.9.0"
 
 // The version as seen in the Windows resource
-#define RC_FILEVERSION 1,8,0,0
+#define RC_FILEVERSION 1,9,0,0
 #define RC_PRODUCTVERSION 1,9,0,0
 
 // These are for content versioning.
