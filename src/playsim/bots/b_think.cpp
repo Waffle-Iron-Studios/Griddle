@@ -58,7 +58,7 @@ static FRandom pr_botmove ("BotMove");
 //so this is what the bot does.
 void DBot::Think ()
 {
-	usercmd_t *cmd = &player->cmd;
+	ticcmd_t *cmd = &netcmds[player - players][((gametic + 1)/ticdup)%BACKUPTICS];
 
 	memset (cmd, 0, sizeof(*cmd));
 
@@ -78,12 +78,13 @@ void DBot::Think ()
 		ThinkForMove (cmd);
 		TurnToAng ();
 
-		cmd->yaw = (short)((actor->Angles.Yaw - oldyaw).Degrees() * (65536 / 360.f));
-		cmd->pitch = (short)((oldpitch - actor->Angles.Pitch).Degrees() * (65536 / 360.f));
-		if (cmd->pitch == -32768)
-			cmd->pitch = -32767;
-		actor->Angles.Yaw = oldyaw + DAngle::fromDeg(cmd->yaw * (360 / 65536.f));
-		actor->Angles.Pitch = oldpitch - DAngle::fromDeg(cmd->pitch * (360 / 65536.f));
+		cmd->ucmd.yaw = (short)((actor->Angles.Yaw - oldyaw).Degrees() * (65536 / 360.f)) / ticdup;
+		cmd->ucmd.pitch = (short)((oldpitch - actor->Angles.Pitch).Degrees() * (65536 / 360.f));
+		if (cmd->ucmd.pitch == -32768)
+			cmd->ucmd.pitch = -32767;
+		cmd->ucmd.pitch /= ticdup;
+		actor->Angles.Yaw = oldyaw + DAngle::fromDeg(cmd->ucmd.yaw * ticdup * (360 / 65536.f));
+		actor->Angles.Pitch = oldpitch - DAngle::fromDeg(cmd->ucmd.pitch * ticdup * (360 / 65536.f));
 	}
 
 	if (t_active)	t_active--;
@@ -100,14 +101,14 @@ void DBot::Think ()
 	}
 	else if (player->mo->health <= 0)
 	{ // Time to respawn
-		cmd->buttons |= BT_USE;
+		cmd->ucmd.buttons |= BT_USE;
 	}
 }
 
 #define THINKDISTSQ (50000.*50000./(65536.*65536.))
 //how the bot moves.
 //MAIN movement function.
-void DBot::ThinkForMove (usercmd_t *cmd)
+void DBot::ThinkForMove (ticcmd_t *cmd)
 {
 	double dist;
 	bool stuck;
@@ -135,8 +136,8 @@ void DBot::ThinkForMove (usercmd_t *cmd)
 	{
 		Pitch (missile);
 		Angle = player->mo->AngleTo(missile);
-		cmd->sidemove = sleft ? -SIDERUN : SIDERUN;
-		cmd->forwardmove = -FORWARDRUN; //Back IS best.
+		cmd->ucmd.sidemove = sleft ? -SIDERUN : SIDERUN;
+		cmd->ucmd.forwardmove = -FORWARDRUN; //Back IS best.
 
 		if ((player->mo->Pos() - old).LengthSquared() < THINKDISTSQ
 			&& t_strafe<=0)
@@ -207,22 +208,22 @@ void DBot::ThinkForMove (usercmd_t *cmd)
 			GetBotInfo(player->ReadyWeapon).MoveCombatDist)
 		{
 			// If a monster, use lower speed (just for cooler apperance while strafing down doomed monster)
-			cmd->forwardmove = (enemy->flags3 & MF3_ISMONSTER) ? FORWARDWALK : FORWARDRUN;
+			cmd->ucmd.forwardmove = (enemy->flags3 & MF3_ISMONSTER) ? FORWARDWALK : FORWARDRUN;
 		}
 		else if (!stuck) //Too close, so move away.
 		{
 			// If a monster, use lower speed (just for cooler apperance while strafing down doomed monster)
-			cmd->forwardmove = (enemy->flags3 & MF3_ISMONSTER) ? -FORWARDWALK : -FORWARDRUN;
+			cmd->ucmd.forwardmove = (enemy->flags3 & MF3_ISMONSTER) ? -FORWARDWALK : -FORWARDRUN;
 		}
 
 		//Strafing.
 		if (enemy->flags3 & MF3_ISMONSTER) //It's just a monster so take it down cool.
 		{
-			cmd->sidemove = sleft ? -SIDEWALK : SIDEWALK;
+			cmd->ucmd.sidemove = sleft ? -SIDEWALK : SIDEWALK;
 		}
 		else
 		{
-			cmd->sidemove = sleft ? -SIDERUN : SIDERUN;
+			cmd->ucmd.sidemove = sleft ? -SIDERUN : SIDERUN;
 		}
 		Dofire (cmd); //Order bot to fire current weapon
 	}
@@ -245,11 +246,11 @@ void DBot::ThinkForMove (usercmd_t *cmd)
 
 		matedist = player->mo->Distance2D(mate);
 		if (matedist > (FRIEND_DIST*2))
-			cmd->forwardmove = FORWARDRUN;
+			cmd->ucmd.forwardmove = FORWARDRUN;
 		else if (matedist > FRIEND_DIST)
-			cmd->forwardmove = FORWARDWALK; //Walk, when starting to get close.
+			cmd->ucmd.forwardmove = FORWARDWALK; //Walk, when starting to get close.
 		else if (matedist < FRIEND_DIST-(FRIEND_DIST/3)) //Got too close, so move away.
-			cmd->forwardmove = -FORWARDWALK;
+			cmd->ucmd.forwardmove = -FORWARDWALK;
 	}
 	else //Roam after something.
 	{

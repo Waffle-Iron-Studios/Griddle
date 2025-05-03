@@ -12,12 +12,7 @@ class ListView : public Widget
 public:
 	ListView(Widget* parent = nullptr);
 
-	void SetColumnWidths(const std::vector<double>& widths);
-	void AddItem(const std::string& text, int index = -1, int column = 0);
-	void UpdateItem(const std::string& text, int index, int column = 0);
-	void RemoveItem(int index = -1);
-	size_t GetItemAmount() const { return items.size(); }
-	size_t GetColumnAmount() const { return columnwidths.size(); }
+	void AddItem(const std::string& text);
 	int GetSelectedItem() const { return selectedItem; }
 	void SetSelectedItem(int index);
 	void ScrollToItem(int index);
@@ -39,7 +34,6 @@ protected:
 
 	Scrollbar* scrollbar = nullptr;
 
-	std::vector<std::vector<std::string>> items;
-	std::vector<double> columnwidths;
+	std::vector<std::string> items;
 	int selectedItem = 0;
 };

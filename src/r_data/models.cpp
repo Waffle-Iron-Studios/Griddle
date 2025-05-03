@@ -513,7 +513,7 @@ bool CalcModelOverrides(int i, const FSpriteModelFrame *smf, DActorModelData* da
 }
 
 
-const TArray<VSMatrix> * ProcessModelFrame(FModel * animation, bool nextFrame, int i, const FSpriteModelFrame *smf, DActorModelData* modelData, const CalcModelFrameInfo &frameinfo, ModelDrawInfo &drawinfo, bool is_decoupled, double tic, BoneInfo *out)
+const TArray<VSMatrix> * ProcessModelFrame(FModel * animation, bool nextFrame, int i, const FSpriteModelFrame *smf, DActorModelData* modelData, const CalcModelFrameInfo &frameinfo, ModelDrawInfo &drawinfo, bool is_decoupled, double tic)
 {
 	const TArray<TRS>* animationData = nullptr;
 	
@@ -533,12 +533,7 @@ const TArray<VSMatrix> * ProcessModelFrame(FModel * animation, bool nextFrame, i
 				frameinfo.decoupled_frame_prev ? *frameinfo.decoupled_frame_prev : nullptr,
 				frameinfo.decoupled_frame,
 				frameinfo.inter,
-				animationData,
-				modelData->modelBoneOverrides.Size() > i
-				? &modelData->modelBoneOverrides[i]
-				: nullptr,
-				out,
-				tic);
+				animationData);
 		}
 	}
 	else
@@ -551,12 +546,7 @@ const TArray<VSMatrix> * ProcessModelFrame(FModel * animation, bool nextFrame, i
 				drawinfo.modelframenext
 			},
 			-1.0f,
-			animationData,
-			(modelData && modelData->modelBoneOverrides.Size() > i)
-			? &modelData->modelBoneOverrides[i]
-			: nullptr,
-			out,
-			tic);
+			animationData);
 	}
 
 	return boneData;
@@ -577,7 +567,7 @@ static inline void RenderModelFrame(FModelRenderer *renderer, int i, const FSpri
 	// [Jay] while per-model animations aren't done, DECOUPLEDANIMATIONS does the same as MODELSAREATTACHMENTS
 	if(!evaluatedSingle)
 	{  // [Jay] TODO per-model decoupled animations
-		const TArray<VSMatrix> *boneData = ProcessModelFrame(mdl, nextFrame, i, smf, modelData, frameinfo, drawinfo, is_decoupled, tic, nullptr);
+		const TArray<VSMatrix> *boneData = ProcessModelFrame(mdl, nextFrame, i, smf, modelData, frameinfo, drawinfo, is_decoupled, tic);
 
 		if(frameinfo.smf_flags & MDL_MODELSAREATTACHMENTS || is_decoupled)
 		{

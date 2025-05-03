@@ -27,7 +27,7 @@ if( APPLE )
     option( OSX_COCOA_BACKEND "Use native Cocoa backend instead of SDL" ON )
 endif()
 
-option( ZDOOM_ENABLE_SWR "Enable software renderer" ON )
+option( ZDOOM_ENABLE_SWR "Enable software renderer" OFF )
 if( NOT ZDOOM_ENABLE_SWR )
 	add_definitions( -DNO_SWRENDERER )
 endif()
@@ -1125,7 +1125,6 @@ set (PCH_SOURCES
 	common/rendering/v_video.cpp
 	common/rendering/r_thread.cpp
 	common/rendering/r_videoscale.cpp
-	common/rendering/stb_include.cpp
 	common/rendering/hwrenderer/hw_draw2d.cpp
 	common/rendering/hwrenderer/data/hw_clock.cpp
 	common/rendering/hwrenderer/data/hw_skydome.cpp

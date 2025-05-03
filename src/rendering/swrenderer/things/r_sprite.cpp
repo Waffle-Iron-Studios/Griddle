@@ -208,17 +208,9 @@ namespace swrenderer
 			float lit_red = 0;
 			float lit_green = 0;
 			float lit_blue = 0;
-			auto Level = vis->sector->Level;
-			auto flatLightList = Level->lightlists.flat_dlist.CheckKey(vis->section);
-			if (flatLightList)
+			auto node = vis->section->lighthead;
+			while (node != nullptr)
 			{
-				TMap<FDynamicLight *, std::unique_ptr<FLightNode>>::Iterator it(*flatLightList);
-				TMap<FDynamicLight *, std::unique_ptr<FLightNode>>::Pair *pair;
-				while (it.NextPair(pair))
-				{
-					auto node = pair->Value.get();
-					if (!node) continue;
-
 					FDynamicLight *light = node->lightsource;
 					if (light->ShouldLightActor(thing))
 					{
@@ -251,7 +243,7 @@ namespace swrenderer
 							}
 						}
 					}
-				}
+				node = node->nextLight;
 			}
 			lit_red = clamp(lit_red * 255.0f, 0.0f, 255.0f);
 			lit_green = clamp(lit_green * 255.0f, 0.0f, 255.0f);

@@ -13,7 +13,6 @@ class StrifeGrenadeLauncher : StrifeWeapon
 		Inventory.Icon "GRNDA0";
 		Tag "$TAG_GLAUNCHER1";
 		Inventory.PickupMessage "$TXT_GLAUNCHER";
-		+WEAPON.EXPLOSIVE
 	}
 
 	States

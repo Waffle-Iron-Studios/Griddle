@@ -1493,7 +1493,6 @@ PPointer::PPointer(PType *pointsat, bool isconst)
 	{
 		mDescriptiveName.Format("Pointer<%s%s>", pointsat->DescriptiveName(), isconst ? "readonly " : "");
 		mVersion = pointsat->mVersion;
-		TypeDeprecated = pointsat->TypeDeprecated;
 	}
 	else
 	{
@@ -1675,11 +1674,7 @@ PClassPointer::PClassPointer(PClass *restrict)
 	loadOp = OP_LP;
 	storeOp = OP_SP;
 	Flags |= TYPE_ClassPointer;
-	if (restrict)
-	{
-		mVersion = restrict->VMType->mVersion;
-		TypeDeprecated = restrict->VMType->TypeDeprecated;
-	}
+	if (restrict) mVersion = restrict->VMType->mVersion;
 	else mVersion = 0;
 }
 

@@ -13,7 +13,6 @@ class RocketLauncher : DoomWeapon
 		Weapon.AmmoGive 2;
 		Weapon.AmmoType "RocketAmmo";
 		+WEAPON.NOAUTOFIRE
-		+WEAPON.EXPLOSIVE
 		Inventory.PickupMessage "$GOTLAUNCHER";
 		Tag "$TAG_ROCKETLAUNCHER";
 	}

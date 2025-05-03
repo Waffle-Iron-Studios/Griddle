@@ -573,7 +573,6 @@ void DObject::Serialize(FSerializer &arc)
 	SerializeFlag("justspawned", OF_JustSpawned);
 	SerializeFlag("spawned", OF_Spawned);
 	SerializeFlag("networked", OF_Networked);
-	SerializeFlag("clientside", OF_ClientSide);
 		
 	ObjectFlags |= OF_SerialSuccess;
 
@@ -669,7 +668,7 @@ void NetworkEntityManager::SetClientNetworkEntity(DObject* mo, const unsigned in
 
 void NetworkEntityManager::AddNetworkEntity(DObject* const ent)
 {
-	if (ent->IsNetworked() || ent->IsClientside())
+	if (ent->IsNetworked())
 		return;
 
 	// Slot 0 is reserved for the world.
@@ -757,18 +756,6 @@ DEFINE_ACTION_FUNCTION_NATIVE(DObject, GetNetworkID, GetNetworkID)
 	PARAM_SELF_PROLOGUE(DObject);
 
 	ACTION_RETURN_INT(self->GetNetworkID());
-}
-
-static int IsClientside(DObject* self)
-{
-	return self->IsClientside();
-}
-
-DEFINE_ACTION_FUNCTION_NATIVE(DObject, IsClientside, IsClientside)
-{
-	PARAM_SELF_PROLOGUE(DObject);
-
-	ACTION_RETURN_BOOL(self->IsClientside());
 }
 
 static void EnableNetworking(DObject* const self, const bool enable)

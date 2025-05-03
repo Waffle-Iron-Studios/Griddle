@@ -5,7 +5,6 @@ class PhoenixRod : Weapon
 	Default
 	{
 		+WEAPON.NOAUTOFIRE
-		+WEAPON.EXPLOSIVE
 		Weapon.SelectionOrder 2600;
 		Weapon.Kickback 150;
 		Weapon.YAdjust 15;
@@ -74,8 +73,6 @@ class PhoenixRodPowered : PhoenixRod
 	Default
 	{
 		+WEAPON.POWERED_UP
-		-WEAPON.EXPLOSIVE
-		+WEAPON.BFG
 		Weapon.SisterWeapon "PhoenixRod";
 		Weapon.AmmoGive 0;
 		Tag "$TAG_PHOENIXRODP";

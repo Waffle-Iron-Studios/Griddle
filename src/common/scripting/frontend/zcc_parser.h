@@ -65,9 +65,7 @@ enum
 	ZCC_Version				= 1 << 21,
 	ZCC_Internal			= 1 << 22,
 	ZCC_Sealed				= 1 << 23,
-	ZCC_FuncConstUnsafe		= 1 << 24,
-	ZCC_UnsafeClearScope	= 1 << 25,
-	ZCC_VMInternalStruct	= 1 << 26,
+	ZCC_VMInternalStruct	= 1 << 24,
 };
 
 // Function parameter modifiers
@@ -244,7 +242,6 @@ struct ZCC_Struct : ZCC_NamedNode
 	ZCC_TreeNode *Body;
 	PContainerType *Type;
 	VersionInfo Version;
-	FString *DeprecationMessage;
 };
 
 struct ZCC_Property : ZCC_NamedNode

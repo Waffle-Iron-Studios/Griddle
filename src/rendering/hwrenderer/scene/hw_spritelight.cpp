@@ -107,7 +107,7 @@ LightProbe* FindLightProbe(FLevelLocals* level, float x, float y, float z)
 //
 //==========================================================================
 
-void HWDrawInfo::GetDynSpriteLight(AActor *self, float x, float y, float z, FSection *sec, int portalgroup, float *out)
+void HWDrawInfo::GetDynSpriteLight(AActor *self, float x, float y, float z, FLightNode *node, int portalgroup, float *out)
 {
 	FDynamicLight *light;
 	float frac, lr, lg, lb;
@@ -124,17 +124,8 @@ void HWDrawInfo::GetDynSpriteLight(AActor *self, float x, float y, float z, FSec
 	}
 
 	// Go through both light lists
-	auto flatLightList = Level->lightlists.flat_dlist.CheckKey(sec);
-
-	if (flatLightList)
-	{
-		TMap<FDynamicLight *, std::unique_ptr<FLightNode>>::Iterator it(*flatLightList);
-		TMap<FDynamicLight *, std::unique_ptr<FLightNode>>::Pair *pair;
-		while (it.NextPair(pair))
+	while (node)
 		{
-			auto node = pair->Value.get();
-			if (!node) continue;
-
 			light=node->lightsource;
 			if (light->ShouldLightActor(self))
 			{
@@ -209,7 +200,7 @@ void HWDrawInfo::GetDynSpriteLight(AActor *self, float x, float y, float z, FSec
 					}
 				}
 			}
-		}
+		node = node->nextLight;
 	}
 }
 
@@ -217,11 +208,11 @@ void HWDrawInfo::GetDynSpriteLight(AActor *thing, particle_t *particle, float *o
 {
 	if (thing != NULL)
 	{
-		GetDynSpriteLight(thing, (float)thing->X(), (float)thing->Y(), (float)thing->Center(), thing->section, thing->Sector->PortalGroup, out);
+		GetDynSpriteLight(thing, (float)thing->X(), (float)thing->Y(), (float)thing->Center(), thing->section->lighthead, thing->Sector->PortalGroup, out);
 	}
 	else if (particle != NULL)
 	{
-		GetDynSpriteLight(NULL, (float)particle->Pos.X, (float)particle->Pos.Y, (float)particle->Pos.Z, particle->subsector->section, particle->subsector->sector->PortalGroup, out);
+		GetDynSpriteLight(NULL, (float)particle->Pos.X, (float)particle->Pos.Y, (float)particle->Pos.Z, particle->subsector->section->lighthead, particle->subsector->sector->PortalGroup, out);
 	}
 }
 
@@ -250,15 +241,9 @@ void hw_GetDynModelLight(AActor *self, FDynLightData &modellightdata)
 		{
 			auto section = subsector->section;
 			if (section->validcount == dl_validcount) return;	// already done from a previous subsector.
-			auto flatLightList = self->Level->lightlists.flat_dlist.CheckKey(subsector->section);
-			if (flatLightList)
+			FLightNode * node = section->lighthead;
+			while (node) // check all lights touching a subsector
 			{
-				TMap<FDynamicLight *, std::unique_ptr<FLightNode>>::Iterator it(*flatLightList);
-				TMap<FDynamicLight *, std::unique_ptr<FLightNode>>::Pair *pair;
-				while (it.NextPair(pair))
-				{ // check all lights touching a subsector
-					auto node = pair->Value.get();
-					if (!node) continue;
 					FDynamicLight *light = node->lightsource;
 					if (light->ShouldLightActor(self))
 					{
@@ -278,7 +263,7 @@ void hw_GetDynModelLight(AActor *self, FDynLightData &modellightdata)
 							}
 						}
 					}
-				}
+				node = node->nextLight;
 			}
 		});
 	}
