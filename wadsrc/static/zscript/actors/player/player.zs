@@ -324,7 +324,6 @@ class PlayerPawn : Actor
 			return message;
 		}
 	}
-	
 	//----------------------------------------------------------------------------
 	//
 	// This is for SBARINFO.

@@ -797,7 +797,7 @@ void DThinker::ChangeStatNum (int statnum)
 		statnum = MAX_STATNUM;
 	}
 	Remove();
-	Level->Thinkers.Link(this, statnum);
+		Level->Thinkers.Link(this, statnum);
 }
 
 static void ChangeStatNum(DThinker *thinker, int statnum)

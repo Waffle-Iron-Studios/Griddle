@@ -4963,7 +4963,7 @@ AActor *AActor::StaticSpawn(FLevelLocals *Level, PClassActor *type, const DVecto
 	AActor *actor;
 
 	actor = static_cast<AActor *>(Level->CreateThinker(type));
-	actor->EnableNetworking(true);
+		actor->EnableNetworking(true);
 
 	ConstructActor(actor, pos, SpawningMapThing);
 	return actor;
@@ -6429,35 +6429,35 @@ void P_SpawnBlood (const DVector3 &pos1, DAngle dir, int damage, AActor *origina
 				}
 				else damage += 2;
 			}
-			int advance = 0;
-			if (damage <= 12 && damage >= 9)
-			{
-				advance = 1;
-			}
-			else if (damage < 9)
-			{
-				advance = 2;
-			}
+				int advance = 0;
+				if (damage <= 12 && damage >= 9)
+				{
+					advance = 1;
+				}
+				else if (damage < 9)
+				{
+					advance = 2;
+				}
 
 			PClassActor *cls = th->GetClass();
 
-			while (cls != RUNTIME_CLASS(AActor))
-			{
-				int checked_advance = advance;
-				if (cls->OwnsState(th->SpawnState))
+				while (cls != RUNTIME_CLASS(AActor))
 				{
 					for (; checked_advance > 0; --checked_advance)
 					{
 						// [RH] Do not set to a state we do not own.
 						if (cls->OwnsState(th->SpawnState + checked_advance))
 						{
-							th->SetState(th->SpawnState + checked_advance);
+							// [RH] Do not set to a state we do not own.
+							if (cls->OwnsState(th->SpawnState + checked_advance))
+							{
+								th->SetState(th->SpawnState + checked_advance);
 							goto statedone;
+							}
 						}
 					}
-				}
-				// We can safely assume the ParentClass is of type PClassActor
-				// since we stop when we see the Actor base class.
+					// We can safely assume the ParentClass is of type PClassActor
+					// since we stop when we see the Actor base class.
 				cls = static_cast<PClassActor *>(cls->ParentClass);
 			}
 		}

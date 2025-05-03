@@ -668,6 +668,12 @@ class Actor : Thinker native
 		return Obituary;
 	}
 	
+	virtual String GetSelfObituary(Actor inflictor, Name mod)
+	{
+		return SelfObituary;
+	}
+	
+
 	virtual int OnDrain(Actor victim, int damage, Name dmgtype)
 	{
 		return damage;

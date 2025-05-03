@@ -447,8 +447,8 @@ void FConsoleWindow::NetInit(const char* const message, const int playerCount)
 		if (0 == playerCount)
 		{
 			// Joining game
-			[m_netProgressBar setIndeterminate:YES];
-			[m_netProgressBar startAnimation:nil];
+		[m_netProgressBar setIndeterminate:YES];
+		[m_netProgressBar startAnimation:nil];
 		}
 		else
 		{
@@ -530,4 +530,9 @@ void FConsoleWindow::NetDone()
 		m_netProgressBar = nil;
 		m_netAbortButton = nil;
 	}
+}
+
+void FConsoleWindow::NetClose()
+{
+	// TODO: Implement this
 }

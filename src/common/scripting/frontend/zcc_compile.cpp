@@ -748,6 +748,18 @@ void ZCCCompiler::CreateStructTypes()
 			s->strct->Type->mVersion = s->strct->Version;
 		}
 
+		if (s->strct->Flags & ZCC_VMInternalStruct)
+		{
+			if(fileSystem.GetFileContainer(Lump) == 0)
+			{
+				s->strct->Type->VMInternalStruct = true;
+			}
+			else
+			{
+				Error(s->strct, "Internal structs are only allowed in the root pk3");
+			}
+		}
+
 		auto &sf = s->Type()->ScopeFlags;
 		if (mVersion >= MakeVersion(2, 4, 0))
 		{
@@ -906,7 +918,6 @@ void ZCCCompiler::CreateClassTypes()
 				{
 					c->Type()->mVersion = c->cls->Version;
 				}
-				
 
 				if (c->cls->Flags & ZCC_Final)
 				{

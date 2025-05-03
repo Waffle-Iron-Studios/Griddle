@@ -544,9 +544,9 @@ bool FShader::Load(const char * name, const char * vert_prog_lump, const char * 
 		}
 		glGetShaderInfoLog(hFragProg, 10000, NULL, buffer);
 		if (*buffer)
-		{
+			{
 			error << "Fragment shader:\n" << buffer << "\n";
-		}
+			}
 
 		glGetProgramInfoLog(hShader, 10000, NULL, buffer);
 		if (*buffer)

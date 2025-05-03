@@ -427,11 +427,12 @@ struct_def(X) ::= EXTEND STRUCT(T) IDENTIFIER(A) LBRACE opt_struct_body(B) RBRAC
 }
 
 %type struct_flags{ClassFlagsBlock}
-struct_flags(X) ::= .										{ X.Flags = 0; X.Version = {0, 0}; }
-struct_flags(X) ::= struct_flags(A) UI.						{ X.Flags = A.Flags | ZCC_UIFlag; }
-struct_flags(X) ::= struct_flags(A) PLAY.					{ X.Flags = A.Flags | ZCC_Play; }
-struct_flags(X) ::= struct_flags(A) CLEARSCOPE.				{ X.Flags = A.Flags | ZCC_ClearScope; }
-struct_flags(X) ::= struct_flags(A) NATIVE.					{ X.Flags = A.Flags | ZCC_Native; }
+struct_flags(X) ::= .													{ X.Flags = 0; X.Version = {0, 0}; }
+struct_flags(X) ::= struct_flags(A) UI.									{ X.Flags = A.Flags | ZCC_UIFlag; X.Version = A.Version; }
+struct_flags(X) ::= struct_flags(A) PLAY.								{ X.Flags = A.Flags | ZCC_Play; X.Version = A.Version; }
+struct_flags(X) ::= struct_flags(A) CLEARSCOPE.							{ X.Flags = A.Flags | ZCC_ClearScope; X.Version = A.Version; }
+struct_flags(X) ::= struct_flags(A) NATIVE.								{ X.Flags = A.Flags | ZCC_Native; X.Version = A.Version; }
+struct_flags(X) ::= struct_flags(A) UNSAFE LPAREN INTERNAL RPAREN.		{ X.Flags = A.Flags | ZCC_VMInternalStruct; X.Version = A.Version; }
 struct_flags(X) ::= struct_flags(A) VERSION LPAREN STRCONST(C) RPAREN.	{ X.Flags = A.Flags | ZCC_Version; X.Version = C.String->GetChars(); }
 
 opt_struct_body(X) ::= .								{ X = NULL; }
@@ -1316,8 +1317,8 @@ decl_flag(X) ::= PLAY(T).		{ X.Int = ZCC_Play; X.SourceLoc = T.SourceLoc; }
 decl_flag(X) ::= CLEARSCOPE(T). { X.Int = ZCC_ClearScope; X.SourceLoc = T.SourceLoc; }
 decl_flag(X) ::= VIRTUALSCOPE(T). { X.Int = ZCC_VirtualScope; X.SourceLoc = T.SourceLoc; }
 
-func_const(X) ::= .							{ X.Int = 0; X.SourceLoc = stat->sc->GetMessageLine(); }
-func_const(X) ::= CONST(T).					{ X.Int = ZCC_FuncConst; X.SourceLoc = T.SourceLoc; }
+func_const(X) ::= .									{ X.Int = 0; X.SourceLoc = stat->sc->GetMessageLine(); }
+func_const(X) ::= CONST(T).							{ X.Int = ZCC_FuncConst; X.SourceLoc = T.SourceLoc; }
 
 opt_func_body(X) ::= SEMICOLON.				{ X = NULL; }
 opt_func_body(X) ::= function_body(X).

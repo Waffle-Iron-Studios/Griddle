@@ -326,31 +326,7 @@ void HWDrawInfo::AddLine (seg_t *seg, bool portalclip)
 		return;
 	}
 
-	if (Viewpoint.IsAllowedOoB()) // No need for vertical clipping if viewpoint not allowed out of bounds
-	{
-		auto &clipperv = *vClipper;
-		angle_t startPitch = clipperv.PointToPseudoPitch(seg->v1->fX(), seg->v1->fY(), currentsector->floorplane.ZatPoint(seg->v1));
-		angle_t endPitch = clipperv.PointToPseudoPitch(seg->v1->fX(), seg->v1->fY(), currentsector->ceilingplane.ZatPoint(seg->v1));
-		angle_t startPitch2 = clipperv.PointToPseudoPitch(seg->v2->fX(), seg->v2->fY(), currentsector->floorplane.ZatPoint(seg->v2));
-		angle_t endPitch2 = clipperv.PointToPseudoPitch(seg->v2->fX(), seg->v2->fY(), currentsector->ceilingplane.ZatPoint(seg->v2));
-		angle_t temp;
-		// Wall can be tilted from viewpoint perspective. Find vertical extent on screen in psuedopitch units (0 to 2, bottom to top)
-		if(int(startPitch) > int(startPitch2)) // Handle zero crossing
-		{
-			temp = startPitch; startPitch = startPitch2; startPitch2 = temp; // exchange
-		}
-		if(int(endPitch) > int(endPitch2)) // Handle zero crossing
-		{
-			temp = endPitch; endPitch = endPitch2; endPitch2 = temp; // exchange
-		}
-
-		if (!clipperv.SafeCheckRange(startPitch, endPitch2))
-		{
-			return;
-		}
-	}
-
-	if (!r_radarclipper || (Level->flags3 & LEVEL3_NOFOGOFWAR) || clipperr.SafeCheckRange(startAngleR, endAngleR))
+	if (Viewpoint.IsAllowedOoB() && (!r_radarclipper || (Level->flags3 & LEVEL3_NOFOGOFWAR) || clipperr.SafeCheckRange(startAngleR, endAngleR)))
 		currentsubsector->flags |= SSECMF_DRAWN;
 
 	uint8_t ispoly = uint8_t(seg->sidedef->Flags & WALLF_POLYOBJ);

@@ -188,6 +188,8 @@ bool 			precache = true;		// if true, load all graphics at start
   
 short			consistancy[MAXPLAYERS][BACKUPTICS];
  
+short			consistancy[MAXPLAYERS][BACKUPTICS];
+ 
  
 #define MAXPLMOVE				(forwardmove[1]) 
  
@@ -1146,10 +1148,10 @@ void G_Ticker ()
 	for (i = 0; i < MAXPLAYERS; i++)
 	{
 		if (playeringame[i])
-		{
-			if (players[i].playerstate == PST_GONE)
+	{
+		if (players[i].playerstate == PST_GONE)
 			{
-				G_DoPlayerPop(i);
+			G_DoPlayerPop(i);
 			}
 			if (players[i].playerstate == PST_REBORN || players[i].playerstate == PST_ENTER)
 			{
@@ -1196,10 +1198,7 @@ void G_Ticker ()
 			savedescription = "";
 			break;
 		case ga_autosave:
-			if (!(primaryLevel->wisflags & LEVELWIS_CUTSCENELEVEL || primaryLevel->wisflags & LEVELWIS_NOAUTOSAVES))
-			{
-				G_DoAutoSave();
-			}
+			G_DoAutoSave ();
 			gameaction = ga_nothing;
 			break;
 		case ga_loadgameplaydemo:
@@ -1266,7 +1265,7 @@ void G_Ticker ()
 	for (i = 0; i < MAXPLAYERS; i++)
 	{
 		if (playeringame[i])
-		{
+	{
 			ticcmd_t *cmd = &players[i].cmd;
 			ticcmd_t *newcmd = &netcmds[i][buf];
 
@@ -1274,24 +1273,24 @@ void G_Ticker ()
 			{
 				RunNetSpecs (i, buf);
 			}
-			if (demorecording)
+		if (demorecording)
 			{
 				G_WriteDemoTiccmd (newcmd, i, buf);
 			}
 			players[i].oldbuttons = cmd->ucmd.buttons;
-			// If the user alt-tabbed away, paused gets set to -1. In this case,
-			// we do not want to read more demo commands until paused is no
-			// longer negative.
-			if (demoplayback)
+		// If the user alt-tabbed away, paused gets set to -1. In this case,
+		// we do not want to read more demo commands until paused is no
+		// longer negative.
+		if (demoplayback)
 			{
 				G_ReadDemoTiccmd (cmd, i);
 			}
-			else
+		else
 			{
 				memcpy(cmd, newcmd, sizeof(ticcmd_t));
 			}
 
-			// check for turbo cheats
+		// check for turbo cheats
 			if (multiplayer && turbo > 100.f && cmd->ucmd.forwardmove > TURBOTHRESHOLD &&
 				!(gametic&31) && ((gametic>>5)&(MAXPLAYERS-1)) == i )
 			{
@@ -1299,7 +1298,7 @@ void G_Ticker ()
 			}
 
 			if (netgame && players[i].Bot == NULL && !demoplayback && (gametic%ticdup) == 0)
-			{
+		{
 				//players[i].inconsistant = 0;
 				if (gametic > BACKUPTICS*ticdup && consistancy[i][buf] != cmd->consistancy)
 				{

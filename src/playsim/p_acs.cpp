@@ -10410,8 +10410,8 @@ DLevelScript::DLevelScript (FLevelLocals *l, AActor *who, line_t *where, int num
 	: activeBehavior (module)
 {
 	Level = l;
-	if (Level->ACSThinker == nullptr)
-		Level->ACSThinker = Level->CreateThinker<DACSThinker>();
+		if (Level->ACSThinker == nullptr)
+			Level->ACSThinker = Level->CreateThinker<DACSThinker>();
 
 	script = num;
 	assert(code->VarCount >= code->ArgCount);
@@ -10476,11 +10476,11 @@ void FLevelLocals::DoDeferedScripts ()
 			scriptdata = Behaviors.FindScript (def->script, module);
 			if (scriptdata)
 			{
-				P_GetScriptGoing (this, (unsigned)def->playernum < MAXPLAYERS &&
-					PlayerInGame(def->playernum) ? Players[def->playernum]->mo : nullptr,
-					nullptr, def->script,
-					scriptdata, module,
-					def->args, 3,
+			P_GetScriptGoing (this, (unsigned)def->playernum < MAXPLAYERS &&
+				PlayerInGame(def->playernum) ? Players[def->playernum]->mo : nullptr,
+				nullptr, def->script,
+				scriptdata, module,
+				def->args, 3,
 					def->type == acsdefered_t::defexealways ? ACS_ALWAYS : 0);
 			}
 			else

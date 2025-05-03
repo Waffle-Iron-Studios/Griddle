@@ -40,6 +40,7 @@
 #include "g_levellocals.h"
 #include "animations.h"
 #include "texturemanager.h"
+#include "vm.h"
 
 //============================================================================
 //

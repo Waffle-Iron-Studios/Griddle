@@ -772,7 +772,7 @@ int FIWadManager::IdentifyVersion (std::vector<std::string>&wadfiles, const char
 				}
 			}
 		}
-		if (picks.Size() > 1)
+		if (alwaysshow || picks.Size() > 1)
 		{
 			if (!havepicked)
 			{

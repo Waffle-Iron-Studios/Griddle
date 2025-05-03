@@ -77,11 +77,7 @@ namespace swrenderer
 
 		while (node)
 		{
-			if (node->lightsource->IsActive() && (height.PointOnSide(node->lightsource->Pos) > 0))
-			{
-				bool found = false;
-				VisiblePlaneLight *light_node = lights;
-				while (light_node)
+				if (node->lightsource->IsActive() && (height.PointOnSide(node->lightsource->Pos) > 0))
 				{
 					if (light_node->lightsource == node->lightsource)
 					{
@@ -97,7 +93,6 @@ namespace swrenderer
 					newlight->lightsource = node->lightsource;
 					lights = newlight;
 				}
-			}
 			node = node->nextLight;
 		}
 	}

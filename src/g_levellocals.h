@@ -441,7 +441,6 @@ public:
 		thinker->Construct(std::forward<Args>(args)...);
 		return thinker;
 	}
-	
 	void SetMusic();
 
 	TArray<vertex_t> vertexes;

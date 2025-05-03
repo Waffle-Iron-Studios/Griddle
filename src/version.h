@@ -39,12 +39,14 @@ const char *GetGitHash();
 const char *GetGitTime();
 const char *GetVersionString();
 
-#define VERSIONSTR "1.8.0"
+/** Lots of different version numbers **/
+
+#define VERSIONSTR "1.10.0"
 
 // The version as seen in the Windows resource
-#define RC_FILEVERSION 1,8,0,0
-#define RC_PRODUCTVERSION 1,8,0,0
-#define RC_PRODUCTVERSION2 VERSIONSTR
+#define RC_FILEVERSION 1,10,0,0
+#define RC_PRODUCTVERSION 1,10,0,0
+
 // These are for content versioning.
 #define VER_MAJOR 1
 #define VER_MINOR 8
@@ -53,11 +55,11 @@ const char *GetVersionString();
 // These are for ZScript versioning
 #define ZSCRIPT_VER_MAJOR 4
 #define ZSCRIPT_VER_MINOR 14
-#define ZSCRIPT_VER_REVISION 0
+#define ZSCRIPT_VER_REVISION 2
 
 // This should always refer to the GZDoom version a derived port is based on and not reflect the derived port's version number!
 #define ENG_MAJOR 1
-#define ENG_MINOR 8
+#define ENG_MINOR 10
 #define ENG_REVISION 0
 
 // Version identifier for network games.

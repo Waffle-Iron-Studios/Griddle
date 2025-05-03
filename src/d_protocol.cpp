@@ -408,8 +408,8 @@ int SkipTicCmd (uint8_t **stream, int count)
 		{
 			uint8_t type = *flow++;
 
-			if (type == DEM_USERCMD)
-			{
+		if (type == DEM_USERCMD)
+		{
 				moreticdata = false;
 				skip = 1;
 				if (*flow & UCMDF_PITCH)		skip += 2;
@@ -419,7 +419,7 @@ int SkipTicCmd (uint8_t **stream, int count)
 				if (*flow & UCMDF_UPMOVE)		skip += 2;
 				if (*flow & UCMDF_ROLL)			skip += 2;
 				if (*flow & UCMDF_BUTTONS)
-				{
+					{
 					if (*++flow & 0x80)
 					{
 						if (*++flow & 0x80)
@@ -428,7 +428,6 @@ int SkipTicCmd (uint8_t **stream, int count)
 							{
 								++flow;
 							}
-						}
 					}
 				}
 				flow += skip;
@@ -441,7 +440,17 @@ int SkipTicCmd (uint8_t **stream, int count)
 			{
 				Net_SkipCommand (type, &flow);
 			}
+				flow += skip;
 		}
+		else if (type == DEM_EMPTYUSERCMD)
+		{
+				moreticdata = false;
+		}
+		else
+		{
+				Net_SkipCommand (type, &flow);
+		}
+	}
 	}
 
 	skip = int(flow - *stream);
@@ -499,14 +508,14 @@ void RunNetSpecs (int player, int buf)
 	{
 		stream = NetSpecs[player][buf].GetData (&len);
 		if (stream)
-		{
+	{
 			uint8_t *end = stream + len;
-			while (stream < end)
+		while (stream < end)
 			{
 				int type = ReadInt8 (&stream);
 				Net_DoCommand (type, &stream, player);
 			}
-			if (!demorecording)
+		if (!demorecording)
 				NetSpecs[player][buf].SetData (NULL, 0);
 		}
 	}

@@ -1244,7 +1244,7 @@ void D_DoomLoop ()
 			}
 			else
 			{
-				TryRunTics (); // will run at least one tic
+			TryRunTics (); // will run at least one tic
 			}
 			// Update display, next frame, with current state.
 			I_StartTic ();

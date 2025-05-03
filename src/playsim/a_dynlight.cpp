@@ -433,18 +433,18 @@ FLightNode * AddLightNode(FLightNode ** thread, void * linkto, FDynamicLight * l
 
 	node = nextnode;
 	while (node)
-    {
+	{
 		if (node->targ==linkto)   // Already have a node for this sector?
 		{
 			node->lightsource = light; // Yes. Setting m_thing says 'keep it'.
 			return(nextnode);
-		}
+			}
 		node = node->nextTarget;
-    }
+		}
 
 	// Couldn't find an existing node for this sector. Add one at the head
 	// of the list.
-	
+
 	node = new FLightNode;
 	
 	node->targ = linkto;
@@ -478,7 +478,7 @@ static FLightNode * DeleteLightNode(FLightNode * node)
 	FLightNode * tn;  // next node on thing thread
 	
 	if (node)
-    {
+		{
 		
 		*node->prevTarget = node->nextTarget;
 		if (node->nextTarget) node->nextTarget->prevTarget=node->prevTarget;
@@ -690,10 +690,10 @@ void FDynamicLight::LinkLight()
 		CollectWithinRadius(Pos, sect, float(radius*radius));
 
 	}
-		
+
 	// Now delete any nodes that won't be used. These are the ones where
 	// m_thing is still nullptr.
-	
+
 	node = touching_sides;
 	while (node)
 	{

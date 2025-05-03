@@ -161,13 +161,13 @@ void HU_DrawScores (player_t *player)
 		else
 		{
 			if (!sb_deathmatch_enable)
-				return;
+			return;
 		}
 	}
 	else
 	{
 		if (!sb_cooperative_enable || !multiplayer)
-			return;
+		return;
 	}
 
 	int i, j;
@@ -217,18 +217,18 @@ void HU_GetPlayerWidths(int &maxnamewidth, int &maxscorewidth, int &maxiconheigh
 			{
 				maxnamewidth = width;
 			}
-			auto icon = FSetTextureID(players[i].mo->IntVar(NAME_ScoreIcon));
-			if (icon.isValid())
-			{
-				auto pic = TexMan.GetGameTexture(icon);
-				width = int(pic->GetDisplayWidth() - pic->GetDisplayLeftOffset() + 2.5);
+		auto icon = FSetTextureID(players[i].mo->IntVar(NAME_ScoreIcon));
+		if (icon.isValid())
+		{
+			auto pic = TexMan.GetGameTexture(icon);
+			width = int(pic->GetDisplayWidth() - pic->GetDisplayLeftOffset() + 2.5);
 				if (width > maxscorewidth)
 				{
 					maxscorewidth = width;
 				}
-				// The icon's top offset does not count toward its height, because
-				// zdoom.pk3's standard Hexen class icons are designed that way.
-				int height = int(pic->GetDisplayHeight() - pic->GetDisplayTopOffset() + 0.5);
+			// The icon's top offset does not count toward its height, because
+			// zdoom.pk3's standard Hexen class icons are designed that way.
+			int height = int(pic->GetDisplayHeight() - pic->GetDisplayTopOffset() + 0.5);
 				if (height > maxiconheight)
 				{
 					maxiconheight = height;
@@ -294,9 +294,9 @@ static void HU_DoDrawScores (player_t *player, player_t *sortedplayers[MAXPLAYER
 		for (i = 0; i < MAXPLAYERS; ++i)
 		{
 			if (playeringame[sortedplayers[i]-players] && FTeam::IsValid (sortedplayers[i]->userinfo.GetTeam()))
-			{
+		{
 				if (Teams[sortedplayers[i]->userinfo.GetTeam()].m_iPlayerCount++ == 0)
-				{
+			{
 					numTeams++;
 				}
 
@@ -322,12 +322,12 @@ static void HU_DoDrawScores (player_t *player, player_t *sortedplayers[MAXPLAYER
 		{
 			if (Teams[i].m_iPlayerCount)
 			{
-				char score[80];
+			char score[80];
 				mysnprintf (score, countof(score), "%d", Teams[i].m_iScore);
 
-				DrawText(twod, BigFont, Teams[i].GetTextColor(),
+			DrawText(twod, BigFont, Teams[i].GetTextColor(),
 					scorex - BigFont->StringWidth(score)*CleanXfac/2, y, score,
-					DTA_CleanNoMove, true, TAG_DONE);
+				DTA_CleanNoMove, true, TAG_DONE);
 
 				scorex += scorexwidth;
 			}
