@@ -13,6 +13,7 @@
 #include "tarray.h"
 #include "zstring.h"
 
+struct ticcmd_t;
 struct WadStuff;
 
 #ifndef SHARE_DIR

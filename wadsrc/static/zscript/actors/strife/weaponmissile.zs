@@ -12,7 +12,6 @@ class MiniMissileLauncher : StrifeWeapon
 		Inventory.Icon "MMSLA0";
 		Tag "$TAG_MMLAUNCHER";
 		Inventory.PickupMessage "$TXT_MMLAUNCHER";
-		+WEAPON.EXPLOSIVE
 	}
 
 	States

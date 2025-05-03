@@ -73,25 +73,6 @@ class ViewPosition native
 	native readonly int Flags;
 }
 
-class Behavior native play abstract version("4.15.1")
-{
-	native readonly Actor Owner;
-	native readonly LevelLocals Level;
-
-	virtual void Initialize() {}
-	virtual void Reinitialize() {}
-	virtual void TransferredOwner(Actor oldOwner) {}
-	virtual void Tick() {}
-}
-
-class BehaviorIterator native abstract final version("4.15.1")
-{
-	native static BehaviorIterator CreateFrom(Actor mobj, class<Behavior> type = null);
-	native static BehaviorIterator Create(class<Behavior> type = null, class<Actor> ownerType = null);
-
-	native Behavior Next();
-	native void Reinit();
-}
 
 class Actor : Thinker native
 {
@@ -521,13 +502,6 @@ class Actor : Thinker native
 		return sin(fb * (180./32)) * 8;
 	}
 
-	native version("4.15.1") clearscope Behavior FindBehavior(class<Behavior> type) const;
-	native version("4.15.1") bool RemoveBehavior(class<Behavior> type);
-	native version("4.15.1") Behavior AddBehavior(class<Behavior> type);
-	native version("4.15.1") void TickBehaviors();
-	native version("4.15.1") void ClearBehaviors(class<Behavior> type = null);
-	native version("4.15.1") void MoveBehaviors(Actor from);
-
 	native clearscope bool isFrozen() const;
 	virtual native void BeginPlay();
 	virtual native void Activate(Actor activator);
@@ -695,12 +669,13 @@ class Actor : Thinker native
 		}
 		return Obituary;
 	}
-
+	
 	virtual String GetSelfObituary(Actor inflictor, Name mod)
 	{
 		return SelfObituary;
 	}
 	
+
 	virtual int OnDrain(Actor victim, int damage, Name dmgtype)
 	{
 		return damage;
@@ -786,7 +761,6 @@ class Actor : Thinker native
 	native bool CheckPosition(Vector2 pos, bool actorsonly = false, FCheckPosition tm = null);
 	native bool TestMobjLocation();
 	native static Actor Spawn(class<Actor> type, vector3 pos = (0,0,0), int replace = NO_REPLACE);
-	native static clearscope Actor SpawnClientside(class<Actor> type, vector3 pos = (0,0,0), int replace = NO_REPLACE);
 	native Actor SpawnMissile(Actor dest, class<Actor> type, Actor owner = null);
 	native Actor SpawnMissileXYZ(Vector3 pos, Actor dest, Class<Actor> type, bool checkspawn = true, Actor owner = null);
 	native Actor SpawnMissileZ (double z, Actor dest, class<Actor> type);
@@ -1358,108 +1332,6 @@ class Actor : Thinker native
 	native bool A_AttachLightDef(Name lightid, Name lightdef);
 	native bool A_AttachLight(Name lightid, int type, Color lightcolor, int radius1, int radius2, int flags = 0, Vector3 ofs = (0,0,0), double param = 0, double spoti = 10, double spoto = 25, double spotp = 0);
 	native bool A_RemoveLight(Name lightid);
-
-	//================================================
-	// 
-	// Bone Offset Setters
-	// 
-	//================================================
-
-	native version("4.15.1") void SetBoneRotation(int boneIndex, Quat rotation, int mode = SB_ADD, double interpolation_duration = 1.0);
-	native version("4.15.1") void SetNamedBoneRotation(Name boneName, Quat rotation, int mode = SB_ADD, double interpolation_duration = 1.0);
-
-	version("4.15.1") void SetBoneRotationAngles(int boneIndex, double yaw, double pitch, double roll, int mode = SB_ADD, double interpolation_duration = 1.0)
-	{
-		SetBoneRotation(boneIndex, Quat.FromAngles(yaw, pitch, roll), mode, interpolation_duration);
-	}
-
-	version("4.15.1") void SetNamedBoneRotationAngles(Name boneName, double yaw, double pitch, double roll, int mode = SB_ADD, double interpolation_duration = 1.0)
-	{
-		SetNamedBoneRotation(boneName, Quat.FromAngles(yaw, pitch, roll), mode, interpolation_duration);
-	}
-
-	version("4.15.1") void ClearBoneRotation(int boneIndex, double interpolation_duration = 1.0)
-	{
-		SetBoneRotation(boneIndex, Quat(0, 0, 0, 1), 0, interpolation_duration);
-	}
-
-	version("4.15.1") void ClearNamedBoneRotation(Name boneName, double interpolation_duration = 1.0)
-	{
-		SetNamedBoneRotation(boneName, Quat(0, 0, 0, 1), 0, interpolation_duration);
-	}
-
-	native version("4.15.1") void SetBoneTranslation(int boneIndex, Vector3 translation, int mode = SB_ADD, double interpolation_duration = 1.0);
-	native version("4.15.1") void SetNamedBoneTranslation(Name boneName, Vector3 translation, int mode = SB_ADD, double interpolation_duration = 1.0);
-
-	version("4.15.1") void ClearBoneTranslation(int boneIndex, double interpolation_duration = 1.0)
-	{
-		SetBoneTranslation(boneIndex, (0, 0, 0), 0, interpolation_duration);
-	}
-
-	version("4.15.1") void ClearNamedBoneTranslation(Name boneName, double interpolation_duration = 1.0)
-	{
-		SetNamedBoneTranslation(boneName, (0, 0, 0), 0, interpolation_duration);
-	}
-
-	native version("4.15.1") void SetBoneScaling(int boneIndex, Vector3 scaling, int mode = SB_ADD, double interpolation_duration = 1.0);
-	native version("4.15.1") void SetNamedBoneScaling(Name boneName, Vector3 scaling, int mode = SB_ADD, double interpolation_duration = 1.0);
-
-	version("4.15.1") void ClearBoneScaling(int boneIndex, double interpolation_duration = 1.0)
-	{
-		SetBoneScaling(boneIndex, (0, 0, 0), 0, interpolation_duration);
-	}
-
-	version("4.15.1") void ClearNamedBoneScaling(Name boneName, double interpolation_duration = 1.0)
-	{
-		SetNamedBoneScaling(boneName, (0, 0, 0), 0, interpolation_duration);
-	}
-
-	native version("4.15.1") void ClearBoneOffsets();
-
-	//================================================
-	// 
-	// Bone Offset Getters
-	// 
-	//================================================
-
-	/* rotation, translation, scaling */
-	native version("4.15.1") Quat, Vector3, Vector3 GetBoneOffset(int boneIndex);
-	native version("4.15.1") Quat, Vector3, Vector3 GetNamedBoneOffset(Name boneName);
-
-	//================================================
-	// 
-	// Bone Info Getters
-	// 
-	//================================================
-	
-	native version("4.15.1") void GetRootBones(out Array<int> rootBones);
-	
-	native version("4.15.1") Name GetBoneName(int boneIndex);
-	native version("4.15.1") int GetBoneIndex(Name boneName);
-	
-	native version("4.15.1") int GetBoneParent(int boneIndex);
-	native version("4.15.1") int GetNamedBoneParent(Name boneName); // return value lower than 0 means it's a root bone, and as such has no parent
-	
-	native version("4.15.1") void GetBoneChildren(int boneIndex, out Array<int> children);
-	native version("4.15.1") void GetNamedBoneChildren(Name boneName, out Array<int> children);
-
-	// this is the length in model units, not in world units, and does not take model scale in MODELDEF, world, etc, or current animation or offset into account at all
-	native version("4.15.1") double GetBoneLength(int boneIndex);
-	native version("4.15.1") double GetNamedBoneLength(Name boneName);
-
-	// this is the direction of the bone in the armature, does not take the current animation or offset into account at all
-	native version("4.15.1") Vector3 GetBoneDir(int boneIndex);
-	native version("4.15.1") Vector3 GetNamedBoneDir(Name boneName);
-	
-	native version("4.15.1") int GetBoneCount();
-
-
-	//================================================
-	// 
-	// 
-	// 
-	//================================================
-
 
 	native version("4.12") void SetAnimation(Name animName, double framerate = -1, int startFrame = -1, int loopFrame = -1, int endFrame = -1, int interpolateTics = -1, int flags = 0);
 	native version("4.12") ui void SetAnimationUI(Name animName, double framerate = -1, int startFrame = -1, int loopFrame = -1, int endFrame = -1, int interpolateTics = -1, int flags = 0);

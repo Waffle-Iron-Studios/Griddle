@@ -39,6 +39,9 @@ int SaveVersion;
 // Game speed
 EGameSpeed		GameSpeed = SPEED_Normal;
 
+// [RH] Network arbitrator
+int Net_Arbitrator = 0;
+
 int NextSkill = -1;
 
 int SinglePlayerClass[MAXPLAYERS];

@@ -66,7 +66,7 @@ namespace swrenderer
 		fillshort(top, viewwidth, 0x7fff);
 	}
 
-	void VisiblePlane::AddLights(RenderThread *thread, FSection *sec)
+	void VisiblePlane::AddLights(RenderThread *thread, FLightNode *node)
 	{
 		if (!r_dynlights)
 			return;
@@ -75,17 +75,8 @@ namespace swrenderer
 		if (cameraLight->FixedColormap() != NULL || cameraLight->FixedLightLevel() >= 0)
 			return; // [SP] no dynlights if invul or lightamp
 
-		auto Level = sec->sector->Level;
-		auto flatLightList = Level->lightlists.flat_dlist.CheckKey(sec);
-		if (flatLightList)
+		while (node)
 		{
-			TMap<FDynamicLight *, std::unique_ptr<FLightNode>>::Iterator it(*flatLightList);
-			TMap<FDynamicLight *, std::unique_ptr<FLightNode>>::Pair *pair;
-			while (it.NextPair(pair))
-			{
-				auto node = pair->Value.get();
-				if (!node) continue;
-
 				if (node->lightsource->IsActive() && (height.PointOnSide(node->lightsource->Pos) > 0))
 				{
 					bool found = false;
@@ -107,7 +98,7 @@ namespace swrenderer
 						lights = newlight;
 					}
 				}
-			}
+			node = node->nextLight;
 		}
 	}
 

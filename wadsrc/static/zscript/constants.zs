@@ -1,6 +1,6 @@
 // for flag changer functions.
 const FLAG_NO_CHANGE = -1;
-const MAXPLAYERS = 64;
+const MAXPLAYERS = 8;
 
 enum EStateUseFlags
 {
@@ -1008,11 +1008,6 @@ enum EMapThingFlags
 	MTF_SECRET			= 0x080000,	// Secret pickup
 	MTF_NOINFIGHTING	= 0x100000,
 	MTF_NOCOUNT			= 0x200000,	// Removes COUNTKILL/COUNTITEM
-
-	// Thing spawn origins, what created this thing?
-	MTF_MAPTHING		= 0x400000, // Map spawned
-	MTF_CONSOLETHING	= 0x800000, // Console spawned (i.e summon)
-	MTF_NONSPAWNTHING	= (MTF_MAPTHING|MTF_CONSOLETHING), // [inkoalawetrust]: Rachael didn't want a dedicated MTF_SPAWNTHING flag taking up the field, so check if the other 2 flags aren't true instead.
 };
 
 enum ESkillProperty
@@ -1546,11 +1541,4 @@ enum EParticleStyle
 	PT_SQUARE	= 0,
 	PT_ROUND	= 1,
 	PT_SMOOTH	= 2,
-};
-
-enum ESetBoneMode
-{
-	SB_CLEAR = 0,
-	SB_ADD = 1,
-	SB_REPLACE = 2,
 };

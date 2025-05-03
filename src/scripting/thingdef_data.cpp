@@ -75,7 +75,6 @@ extern float			BackbuttonAlpha;
 #define DEFINE_FLAG(prefix, name, type, variable) { (unsigned int)prefix##_##name, #name, (int)(size_t)&((type*)1)->variable - 1, sizeof(((type *)0)->variable), VARF_Native }
 #define DEFINE_PROTECTED_FLAG(prefix, name, type, variable) { (unsigned int)prefix##_##name, #name, (int)(size_t)&((type*)1)->variable - 1, sizeof(((type *)0)->variable), VARF_Native|VARF_ReadOnly|VARF_InternalAccess }
 #define DEFINE_FLAG2(symbol, name, type, variable) { (unsigned int)symbol, #name, (int)(size_t)&((type*)1)->variable - 1, sizeof(((type *)0)->variable), VARF_Native }
-#define DEFINE_PROTECTED_FLAG2(symbol, name, type, variable) { (unsigned int)symbol, #name, (int)(size_t)&((type*)1)->variable - 1, sizeof(((type *)0)->variable), VARF_Native|VARF_ReadOnly|VARF_InternalAccess }
 #define DEFINE_FLAG2_DEPRECATED(symbol, name, type, variable, version) { (unsigned int)symbol, #name, (int)(size_t)&((type*)1)->variable - 1, sizeof(((type *)0)->variable), VARF_Native|VARF_Deprecated }
 #define DEFINE_DEPRECATED_FLAG(name, version) { DEPF_##name, #name, -1, 0, VARF_Deprecated, version }
 #define DEFINE_DUMMY_FLAG(name, deprec) { DEPF_UNUSED, #name, -1, 0, deprec? VARF_Deprecated:0 }
@@ -415,7 +414,6 @@ static FFlagDef ActorFlagDefs[]=
 	DEFINE_FLAG2(BOUNCE_ModifyPitch, BOUNCEMODIFIESPITCH, AActor, BounceFlags),
 	
 	DEFINE_FLAG2(OF_Transient, NOSAVEGAME, AActor, ObjectFlags),
-	DEFINE_PROTECTED_FLAG2(OF_ClientSide, CLIENTSIDE, AActor, ObjectFlags),
 
 	// Deprecated flags which need a ZScript workaround.
 	DEFINE_DEPRECATED_FLAG(MISSILEMORE, MakeVersion(4, 13, 0)),
@@ -768,14 +766,6 @@ void InitThingdef()
 	auto terraindefstruct = NewStruct("TerrainDef", nullptr, true);
 	terraindefstruct->Size = sizeof(FTerrainDef);
 	terraindefstruct->Align = alignof(FTerrainDef);
-
-	auto episodestruct = NewStruct("EpisodeInfo", nullptr, true);
-	episodestruct->Size = sizeof(FEpisode);
-	episodestruct->Align = alignof(FEpisode);
-
-	auto skillstruct = NewStruct("SkillInfo", nullptr, true);
-	skillstruct->Size = sizeof(FSkillInfo);
-	skillstruct->Align = alignof(FSkillInfo);
 
 	PStruct *pstruct = NewStruct("PlayerInfo", nullptr, true);
 	pstruct->Size = sizeof(player_t);

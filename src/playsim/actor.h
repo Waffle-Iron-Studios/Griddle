@@ -740,7 +740,6 @@ public:
 	TArray<FTextureID>			 skinIDs;
 	TArray<AnimModelOverride>	 animationIDs;
 	TArray<int>					 modelFrameGenerators;
-	TArray<TArray<BoneOverride>> modelBoneOverrides;
 	int							 flags;
 	int							 overrideFlagsSet;
 	int							 overrideFlagsClear;
@@ -782,18 +781,6 @@ public:
 	void Serialize(FSerializer& arc) override;
 };
 
-class DBehavior final : public DObject
-{
-	DECLARE_CLASS(DBehavior, DObject)
-	HAS_OBJECT_POINTERS
-public:
-	TObjPtr<AActor*> Owner;
-	FLevelLocals* Level;
-
-	void Serialize(FSerializer& arc) override;
-	void OnDestroy() override;
-};
-
 const double MinVel = EQUAL_EPSILON;
 
 // Map Object definition.
@@ -809,7 +796,6 @@ public:
 
 	virtual void OnDestroy() override;
 	virtual void Serialize(FSerializer &arc) override;
-	virtual size_t PropagateMark() override;
 	virtual void PostSerialize() override;
 	virtual void PostBeginPlay() override;		// Called immediately before the actor's first tick
 	virtual void Tick() override;
@@ -1390,7 +1376,6 @@ public:
 	// landing speed from a jump with normal gravity (squats the player's view)
 	// (note: this is put into AActor instead of the PlayerPawn because non-players also use the value)
 	double LandingSpeed;
-	TMap<FName, TObjPtr<DBehavior*>> Behaviors;
 
 
 	// ThingIDs
@@ -1451,24 +1436,6 @@ public:
 	{
 		return GetClass()->FindState(numnames, names, exact);
 	}
-
-	DBehavior* FindBehavior(FName type) const
-	{
-		auto b = Behaviors.CheckKey(type);
-		return b != nullptr ? b->Get() : nullptr;
-	}
-	bool IsValidBehavior(const DBehavior& b) const
-	{
-		return !(b.ObjectFlags & OF_EuthanizeMe) && b.Owner.ForceGet() == this;
-	}
-	DBehavior* AddBehavior(PClass& type);
-	bool RemoveBehavior(FName type);
-	void TickBehaviors();
-	void MoveBehaviors(AActor& from);
-	void ClearBehaviors(PClass* type = nullptr);
-	// Internal only, mostly for traveling.
-	void UnlinkBehaviorsFromLevel();
-	void LinkBehaviorsToLevel();
 
 	bool HasSpecialDeathStates () const;
 
