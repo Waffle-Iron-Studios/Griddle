@@ -936,7 +936,7 @@ static DObject *BuiltinNewDoom(PClass *cls, int outerside, int backwardscompatib
 	// Creating actors here must be outright prohibited,
 	if (cls->IsDescendantOf(NAME_Actor))
 	{
-		ThrowAbortException(X_OTHER, "Cannot create actors with 'new'");
+		ThrowAbortException(X_OTHER, "Cannot create actors with 'new'. Use Actor.Spawn instead.");
 		return nullptr;
 	}
 	if (cls->IsDescendantOf(NAME_VisualThinker)) // Same for VisualThinkers.

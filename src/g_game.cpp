@@ -185,8 +185,6 @@ uint8_t*			zdembodyend;			// end of ZDEM BODY chunk
 bool 			singledemo; 			// quit after playing a demo from cmdline 
  
 bool 			precache = true;		// if true, load all graphics at start 
-  
-short			consistancy[MAXPLAYERS][BACKUPTICS];
  
 short			consistancy[MAXPLAYERS][BACKUPTICS];
  
@@ -302,7 +300,7 @@ CCMD (turnspeeds)
 		}
 		if (i <= 4)
 		{
-			*angleturn[3] = *angleturn[2];
+			*angleturn[3] = **angleturn[2];
 		}
 	}
 }
@@ -1002,6 +1000,8 @@ bool G_Responder (event_t *ev)
 	if (gameaction == ga_nothing && 
 		(demoplayback || gamestate == GS_DEMOSCREEN || gamestate == GS_TITLELEVEL))
 	{
+		if (chatmodeon) chatmodeon = 0;
+
 		const char *cmd = Bindings.GetBind (ev->data1);
 
 		if (ev->type == EV_KeyDown)

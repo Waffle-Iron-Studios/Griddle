@@ -214,6 +214,13 @@ namespace swrenderer
 					FDynamicLight *light = node->lightsource;
 					if (light->ShouldLightActor(thing))
 					{
+						float lx = (float)(light->X() - thing->X());
+						float ly = (float)(light->Y() - thing->Y());
+						float lz = (float)(light->Z() - thing->Center());
+						float LdotL = lx * lx + ly * ly + lz * lz;
+						float radius = node->lightsource->GetRadius();
+						if (radius * radius >= LdotL)
+						{
 						float distance = sqrt(LdotL);
 						float attenuation = 1.0f - distance / radius;
 						if (attenuation > 0.0f)
@@ -233,6 +240,7 @@ namespace swrenderer
 							lit_red += red * attenuation;
 							lit_green += green * attenuation;
 							lit_blue += blue * attenuation;
+							}
 						}
 					}
 				node = node->nextLight;

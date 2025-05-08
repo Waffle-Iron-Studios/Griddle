@@ -1582,7 +1582,7 @@ DEFINE_MAP_OPTION(lightmode, false)
 	parse.sc.MustGetNumber();
 
 	if (parse.sc.Number == 8 || parse.sc.Number == 16) info->lightmode = ELightMode::NotSet;
-	else if (parse.sc.Number >= 0 && parse.sc.Number <= 5)
+	else if (parse.sc.Number >= 0 && parse.sc.Number < 5)
 	{
 		info->lightmode = ELightMode(parse.sc.Number);
 	}
@@ -2835,3 +2835,10 @@ void G_ParseMapInfo (FString basemapinfo)
 	}
 }
 
+DEFINE_GLOBAL(AllEpisodes)
+
+DEFINE_FIELD_X(EpisodeInfo, FEpisode, mEpisodeName)
+DEFINE_FIELD_X(EpisodeInfo, FEpisode, mEpisodeMap)
+DEFINE_FIELD_X(EpisodeInfo, FEpisode, mPicName)
+DEFINE_FIELD_X(EpisodeInfo, FEpisode, mShortcut)
+DEFINE_FIELD_X(EpisodeInfo, FEpisode, mNoSkill)

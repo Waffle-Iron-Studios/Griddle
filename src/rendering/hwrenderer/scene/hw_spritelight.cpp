@@ -129,6 +129,13 @@ void HWDrawInfo::GetDynSpriteLight(AActor *self, float x, float y, float z, FLig
 			light=node->lightsource;
 			if (light->ShouldLightActor(self))
 			{
+				float dist;
+				FVector3 L;
+
+				// This is a performance critical section of code where we cannot afford to let the compiler decide whether to inline the function or not.
+				// This will do the calculations explicitly rather than calling one of AActor's utility functions.
+				if (Level->Displacements.size > 0)
+				{
 				int fromgroup = light->Sector->PortalGroup;
 				int togroup = portalgroup;
 				if (fromgroup == togroup || fromgroup == 0 || togroup == 0) goto direct;
@@ -170,7 +177,7 @@ void HWDrawInfo::GetDynSpriteLight(AActor *self, float x, float y, float z, FLig
 					lg = light->GetGreen() / 255.0f;
 					lb = light->GetBlue() / 255.0f;
 
-					if (light->target)
+						if (light->target && (light->target->renderflags2 & RF2_LIGHTMULTALPHA))
 					{
 						float alpha = (float)light->target->Alpha;
 						lr *= alpha;
@@ -191,6 +198,7 @@ void HWDrawInfo::GetDynSpriteLight(AActor *self, float x, float y, float z, FLig
 					out[1] += lg * frac;
 					out[2] += lb * frac;
 				}
+			}
 			}
 		node = node->nextLight;
 	}
@@ -239,10 +247,20 @@ void hw_GetDynModelLight(AActor *self, FDynLightData &modellightdata)
 					FDynamicLight *light = node->lightsource;
 					if (light->ShouldLightActor(self))
 					{
+						int group = subsector->sector->PortalGroup;
+						DVector3 pos = light->PosRelative(group);
+						float radius = (float)(light->GetRadius() + actorradius);
+						double dx = pos.X - x;
+						double dy = pos.Y - y;
+						double dz = pos.Z - z;
+						double distSquared = dx * dx + dy * dy + dz * dz;
+						if (distSquared < radius * radius) // Light and actor touches
+						{
 						if (std::find(addedLights.begin(), addedLights.end(), light) == addedLights.end()) // Check if we already added this light from a different subsector
 						{
 							AddLightToList(modellightdata, group, light, true);
 							addedLights.Push(light);
+							}
 						}
 					}
 				node = node->nextLight;

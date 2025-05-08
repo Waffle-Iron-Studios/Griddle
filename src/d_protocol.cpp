@@ -430,15 +430,6 @@ int SkipTicCmd (uint8_t **stream, int count)
 							}
 					}
 				}
-				flow += skip;
-			}
-			else if (type == DEM_EMPTYUSERCMD)
-			{
-				moreticdata = false;
-			}
-			else
-			{
-				Net_SkipCommand (type, &flow);
 			}
 				flow += skip;
 		}

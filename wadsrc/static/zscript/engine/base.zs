@@ -15,27 +15,29 @@ enum ESoundFlags
 	// modifier flags
 	CHAN_LISTENERZ = 8,
 	CHAN_MAYBE_LOCAL = 16,
-	CHAN_UI = 32,
-	CHAN_NOPAUSE = 64,
+	CHAN_UI = 32,								// Do not record sound in savegames.
+	CHAN_NOPAUSE = 64,							// Do not pause this sound in menus.
 	CHAN_LOOP = 256,
 	CHAN_PICKUP = (CHAN_ITEM|CHAN_MAYBE_LOCAL), // Do not use this with A_StartSound! It would not do what is expected.
-	CHAN_NOSTOP = 4096,
-	CHAN_OVERLAP = 8192,
+	CHAN_NOSTOP = 4096,							// only for A_PlaySound. Does not start if channel is playing something.
+	CHAN_OVERLAP = 8192,						// [MK] Does not stop any sounds in the channel and instead plays over them.
 
 	// Same as above, with an F appended to allow better distinction of channel and channel flags.
 	CHANF_DEFAULT = 0,	// just to make the code look better and avoid literal 0's.
 	CHANF_LISTENERZ = 8,
 	CHANF_MAYBE_LOCAL = 16,
-	CHANF_UI = 32,
-	CHANF_NOPAUSE = 64,
+	CHANF_UI = 32,				// Do not record sound in savegames.
+	CHANF_NOPAUSE = 64,			// Do not pause this sound in menus.
 	CHANF_LOOP = 256,
-	CHANF_NOSTOP = 4096,
-	CHANF_OVERLAP = 8192,
-	CHANF_LOCAL = 16384,
+	CHANF_NOSTOP = 4096,		// only for A_PlaySound. Does not start if channel is playing something.
+	CHANF_OVERLAP = 8192,		// [MK] Does not stop any sounds in the channel and instead plays over them.
+	CHANF_LOCAL = 16384,		// only plays locally for the calling actor
+	CHANF_TRANSIENT = 32768,    // Do not record in savegames - used for sounds that get restarted outside the sound system (e.g. ambients in SW and Blood)
+	CHANF_FORCE = 65536,		// Start, even if sound is paused.
+	CHANF_SINGULAR = 0x20000,	// Only start if no sound of this name is already playing.
 
 
 	CHANF_LOOPING = CHANF_LOOP | CHANF_NOSTOP, // convenience value for replicating the old 'looping' boolean.
-
 };
 
 // sound attenuation values
@@ -187,7 +189,7 @@ struct Vector3
 }
 */
 
-struct _ native	// These are the global variables, the struct is only here to avoid extending the parser for this.
+struct _ native unsafe(internal)	// These are the global variables, the struct is only here to avoid extending the parser for this.
 {
 	native readonly Array<class> AllClasses;
     native internal readonly Map<Name , Service> AllServices;
@@ -318,7 +320,6 @@ struct TexMan
 	native static bool OkForLocalization(TextureID patch, String textSubstitute);
 	native static bool UseGamePalette(TextureID tex);
 	native static Canvas GetCanvas(String texture);
-	native static void FlushAll();
 }
 
 /*
@@ -794,7 +795,9 @@ class Object native
 	//
 	// Intrinsic random number generation functions. Note that the square
 	// bracket syntax for specifying an RNG ID is only available for these
-	// functions.
+	// functions. If the function is prefixed with a C, this is a client-side RNG
+	// call that isn't backed up while predicting and has a unique name space from
+	// regular RNG calls. This should be used for things like HUD elements.
 	// clearscope void SetRandomSeed[Name rngId = 'None'](int seed); // Set the seed for the given RNG.
 	// clearscope int Random[Name rngId = 'None'](int min, int max); // Use the given RNG to generate a random integer number in the range (min, max) inclusive.
 	// clearscope int Random2[Name rngId = 'None'](int mask); // Use the given RNG to generate a random integer number, and do a "union" (bitwise AND, AKA &) operation with the bits in the mask integer.
@@ -890,6 +893,9 @@ struct Wads	// todo: make FileSystem an alias to 'Wads'
 	native static string GetLumpName(int lump);
 	native static string GetLumpFullName(int lump);
 	native static int GetLumpNamespace(int lump);
+	native static int GetLumpContainer(int lump);
+	native static string GetContainerName(int lump);
+	native static string GetLumpFullPath(int lump);
 }
 
 enum EmptyTokenType
@@ -900,7 +906,7 @@ enum EmptyTokenType
 
 // Although String is a builtin type, this is a convenient way to attach methods to it.
 // All of these methods are available on strings
-struct StringStruct native
+struct StringStruct native unsafe(internal)
 {
 	native static vararg String Format(String fmt, ...);
 	native vararg void AppendFormat(String fmt, ...);
@@ -949,7 +955,7 @@ struct Translation version("2.4")
 }
 
 // Convenient way to attach functions to Quat
-struct QuatStruct native
+struct QuatStruct native unsafe(internal)
 {
 	native static Quat SLerp(Quat from, Quat to, double t);
 	native static Quat NLerp(Quat from, Quat to, double t);

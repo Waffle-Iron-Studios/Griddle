@@ -148,6 +148,10 @@ FRandom pr_spawnmissile("SpawnMissile");
 
 CUSTOM_CVAR (Float, sv_gravity, 800.f, CVAR_SERVERINFO|CVAR_NOSAVE|CVAR_NOINITCALL)
 {
+	// test NAN and INF
+	if (((double)self != (double)self) || isinf((double)self))
+		sv_gravity = 800.f;
+
 	for (auto Level : AllLevels())
 	{
 		Level->gravity = self;
@@ -217,7 +221,6 @@ void AActor::Serialize(FSerializer &arc)
 		A("angles", Angles)
 		A("frame", frame)
 		A("scale", Scale)
-		A("nolocalrender", NoLocalRender) // Note: This will probably be removed later since a better solution is needed
 		A("renderstyle", RenderStyle)
 		A("renderflags", renderflags)
 		A("renderflags2", renderflags2)
@@ -5726,8 +5729,10 @@ AActor *FLevelLocals::SpawnPlayer (FPlayerStart *mthing, int playernum, int flag
 
 	IFVIRTUALPTRNAME(p->mo, NAME_PlayerPawn, ResetAirSupply)
 	{
+		int drowning = 0;
 		VMValue params[] = { p->mo, false };
-		VMCall(func, params, 2, nullptr, 0);
+		VMReturn rets[] = { &drowning };
+		VMCall(func, params, 2, rets, 1);
 	}
 
 	for (int ii = 0; ii < MAXPLAYERS; ++ii)
@@ -5762,7 +5767,7 @@ AActor *FLevelLocals::SpawnPlayer (FPlayerStart *mthing, int playernum, int flag
 		IFVM(PlayerPawn, FilterCoopRespawnInventory)
 		{
 			VMValue params[] = { p->mo, oldactor, ((heldWeap == nullptr || (heldWeap->ObjectFlags & OF_EuthanizeMe)) ? nullptr : heldWeap) };
-			VMCall(func, params, 2, nullptr, 0);
+			VMCall(func, params, 3, nullptr, 0);
 		}
 	}
 	if (oldactor != NULL)
@@ -6381,9 +6386,9 @@ DEFINE_ACTION_FUNCTION(AActor, SpawnPuff)
 // 
 //---------------------------------------------------------------------------
 
-void P_SpawnBlood (const DVector3 &pos1, DAngle dir, int damage, AActor *originator)
+AActor *P_SpawnBlood (const DVector3 &pos1, DAngle dir, int damage, AActor *originator)
 {
-	AActor *th;
+	AActor *th = nullptr;
 	PClassActor *bloodcls = originator->GetBloodType();
 	DVector3 pos = pos1;
 	pos.Z += pr_spawnblood.Random2() / 64.;
@@ -6443,10 +6448,10 @@ void P_SpawnBlood (const DVector3 &pos1, DAngle dir, int damage, AActor *origina
 
 				while (cls != RUNTIME_CLASS(AActor))
 				{
-					for (; checked_advance > 0; --checked_advance)
+					int checked_advance = advance;
+					if (cls->OwnsState(th->SpawnState))
 					{
-						// [RH] Do not set to a state we do not own.
-						if (cls->OwnsState(th->SpawnState + checked_advance))
+						for (; checked_advance > 0; --checked_advance)
 						{
 							// [RH] Do not set to a state we do not own.
 							if (cls->OwnsState(th->SpawnState + checked_advance))
@@ -6468,6 +6473,8 @@ void P_SpawnBlood (const DVector3 &pos1, DAngle dir, int damage, AActor *origina
 
 	if (bloodtype >= 1)
 		P_DrawSplash2 (originator->Level, 40, pos, dir, 2, originator->BloodColor);
+
+	return th;
 }
 
 DEFINE_ACTION_FUNCTION(AActor, SpawnBlood)
@@ -6478,8 +6485,7 @@ DEFINE_ACTION_FUNCTION(AActor, SpawnBlood)
 	PARAM_FLOAT(z);
 	PARAM_ANGLE(dir);
 	PARAM_INT(damage);
-	P_SpawnBlood(DVector3(x, y, z), dir, damage, self);
-	return 0;
+	ACTION_RETURN_OBJECT(P_SpawnBlood(DVector3(x, y, z), dir, damage, self));
 }
 
 
@@ -7823,6 +7829,19 @@ void AActor::Revive()
 	health = SpawnHealth();
 	target = nullptr;
 	lastenemy = nullptr;
+
+	// Make sure to clear poison damage.
+	PoisonDamageReceived = 0;
+	PoisonDamageTypeReceived = NAME_None;
+	PoisonDurationReceived = 0;
+	PoisonPeriodReceived = 0;
+	Poisoner = nullptr;
+	if (player != nullptr)
+	{
+		player->poisoncount = 0;
+		player->poisoner = nullptr;
+		player->poisontype = player->poisonpaintype = NAME_None;
+	}
 
 	// [RH] If it's a monster, it gets to count as another kill
 	if (CountsAsKill())

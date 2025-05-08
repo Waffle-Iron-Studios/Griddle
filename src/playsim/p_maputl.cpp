@@ -318,6 +318,13 @@ void AActor::UnlinkFromWorld (FLinkContext *ctx)
 			ctx->sector_list = touching_sectorlist;
 			ctx->render_list = touching_rendersectors;
 		}
+		else
+		{
+			P_DelSeclist(touching_sectorlist, &sector_t::touching_thinglist);
+			P_DelSeclist(touching_rendersectors, &sector_t::touching_renderthings);
+		}
+		touching_sectorlist = nullptr; //to be restored by P_SetThingPosition
+		touching_rendersectors = nullptr;
 	}
 	}
 		

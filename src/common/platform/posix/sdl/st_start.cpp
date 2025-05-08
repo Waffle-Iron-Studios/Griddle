@@ -173,7 +173,6 @@ void FTTYStartupScreen::NetInit(const char *message, int numplayers)
 	}
 	fflush (stderr);
 	TheNetMessage = message;
-	NetMaxPos = numplayers;
 	NetCurPos = 0;
 	NetProgress(1);		// You always know about yourself
 }

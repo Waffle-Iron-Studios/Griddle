@@ -86,6 +86,11 @@ class Inventory : Actor
 		Inventory.PickupMessage "$TXT_DEFAULTPICKUPMSG";
 	}
 	
+	override void OnLoad()
+	{
+		UpdateLocalPickupStatus();
+	}
+	
 	//native override void Tick();
 	
 	override void Tick()
@@ -1111,6 +1116,11 @@ class Inventory : Actor
 	clearscope bool HasPickedUpLocally(Actor client) const
 	{
 		return pickedUp[client.PlayerNumber()];
+	}
+
+	void UpdateLocalPickupStatus()
+	{
+		DisableLocalRendering(consoleplayer, pickedUp[consoleplayer]);
 	}
 
 	// When items are dropped, clear their local pick ups.

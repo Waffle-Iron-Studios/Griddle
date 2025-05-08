@@ -625,6 +625,7 @@ bool HGetPacket (void)
 		return false;
 	}
 #endif
+
 	if (debugfile)
 	{
 		int i, k, realretrans;
@@ -666,6 +667,7 @@ bool HGetPacket (void)
 					doomcom.remotenode,
 					ExpandTics(netbuffer[1]),
 					numtics, realretrans, doomcom.datalength);
+
 			for (i = 0; i < doomcom.datalength; i++)
 				fprintf (debugfile, "%c%2x", i==k?'|':' ', ((uint8_t *)netbuffer)[i]);
 			if (numtics)
@@ -792,9 +794,6 @@ void GetPackets (void)
 			continue;			// extra setup packet
 		}
 						
-		netnode = doomcom.remotenode;
-		netconsole = playerfornode[netnode] & ~PL_DRONE;
-
 		netnode = doomcom.remotenode;
 		netconsole = playerfornode[netnode] & ~PL_DRONE;
 
@@ -1365,6 +1364,7 @@ void NetUpdate (void)
 						totalavg = lastaverage;
 					}
 				}
+
 				mastertics = nettics[nodeforplayer[Net_Arbitrator]] + totalavg;
 			}
 			if (nettics[0] <= mastertics)
@@ -1554,7 +1554,6 @@ bool DoArbitrate (void *userdata)
 			}
 		}
 	}
-}
 
 	// If we're the host, send the game info, too
 	if (consoleplayer == Net_Arbitrator)
@@ -2593,7 +2592,6 @@ void Net_DoCommand (int type, uint8_t **stream, int player)
 					arg[i] = argval;
 				}
 			}
-			}
 			if (!CheckCheatmode(player == consoleplayer))
 			{
 				P_ExecuteSpecial(primaryLevel, snum, NULL, players[player].mo, false, arg[0], arg[1], arg[2], arg[3], arg[4]);
@@ -2671,11 +2669,6 @@ void Net_DoCommand (int type, uint8_t **stream, int player)
 		PClassActor *cls = PClass::FindActor(s);
 		if (cls != NULL && cls->IsDescendantOf(RUNTIME_CLASS(AActor)))
 		{
-			s = ReadStringConst(stream);
-			int removecount = 0;
-			PClassActor *cls = PClass::FindActor(s);
-		if (cls != NULL && cls->IsDescendantOf(RUNTIME_CLASS(AActor)))
-			{
 				removecount = RemoveClass(primaryLevel, cls);
 				const PClass *cls_rep = cls->GetReplacement(primaryLevel);
 				if (cls != cls_rep)
@@ -2688,12 +2681,6 @@ void Net_DoCommand (int type, uint8_t **stream, int player)
 			{
 				Printf("%s is not an actor class.\n", s);
 			}
-			Printf("Removed %d actors of type %s.\n", removecount, s);
-		}
-		else
-		{
-			Printf("%s is not an actor class.\n", s);
-		}
 	}
 		break;
 
@@ -2796,6 +2783,7 @@ void Net_DoCommand (int type, uint8_t **stream, int player)
 	case DEM_CHANGESKILL:
 		NextSkill = ReadInt32(stream);
 		break;
+
 	default:
 		I_Error ("Unknown net command: %d", type);
 		break;
@@ -2813,6 +2801,7 @@ static void RunScript(uint8_t **stream, AActor *pawn, int snum, int argn, int al
 
 	int arg[4] = { 0, 0, 0, 0 };
 	int i;
+
 	for (i = 0; i < argn; ++i)
 	{
 		int argval = ReadInt32(stream);
@@ -2820,7 +2809,6 @@ static void RunScript(uint8_t **stream, AActor *pawn, int snum, int argn, int al
 		{
 			arg[i] = argval;
 		}
-	}
 	}
 	P_StartScript(pawn->Level, pawn, NULL, snum, primaryLevel->MapName.GetChars(), arg, min<int>(countof(arg), argn), ACS_NET | always);
 }
@@ -2931,15 +2919,7 @@ void Net_SkipCommand (int type, uint8_t **stream)
 				}
 				else
 				{
-				case CVAR_Bool:
 					skip += 1;
-					break;
-				case CVAR_Int: case CVAR_Float:
-					skip += 4;
-					break;
-				case CVAR_String:
-					skip += strlen ((char *)(*stream + skip)) + 1;
-					break;
 				}
 			break;
 
@@ -2968,7 +2948,6 @@ void Net_SkipCommand (int type, uint8_t **stream)
 				for(int numweapons = (*stream)[skip-1]; numweapons > 0; numweapons--)
 				{
 					skip += 1 + ((*stream)[skip] >> 7);
-				}
 			}
 			}
 			break;

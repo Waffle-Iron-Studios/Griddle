@@ -48,9 +48,6 @@ const char *GetVersionString();
 #define RC_PRODUCTVERSION 1,10,0,0
 
 // These are for content versioning.
-#define VER_MAJOR 1
-#define VER_MINOR 8
-#define VER_REVISION 0
 
 // These are for ZScript versioning
 #define ZSCRIPT_VER_MAJOR 4
@@ -113,6 +110,8 @@ const char *GetVersionString();
 
 #if defined(__APPLE__) || defined(_WIN32)
 #define GAME_DIR GAMENAME
+#elif defined(__HAIKU__)
+#define GAME_DIR "config/settings/" GAMENAME
 #else
 #define GAME_DIR ".config/" GAMENAMELOWERCASE
 #endif
