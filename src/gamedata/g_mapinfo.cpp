@@ -97,6 +97,7 @@ level_info_t *FindLevelInfo (const char *mapname, bool allowdefault)
 		if (TheDefaultLevelInfo.LevelName.IsEmpty())
 		{
 			TheDefaultLevelInfo.SkyPic2 = TheDefaultLevelInfo.SkyPic1 = "SKY1";
+			TheDefaultLevelInfo.SkyMistPic = "SKYMIST1";
 			TheDefaultLevelInfo.LevelName = "Unnamed";
 		}
 		return &TheDefaultLevelInfo;
@@ -255,6 +256,7 @@ void level_info_t::Reset()
 	NextMap = "";
 	NextSecretMap = "";
 	SkyPic1 = SkyPic2 = "-NOFLAT-";
+	SkyMistPic = "SKYMIST1";
 	cluster = 0;
 	partime = 0;
 	sucktime = 0;
@@ -279,7 +281,7 @@ void level_info_t::Reset()
 	musicorder = 0;
 	Snapshot = { 0,0,0,0,0,nullptr };
 	deferred.Clear();
-	skyspeed1 = skyspeed2 = 0.f;
+	skyspeed1 = skyspeed2 = skymistspeed = 0.f;
 	fadeto = 0;
 	outsidefog = 0xff000000;
 	cdtrack = 0;
@@ -1101,6 +1103,20 @@ DEFINE_MAP_OPTION(sky2, true)
 	}
 }
 
+DEFINE_MAP_OPTION(skymist, true)
+{
+	parse.ParseAssign();
+	parse.ParseLumpOrTextureName(info->SkyMistPic);
+	if (parse.CheckFloat())
+	{
+		if (parse.HexenHack)
+		{
+			parse.sc.Float /= 256;
+		}
+		info->skymistspeed = float(parse.sc.Float * (TICRATE / 1000.));
+	}
+}
+
 // Vavoom compatibility
 DEFINE_MAP_OPTION(skybox, true)
 {
@@ -1582,7 +1598,7 @@ DEFINE_MAP_OPTION(lightmode, false)
 	parse.sc.MustGetNumber();
 
 	if (parse.sc.Number == 8 || parse.sc.Number == 16) info->lightmode = ELightMode::NotSet;
-	else if (parse.sc.Number >= 0 && parse.sc.Number <= 5)
+	else if (parse.sc.Number >= 0 && parse.sc.Number < 5)
 	{
 		info->lightmode = ELightMode(parse.sc.Number);
 	}
@@ -1866,6 +1882,7 @@ MapFlagHandlers[] =
 	{ "avoidmelee",						MITYPE_SETFLAG3,	LEVEL3_AVOIDMELEE, 0 },
 	{ "attenuatelights",				MITYPE_SETFLAG3,	LEVEL3_ATTENUATE, 0 },
 	{ "nofogofwar",						MITYPE_SETFLAG3,	LEVEL3_NOFOGOFWAR, 0 },
+	{ "useskymist",						MITYPE_SETFLAG3,	LEVEL3_SKYMIST, 0 },
 	{ "nousersave",						MITYPE_SETFLAG9,	LEVEL9_NOUSERSAVE, 0 },	// backport from vkdoom
 	{ "noautomap",						MITYPE_SETFLAG9,	LEVEL9_NOAUTOMAP, 0 },	// backport from vkdoom
 	{ "nototaltime",					MITYPE_SETFLAGWIS,	LEVELWIS_NOTOTALTIME, 0 },
@@ -2834,3 +2851,10 @@ void G_ParseMapInfo (FString basemapinfo)
 	}
 }
 
+DEFINE_GLOBAL(AllEpisodes)
+
+DEFINE_FIELD_X(EpisodeInfo, FEpisode, mEpisodeName)
+DEFINE_FIELD_X(EpisodeInfo, FEpisode, mEpisodeMap)
+DEFINE_FIELD_X(EpisodeInfo, FEpisode, mPicName)
+DEFINE_FIELD_X(EpisodeInfo, FEpisode, mShortcut)
+DEFINE_FIELD_X(EpisodeInfo, FEpisode, mNoSkill)

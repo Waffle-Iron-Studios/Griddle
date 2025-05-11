@@ -1678,10 +1678,6 @@ class PlayerPawn : Actor
 		++BobTimer;
 		CheckFOV();
 
-		if (player.inventorytics)
-		{
-			player.inventorytics--;
-		}
 		CheckCheats();
 
 		if (bJustAttacked)

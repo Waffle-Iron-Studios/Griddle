@@ -391,6 +391,7 @@ static FFlagDef ActorFlagDefs[]=
 	DEFINE_FLAG(RF2, ISOMETRICSPRITES, AActor, renderflags2),
 	DEFINE_FLAG(RF2, SQUAREPIXELS, AActor, renderflags2),
 	DEFINE_FLAG(RF2, STRETCHPIXELS, AActor, renderflags2),
+	DEFINE_FLAG(RF2, LIGHTMULTALPHA, AActor, renderflags2),
 
 	// Bounce flags
 	DEFINE_FLAG2(BOUNCE_Walls, BOUNCEONWALLS, AActor, BounceFlags),
@@ -767,6 +768,14 @@ void InitThingdef()
 	auto terraindefstruct = NewStruct("TerrainDef", nullptr, true);
 	terraindefstruct->Size = sizeof(FTerrainDef);
 	terraindefstruct->Align = alignof(FTerrainDef);
+
+	auto episodestruct = NewStruct("EpisodeInfo", nullptr, true);
+	episodestruct->Size = sizeof(FEpisode);
+	episodestruct->Align = alignof(FEpisode);
+
+	auto skillstruct = NewStruct("SkillInfo", nullptr, true);
+	skillstruct->Size = sizeof(FSkillInfo);
+	skillstruct->Align = alignof(FSkillInfo);
 
 	PStruct *pstruct = NewStruct("PlayerInfo", nullptr, true);
 	pstruct->Size = sizeof(player_t);
