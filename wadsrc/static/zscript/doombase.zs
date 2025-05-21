@@ -414,6 +414,8 @@ struct LevelInfo native
 	native readonly int fogdensity;
 	native readonly int outsidefogdensity;
 	native readonly int skyfog;
+	native readonly float thickfogdistance;
+	native readonly float thickfogmultiplier;
 	native readonly float pixelstretch;
 	native readonly name RedirectType;
 	native readonly String RedirectMapName;
@@ -527,6 +529,8 @@ struct LevelLocals native
 	native readonly int fogdensity;
 	native readonly int outsidefogdensity;
 	native readonly int skyfog;
+	native readonly float thickfogdistance;
+	native readonly float thickfogmultiplier;
 	native readonly float pixelstretch;
 	native readonly float MusicVolume;
 	native name deathsequence;
@@ -588,6 +592,8 @@ struct LevelLocals native
 	native clearscope int PointOnLineSide(Vector2 pos, Line l, bool precise = false) const;
 	native clearscope int ActorOnLineSide(Actor mo, Line l) const;
 	native clearscope int BoxOnLineSide(Vector2 pos, double radius, Line l) const;
+
+	native clearscope int PlayerNum(PlayerInfo player) const;
 
 	native String GetChecksum() const;
 

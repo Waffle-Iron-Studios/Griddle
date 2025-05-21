@@ -2369,6 +2369,13 @@ DEFINE_ACTION_FUNCTION_NATIVE(FLevelLocals, GetUDMFString, ZGetUDMFString)
 	ACTION_RETURN_STRING(GetUDMFString(self, type, index, key));
 }
 
+DEFINE_ACTION_FUNCTION(FLevelLocals, PlayerNum)
+{
+	PARAM_SELF_STRUCT_PROLOGUE(FLevelLocals);
+	PARAM_POINTER(player, player_t);
+	ACTION_RETURN_INT(self->PlayerNum(player));
+}
+
 DEFINE_ACTION_FUNCTION(FLevelLocals, GetChecksum)
 {
 	PARAM_SELF_STRUCT_PROLOGUE(FLevelLocals);
@@ -2848,6 +2855,8 @@ DEFINE_FIELD_X(LevelInfo, level_info_t, deathsequence)
 DEFINE_FIELD_X(LevelInfo, level_info_t, fogdensity)
 DEFINE_FIELD_X(LevelInfo, level_info_t, outsidefogdensity)
 DEFINE_FIELD_X(LevelInfo, level_info_t, skyfog)
+DEFINE_FIELD_X(LevelInfo, level_info_t, thickfogdistance)
+DEFINE_FIELD_X(LevelInfo, level_info_t, thickfogmultiplier)
 DEFINE_FIELD_X(LevelInfo, level_info_t, pixelstretch)
 DEFINE_FIELD_X(LevelInfo, level_info_t, RedirectType)
 DEFINE_FIELD_X(LevelInfo, level_info_t, RedirectMapName)
@@ -2899,6 +2908,8 @@ DEFINE_FIELD(FLevelLocals, teamdamage)
 DEFINE_FIELD(FLevelLocals, fogdensity)
 DEFINE_FIELD(FLevelLocals, outsidefogdensity)
 DEFINE_FIELD(FLevelLocals, skyfog)
+DEFINE_FIELD(FLevelLocals, thickfogdistance)
+DEFINE_FIELD(FLevelLocals, thickfogmultiplier)
 DEFINE_FIELD(FLevelLocals, pixelstretch)
 DEFINE_FIELD(FLevelLocals, MusicVolume)
 DEFINE_FIELD(FLevelLocals, deathsequence)

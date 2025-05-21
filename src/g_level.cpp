@@ -1907,6 +1907,9 @@ void FLevelLocals::Init()
 	skyfog = info->skyfog;
 	deathsequence = info->deathsequence;
 
+	thickfogdistance = info->thickfogdistance;
+	thickfogmultiplier = info->thickfogmultiplier;
+
 	pixelstretch = info->pixelstretch;
 
 	compatflags->Callback();
