@@ -83,7 +83,7 @@ const char *GetVersionString();
 // SAVESIG should match SAVEVER.
 
 // extension for savegames
-#define SAVEGAME_EXT "pasave"
+#define SAVEGAME_EXT "ssave"
 
 // MINSAVEVER is the minimum level snapshot version that can be loaded.
 #define MINSAVEVER 4556
@@ -93,7 +93,7 @@ const char *GetVersionString();
 #define SAVEVER 4560
 
 // This is so that derivates can use the same savegame versions without worrying about engine compatibility
-#define GAMESIG "PROJECTABSENTIA"
+#define GAMESIG "SACCHARINE"
 #define BASEWAD "griddle.pk3"
 // Set OPTIONALWAD to "" (null) to disable searching for it
 #define OPTIONALWAD ""
@@ -101,9 +101,9 @@ const char *GetVersionString();
 #define VR3D_ENABLED
 
 // More stuff that needs to be different for derivatives.
-#define GAMENAME "Project Absentia"
-#define WGAMENAME L"Project Absentia"
-#define GAMENAMELOWERCASE "projectabsentia"
+#define GAMENAME "Saccharine"
+#define WGAMENAME L"Saccharine"
+#define GAMENAMELOWERCASE "saccharine"
 #define FORUM_URL "http://www.waffleironstudios.com"
 #define BUGS_FORUM_URL	"http://www.waffleironstudios.com"
 
