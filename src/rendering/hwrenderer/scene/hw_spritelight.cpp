@@ -156,9 +156,7 @@ void HWDrawInfo::GetDynSpriteLight(AActor *self, float x, float y, float z, FLig
 				{
 					dist = sqrtf(dist);	// only calculate the square root if we really need it.
 
-					frac = 1.0f - (dist / radius);
-
-					if (light->IsSpot())
+					if (light->target && (light->target->renderflags2 & RF2_LIGHTMULTALPHA))
 					{
 						L *= -1.0f / dist;
 						DAngle negPitch = -*light->pPitch;
