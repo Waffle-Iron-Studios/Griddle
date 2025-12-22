@@ -41,23 +41,23 @@ const char *GetVersionString();
 
 /** Lots of different version numbers **/
 
-#define VERSIONSTR "1.10.0"
+#define VERSIONSTR "1.11.0"
 
 // The version as seen in the Windows resource
-#define RC_FILEVERSION 1,10,0,0
-#define RC_PRODUCTVERSION 1,10,0,0
+#define RC_FILEVERSION 1,11,0,0
+#define RC_PRODUCTVERSION 1,11,0,0
 
 // These are for content versioning.
 
 // These are for ZScript versioning
 #define ZSCRIPT_VER_MAJOR 4
 #define ZSCRIPT_VER_MINOR 14
-#define ZSCRIPT_VER_REVISION 2
+#define ZSCRIPT_VER_REVISION 3
 
 // This should always refer to the GZDoom version a derived port is based on and not reflect the derived port's version number!
 #define ENG_MAJOR 1
 #define ENG_MINOR 10
-#define ENG_REVISION 0
+#define ENG_REVISION 1
 
 // Version identifier for network games.
 // Bump it every time you do a release unless you're certain you
@@ -67,7 +67,7 @@ const char *GetVersionString();
 // Version stored in the ini's [LastRun] section.
 // Bump it if you made some configuration change that you want to
 // be able to migrate in FGameConfigFile::DoGlobalSetup().
-#define LASTRUNVERSION "225"
+#define LASTRUNVERSION "228"
 
 // Protocol version used in demos.
 // Bump it if you change existing DEM_ commands or add new ones.
@@ -111,8 +111,6 @@ const char *GetVersionString();
 #define GAME_DIR GAMENAME
 #elif defined(__HAIKU__)
 #define GAME_DIR "config/settings/" GAMENAME
-#else
-#define GAME_DIR ".config/" GAMENAMELOWERCASE
 #endif
 
 #define DEFAULT_DISCORD_APP_ID ""
@@ -121,6 +119,5 @@ const int SAVEPICWIDTH = 216;
 const int SAVEPICHEIGHT = 162;
 const int VID_MIN_WIDTH = 320;
 const int VID_MIN_HEIGHT = 200;
-
 
 #endif //__VERSION_H__
