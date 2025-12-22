@@ -247,7 +247,7 @@ void DCanvas::Resize(int width, int height, bool optimizepitch)
 			CPU.DataL1LineSize = CPUInfo::AssumedDefaultCacheLineSizeBytes;
 		}
 		
-			Pitch = width + CPU.DataL1LineSize;
+		Pitch = width + CPU.DataL1LineSize;
 	}
 	int bytes_per_pixel = Bgra ? 4 : 1;
 	Pixels.Resize(Pitch * height * bytes_per_pixel);

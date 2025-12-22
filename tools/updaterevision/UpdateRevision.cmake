@@ -41,34 +41,34 @@ function(query_repo_info)
 		endif()
 	elseif(is_git EQUAL "0")
 		# from git
-	execute_process(
-		COMMAND git describe --tags --dirty=-m
-		RESULT_VARIABLE Error
+		execute_process(
+			COMMAND git describe --tags --dirty=-m
+			RESULT_VARIABLE Error
 			OUTPUT_VARIABLE Temp
-		ERROR_QUIET
-		OUTPUT_STRIP_TRAILING_WHITESPACE
-	)
+			ERROR_QUIET
+			OUTPUT_STRIP_TRAILING_WHITESPACE
+		)
 
-	if(NOT "${Error}" STREQUAL "0")
+		if(NOT "${Error}" STREQUAL "0")
 			message(STATUS "No git tags found! Using fallback '${Tag}'")
 		else()
 			set(Tag "${Temp}")
-	endif()
+		endif()
 
-	execute_process(
-		COMMAND git log -1 "--format=%ai;%H"
-		RESULT_VARIABLE Error
+		execute_process(
+			COMMAND git log -1 "--format=%ai;%H"
+			RESULT_VARIABLE Error
 			OUTPUT_VARIABLE Temp
-		ERROR_QUIET
-		OUTPUT_STRIP_TRAILING_WHITESPACE
-	)
+			ERROR_QUIET
+			OUTPUT_STRIP_TRAILING_WHITESPACE
+		)
 
 		if(NOT "${Error}" STREQUAL "0")
 			message(STATUS "No git commits found! Using fallback '${Hash}'")
 		else()
 			string(REPLACE ";" ";" CommitInfo "${Temp}")
-	list(GET CommitInfo 0 Timestamp)
-	list(GET CommitInfo 1 Hash)
+			list(GET CommitInfo 0 Timestamp)
+			list(GET CommitInfo 1 Hash)
 		endif()
 
 	else()

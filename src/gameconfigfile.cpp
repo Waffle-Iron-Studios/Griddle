@@ -87,7 +87,7 @@ static TArray<FString> DefaultSearchPaths;
 static void CollectDefaultSearchPaths()
 {
 	if (DefaultSearchPaths.Size() > 0)
-{
+	{
 		// already done
 		return;
 	}
@@ -395,7 +395,7 @@ void FGameConfigFile::DoGlobalSetup ()
 				while (more)
 				{
 					name = GetCurrentSection();
-					if (name != NULL && 
+					if (name != NULL &&
 						(namelen = strlen(name)) > 12 &&
 						strcmp(name + namelen - 12, ".WeaponSlots") == 0)
 					{
@@ -695,7 +695,7 @@ void FGameConfigFile::DoGameSetup (const char *gamename)
 	sublen = countof(section) - 1 - mysnprintf (section, countof(section), "%s.", gamename);
 	subsection = section + countof(section) - sublen - 1;
 	section[countof(section) - 1] = '\0';
-	
+
 	strncpy (subsection, "UnknownConsoleVariables", sublen);
 	if (SetSection (section))
 	{

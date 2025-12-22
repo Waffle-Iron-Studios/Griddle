@@ -2246,7 +2246,7 @@ void G_SaveGame (const char *filename, const char *description, bool quick)
 		}
 		else
 		{
-		sendsave = true;
+			sendsave = true;
 			if (gameaction == ga_quicksave)
 				gameaction = ga_nothing;
 		}

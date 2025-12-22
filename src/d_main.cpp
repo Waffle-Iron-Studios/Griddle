@@ -3670,7 +3670,7 @@ static int D_DoomMain_Internal (void)
 		System_LanguageChanged,
 		OkForLocalization,
 		[]() ->FConfigFile* { return GameConfig; },
-		nullptr, 
+		nullptr,
 		RemapUserTranslation,
 		System_DisableAnisotropicFiltering
 	};

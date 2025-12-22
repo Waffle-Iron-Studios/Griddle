@@ -383,7 +383,7 @@ void I_OpenShellFolder(const char* infolder)
 		#ifdef __HAIKU__
 			std::system("open .");
 		#else
-		std::system("xdg-open .");
+			std::system("xdg-open .");
 		#endif
 		chdir(curdir);
 	}

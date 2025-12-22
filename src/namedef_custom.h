@@ -929,3 +929,5 @@ xx(Corona)
 xx(AimAssistEnabled)
 xx(AimAssistStrength)
 xx(AimAssistPrecision)
+
+xx(BuiltinStateOffset)

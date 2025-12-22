@@ -1736,6 +1736,10 @@ int FLevelLocals::FinishTravel ()
 			inv->ChangeStatNum (STAT_INVENTORY);
 			inv->LinkToWorld (nullptr);
 			P_FindFloorCeiling(inv, FFCF_ONLYSPAWNPOS);
+			
+			tid = inv->tid;
+			inv->tid = 0;
+			inv->SetTID(tid);
 
 			tid = inv->tid;
 			inv->tid = 0;

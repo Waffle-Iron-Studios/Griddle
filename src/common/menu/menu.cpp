@@ -64,7 +64,7 @@ CVAR (Int, m_showinputgrid, 0, CVAR_ARCHIVE | CVAR_GLOBALCONFIG)
 CVAR(Bool, m_blockcontrollers, false, CVAR_ARCHIVE | CVAR_GLOBALCONFIG)
 
 CVAR (Float, snd_menuvolume, 0.6f, CVAR_ARCHIVE)
-CVAR(Int, m_use_mouse, 2, CVAR_ARCHIVE|CVAR_GLOBALCONFIG)
+CVAR(Int, m_use_mouse, 1, CVAR_ARCHIVE|CVAR_GLOBALCONFIG)
 CVAR(Int, m_show_backbutton, 0, CVAR_ARCHIVE|CVAR_GLOBALCONFIG)
 CVAR(Bool, m_cleanscale, false, CVAR_ARCHIVE | CVAR_GLOBALCONFIG)
 // Option Search
@@ -647,11 +647,11 @@ bool M_Responder (event_t *ev)
 				// do we want mouse input?
 				if (ev->subtype >= EV_GUI_FirstMouseEvent && ev->subtype <= EV_GUI_LastMouseEvent)
 				{
-						if (!m_use_mouse)
+					if (!m_use_mouse)
 					{
 						LastMousePos.HeldButtons.Clear();
 						LastMousePos.LastUpdate = -1;
-							return true;
+						return true;
 					}
 
 					const EGUIEvent t = static_cast<EGUIEvent>(ev->subtype);

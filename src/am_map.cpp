@@ -727,27 +727,28 @@ static void AM_initColors(bool overlayed)
 		}
 
 		switch (set)
-	{
-	default:
-		/* Use the custom colors in the am_* cvars */
-		AMColors.initFromCVars(cv_standard);
-		break;
+		{
+		default:
+			/* Use the custom colors in the am_* cvars */
+			AMColors.initFromCVars(cv_standard);
+			break;
 
-	case 1:	// Doom
-		// Use colors corresponding to the original Doom's
-		AMColors.initFromColors(DoomColors, false);
-		break;
+		case 1:	// Doom
+			// Use colors corresponding to the original Doom's
+			AMColors.initFromColors(DoomColors, false);
+			break;
 
-	case 2:	// Strife
-		// Use colors corresponding to the original Strife's
-		AMColors.initFromColors(StrifeColors, false);
-		break;
+		case 2:	// Strife
+			// Use colors corresponding to the original Strife's
+			AMColors.initFromColors(StrifeColors, false);
+			break;
 
-	case 3:	// Raven
-		// Use colors corresponding to the original Raven's
-		AMColors.initFromColors(RavenColors, true);
-		break;
+		case 3:	// Raven
+			// Use colors corresponding to the original Raven's
+			AMColors.initFromColors(RavenColors, true);
+			break;
 
+		}
 	}
 }
 

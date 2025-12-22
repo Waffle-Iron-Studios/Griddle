@@ -70,7 +70,7 @@ int		nomusic = 0;
 // Maximum volume of MOD/stream music.
 //==========================================================================
 
-CUSTOM_CVARD(Float, snd_musicvolume, 0.5, CVAR_ARCHIVE|CVAR_GLOBALCONFIG, "controls music volume")
+CUSTOM_CVARD(Float, snd_musicvolume, 1.0f, CVAR_ARCHIVE | CVAR_GLOBALCONFIG | CVAR_NOINITCALL, "controls music volume")
 {
 	if (self < 0.f)
 		self = 0.f;

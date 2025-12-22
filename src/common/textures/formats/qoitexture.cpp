@@ -207,11 +207,11 @@ int FQOITexture::CopyPixels(FBitmap *bmp, int conversion, int frame)
 				index[QOI_COLOR_HASH(pe) % 64] = pe;
 			}
 
-		pixels[0] = pe.b;
-		pixels[1] = pe.g;
-		pixels[2] = pe.r;
-		pixels[3] = pe.a;
-		pixels += 4;
+			pixels[0] = pe.b;
+			pixels[1] = pe.g;
+			pixels[2] = pe.r;
+			pixels[3] = pe.a;
+			pixels += 4;
 		}
 	}
 	return bMasked? -1 : 0;

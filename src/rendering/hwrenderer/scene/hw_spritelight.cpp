@@ -173,9 +173,26 @@ void HWDrawInfo::GetDynSpriteLight(AActor *self, float x, float y, float z, FLig
 
 				if (frac > 0 && (!light->shadowmapped || (light->GetRadius() > 0 && screen->mShadowMap.ShadowTest(light->Pos, { x, y, z }))))
 				{
-					lr = light->GetRed() / 255.0f;
-					lg = light->GetGreen() / 255.0f;
-					lb = light->GetBlue() / 255.0f;
+					dist = sqrtf(dist);	// only calculate the square root if we really need it.
+
+					if (light->target && (light->target->renderflags2 & RF2_LIGHTMULTALPHA))
+					{
+						L *= -1.0f / dist;
+						DAngle negPitch = -*light->pPitch;
+						DAngle Angle = light->target->Angles.Yaw;
+						double xyLen = negPitch.Cos();
+						double spotDirX = -Angle.Cos() * xyLen;
+						double spotDirY = -Angle.Sin() * xyLen;
+						double spotDirZ = -negPitch.Sin();
+						double cosDir = L.X * spotDirX + L.Y * spotDirY + L.Z * spotDirZ;
+						frac *= (float)smoothstep(light->pSpotOuterAngle->Cos(), light->pSpotInnerAngle->Cos(), cosDir);
+					}
+
+					if (frac > 0 && (!light->shadowmapped || (light->GetRadius() > 0 && screen->mShadowMap.ShadowTest(light->Pos, { x, y, z }))))
+					{
+						lr = light->GetRed() / 255.0f;
+						lg = light->GetGreen() / 255.0f;
+						lb = light->GetBlue() / 255.0f;
 
 						if (light->target && (light->target->renderflags2 & RF2_LIGHTMULTALPHA))
 					{
