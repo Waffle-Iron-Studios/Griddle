@@ -77,27 +77,27 @@ namespace swrenderer
 
 		while (node)
 		{
-				if (node->lightsource->IsActive() && (height.PointOnSide(node->lightsource->Pos) > 0))
+			if (node->lightsource->IsActive() && (height.PointOnSide(node->lightsource->Pos) > 0))
+			{
+				bool found = false;
+				VisiblePlaneLight *light_node = lights;
+				while (light_node)
 				{
-					bool found = false;
-					VisiblePlaneLight *light_node = lights;
-					while (light_node)
+					if (light_node->lightsource == node->lightsource)
 					{
-						if (light_node->lightsource == node->lightsource)
-						{
-							found = true;
-							break;
-						}
-						light_node = light_node->next;
+						found = true;
+						break;
 					}
-					if (!found)
-					{
-						VisiblePlaneLight *newlight = thread->FrameMemory->NewObject<VisiblePlaneLight>();
-						newlight->next = lights;
-						newlight->lightsource = node->lightsource;
-						lights = newlight;
-					}
+					light_node = light_node->next;
 				}
+				if (!found)
+				{
+					VisiblePlaneLight *newlight = thread->FrameMemory->NewObject<VisiblePlaneLight>();
+					newlight->next = lights;
+					newlight->lightsource = node->lightsource;
+					lights = newlight;
+				}
+			}
 			node = node->nextLight;
 		}
 	}

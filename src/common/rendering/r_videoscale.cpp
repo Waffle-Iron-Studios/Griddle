@@ -155,7 +155,7 @@ namespace
 
 	// the odd formatting of this struct definition is meant to resemble a table header. set your tab stops to 4 when editing this file.
 	struct v_ScaleTable
-		{ bool isValid;		uint32_t(*GetScaledWidth)(uint32_t Width, uint32_t Height);								uint32_t(*GetScaledHeight)(uint32_t Width, uint32_t Height);						float pixelAspect;		bool isCustom;	};
+		{ bool isValid;		uint32_t(*GetScaledWidth)(uint32_t Width, uint32_t Height);										uint32_t(*GetScaledHeight)(uint32_t Width, uint32_t Height);								float pixelAspect;		bool isCustom;	};
 	v_ScaleTable vScaleTable[] =
 	{
 		{ true,				[](uint32_t Width, uint32_t Height)->uint32_t { return Width; },		        				[](uint32_t Width, uint32_t Height)->uint32_t { return Height; },	        				1.0f,	  				false   },	// 0  - Native

@@ -159,27 +159,27 @@ void HWFlat::SetupLights(HWDrawInfo *di, FLightNode * node, FDynLightData &light
 		return;	// no lights on additively blended surfaces.
 	}
 	while (node)
+	{
+		FDynamicLight * light = node->lightsource;
+
+		if (!light->IsActive() || light->DontLightMap())
 		{
-			FDynamicLight * light = node->lightsource;
-
-			if (!light->IsActive() || light->DontLightMap())
-			{
 			node = node->nextLight;
-				continue;
-			}
-			iter_dlightf++;
+			continue;
+		}
+		iter_dlightf++;
 
-			// we must do the side check here because gl_GetLight needs the correct plane orientation
-			// which we don't have for Legacy-style 3D-floors
-			double planeh = plane.plane.ZatPoint(light->Pos);
-			if ((planeh<light->Z() && ceiling) || (planeh>light->Z() && !ceiling))
-			{
+		// we must do the side check here because gl_GetLight needs the correct plane orientation
+		// which we don't have for Legacy-style 3D-floors
+		double planeh = plane.plane.ZatPoint(light->Pos);
+		if ((planeh<light->Z() && ceiling) || (planeh>light->Z() && !ceiling))
+		{
 			node = node->nextLight;
-				continue;
-			}
+			continue;
+		}
 
-			p.Set(plane.plane.Normal(), plane.plane.fD());
-			draw_dlightf += GetLight(lightdata, portalgroup, p, light, false);
+		p.Set(plane.plane.Normal(), plane.plane.fD());
+		draw_dlightf += GetLight(lightdata, portalgroup, p, light, false);
 		node = node->nextLight;
 	}
 
