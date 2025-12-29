@@ -931,7 +931,7 @@ void ZCCCompiler::CreateClassTypes()
 				{
 					c->Type()->mVersion = c->cls->Version;
 				}
-
+				
 
 				if (c->cls->Flags & ZCC_Final)
 				{

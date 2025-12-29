@@ -211,38 +211,38 @@ namespace swrenderer
 			auto node = vis->section->lighthead;
 			while (node != nullptr)
 			{
-					FDynamicLight *light = node->lightsource;
-					if (light->ShouldLightActor(thing))
+				FDynamicLight *light = node->lightsource;
+				if (light->ShouldLightActor(thing))
+				{
+					float lx = (float)(light->X() - thing->X());
+					float ly = (float)(light->Y() - thing->Y());
+					float lz = (float)(light->Z() - thing->Center());
+					float LdotL = lx * lx + ly * ly + lz * lz;
+					float radius = node->lightsource->GetRadius();
+					if (radius * radius >= LdotL)
 					{
-						float lx = (float)(light->X() - thing->X());
-						float ly = (float)(light->Y() - thing->Y());
-						float lz = (float)(light->Z() - thing->Center());
-						float LdotL = lx * lx + ly * ly + lz * lz;
-						float radius = node->lightsource->GetRadius();
-						if (radius * radius >= LdotL)
-						{
-							float distance = sqrt(LdotL);
-							float attenuation = 1.0f - distance / radius;
-							if (attenuation > 0.0f)
-							{						
-								float red = light->GetRed() * (1.0f / 255.0f);
-								float green = light->GetGreen() * (1.0f / 255.0f);
-								float blue = light->GetBlue() * (1.0f / 255.0f);
-								/*if (light->IsSubtractive())
-								{
-									float bright = FVector3(lr, lg, lb).Length();
-									FVector3 lightColor(lr, lg, lb);
-									red = (bright - lr) * -1;
-									green = (bright - lg) * -1;
-									blue = (bright - lb) * -1;
-								}*/
-							
-								lit_red += red * attenuation;
-								lit_green += green * attenuation;
-								lit_blue += blue * attenuation;
-							}
+						float distance = sqrt(LdotL);
+						float attenuation = 1.0f - distance / radius;
+						if (attenuation > 0.0f)
+						{						
+							float red = light->GetRed() * (1.0f / 255.0f);
+							float green = light->GetGreen() * (1.0f / 255.0f);
+							float blue = light->GetBlue() * (1.0f / 255.0f);
+							/*if (light->IsSubtractive())
+							{
+								float bright = FVector3(lr, lg, lb).Length();
+								FVector3 lightColor(lr, lg, lb);
+								red = (bright - lr) * -1;
+								green = (bright - lg) * -1;
+								blue = (bright - lb) * -1;
+							}*/
+						
+							lit_red += red * attenuation;
+							lit_green += green * attenuation;
+							lit_blue += blue * attenuation;
 						}
 					}
+				}
 				node = node->nextLight;
 			}
 			lit_red = clamp(lit_red * 255.0f, 0.0f, 255.0f);
