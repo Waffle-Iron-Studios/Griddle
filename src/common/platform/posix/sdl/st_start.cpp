@@ -173,6 +173,7 @@ void FTTYStartupScreen::NetInit(const char *message, int numplayers)
 	}
 	fflush (stderr);
 	TheNetMessage = message;
+	NetMaxPos = numplayers;
 	NetCurPos = 0;
 	NetProgress(1);		// You always know about yourself
 }
@@ -186,7 +187,7 @@ void FTTYStartupScreen::NetInit(const char *message, int numplayers)
 //===========================================================================
 
 void FTTYStartupScreen::NetDone()
-{
+{	
 	CleanProgressBar();
 	// Restore stdin settings
 	if (DidNetInit)
@@ -234,7 +235,7 @@ void FTTYStartupScreen::NetProgress(int count)
 		}
 		fprintf (stderr, "%*c[%2d/%2d]", NetMaxPos + 1 - NetCurPos, ' ', NetCurPos, NetMaxPos);
 		fflush (stderr);
-	}	
+	}
 }
 
 void FTTYStartupScreen::NetClose()

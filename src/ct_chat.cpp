@@ -509,11 +509,11 @@ static bool DoSubstitution (FString &out, const char *in)
 CCMD (messagemode)
 {
 	if (menuactive == MENU_Off)
-		{
-	buttonMap.ResetButtonStates();
+	{
+		buttonMap.ResetButtonStates();
 		chatmodeon = 1;
-	C_HideConsole ();
-	CT_ClearChatMessage ();
+		C_HideConsole ();
+		CT_ClearChatMessage ();
 	}
 }
 
@@ -522,9 +522,9 @@ CCMD (say)
 	if (argv.argc() == 1)
 	{
 		Printf ("Usage: say <message>\n");
-		}
-		else
-		{
+	}
+	else
+	{
 		ShoveChatStr (argv[1], 0);
 	}
 }
@@ -532,7 +532,7 @@ CCMD (say)
 CCMD (messagemode2)
 {
 	if (menuactive == MENU_Off)
-		{
+	{
 		buttonMap.ResetButtonStates();
 		chatmodeon = 2;
 		C_HideConsole ();

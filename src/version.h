@@ -46,7 +46,7 @@ const char *GetVersionString();
 // The version as seen in the Windows resource
 #define RC_FILEVERSION 1,11,0,0
 #define RC_PRODUCTVERSION 1,11,0,0
-
+#define RC_PRODUCTVERSION2 VERSIONSTR
 // These are for content versioning.
 
 // These are for ZScript versioning
