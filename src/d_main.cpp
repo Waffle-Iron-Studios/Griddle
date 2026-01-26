@@ -907,7 +907,7 @@ void D_Display ()
 	if (nodrawers || screen == NULL)
 		return; 				// for comparative timing / profiling
 	
-	if (!AppActive && (screen->IsFullscreen() || !vid_activeinbackground))
+	if (!AppActive && !vid_activeinbackground)
 	{
 		return;
 	}
