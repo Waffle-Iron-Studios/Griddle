@@ -148,10 +148,6 @@ FRandom pr_spawnmissile("SpawnMissile");
 
 CUSTOM_CVAR (Float, sv_gravity, 800.f, CVAR_SERVERINFO|CVAR_NOSAVE|CVAR_NOINITCALL)
 {
-	// test NAN and INF
-	if (((double)self != (double)self) || isinf((double)self))
-		sv_gravity = 800.f;
-
 	for (auto Level : AllLevels())
 	{
 		Level->gravity = self;
@@ -405,7 +401,8 @@ void AActor::Serialize(FSerializer &arc)
 		("morphflags", MorphFlags)
 		("premorphproperties", PremorphProperties)
 		("morphexitflash", MorphExitFlash)
-		("damagesource", damagesource);
+		("damagesource", damagesource)
+		A("decalgenerator", DecalGenerator);
 
 
 		SerializeTerrain(arc, "floorterrain", floorterrain, &def->floorterrain);
@@ -531,9 +528,17 @@ bool AActor::SetState (FState *newstate, bool nofunction)
 	if (debugfile && player && (player->cheats & CF_PREDICTING))
 		fprintf (debugfile, "for pl %d: SetState while predicting!\n", Level->PlayerNum(player));
 	
+	int statelooplimit = 300000;
 	auto oldstate = state;
 	do
 	{
+		if (!(--statelooplimit))
+		{
+			Printf(TEXTCOLOR_RED "Infinite state loop in Actor '%s' state '%s'\n", GetClass()->TypeName.GetChars(), FState::StaticGetStateName(state).GetChars());
+			state = nullptr;
+			Destroy();
+			return false;
+		}
 		if (newstate == NULL)
 		{
 			state = NULL;
