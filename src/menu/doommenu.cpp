@@ -68,6 +68,7 @@
 #include "shiftstate.h"
 #include "s_music.h"
 #include "hwrenderer/scene/hw_drawinfo.h"
+#include <g_levellocals.h>
 
 EXTERN_CVAR(Int, cl_gfxlocalization)
 EXTERN_CVAR(Bool, m_quickexit)
