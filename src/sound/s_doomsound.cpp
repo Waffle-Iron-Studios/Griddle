@@ -67,6 +67,7 @@
 #include "s_music.h"
 #include "v_draw.h"
 #include "m_argv.h"
+#include "vm.h"
 
 // PUBLIC DATA DEFINITIONS -------------------------------------------------
 
@@ -521,7 +522,17 @@ void DoomSoundEngine::StopChannel(FSoundChan* chan)
 void S_SoundPitchActor(AActor *ent, int channel, EChanFlags flags, FSoundID sound_id, float volume, float attenuation, float pitch, float startTime)
 {
 	if (VerifyActorSound(ent, sound_id, channel, flags))
-		soundEngine->StartSound (SOURCE_Actor, ent, nullptr, channel, flags, sound_id, volume, attenuation, 0, pitch, startTime);
+	{
+		soundEngine->StartSound(SOURCE_Actor, ent, nullptr, channel, flags, sound_id, volume, attenuation, 0, pitch, startTime);
+		if (ent != nullptr)
+		{
+			IFOVERRIDENVIRTUALPTRNAME(ent, NAME_Actor, GetSoundPlaying)
+			{
+				VMValue params[] = {ent, sound_id.index()};
+				VMCall(func, params, countof(params), nullptr, 0);
+			}
+		}
+	}
 }
 
 void S_Sound(AActor *ent, int channel, EChanFlags flags, FSoundID sound_id, float volume, float attenuation)
@@ -547,6 +558,14 @@ void S_SoundMinMaxDist(AActor *ent, int channel, EChanFlags flags, FSoundID soun
 		rolloff.MinDistance = mindist;
 		rolloff.MaxDistance = maxdist;
 		soundEngine->StartSound(SOURCE_Actor, ent, nullptr, channel, flags, sound_id, volume, 1, &rolloff);
+		if (ent != nullptr)
+		{
+			IFOVERRIDENVIRTUALPTRNAME(ent, NAME_Actor, GetSoundPlaying)
+			{
+				VMValue params[] = {ent, sound_id.index()};
+				VMCall(func, params, countof(params), nullptr, 0);
+			}
+		}
 	}
 }
 
